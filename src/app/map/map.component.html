@@ -1,0 +1,27 @@
+@let map = mapa();
+@if (requesting()) {
+    <bee-center>
+        <bee-loader />
+    </bee-center>
+} @else {
+    @if (map) {
+        <div class="w-dvw h-dvh relative">
+            <app-mapa-header />
+            <app-mobile-acao-selecionada />
+            <bee-map 
+                [showControls]="false"
+                [maxZoom]="10"
+                [size]="{ x: map.quantidadeTiles.x, y: map.quantidadeTiles.y }" 
+                [image]="map.url" class="w-dvw h-dvh" viewportHeight="100%">
+                @for (acao of map.getMapActionDataList(); track $index) {
+                    <app-acao [acao]="acao" />
+                }
+            </bee-map>
+            <app-mapa-footer />
+        </div>
+    } @else {
+        <bee-center>
+            <bee-text> Não Encontrado </bee-text>
+        </bee-center>
+    }
+}

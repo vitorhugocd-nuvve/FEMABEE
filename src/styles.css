@@ -1,3 +1,49 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+@font-face {
+  font-family: 'DepartureMono';
+  src: url('../public/fonts/DepartureMono-Regular.woff2') format('woff2'),
+       url('../public/fonts/DepartureMono-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.tile-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+}
+
+.shadow-border {
+    box-shadow: inset 2px 0 0 0 white, 
+                inset 0 2px 0 0 white, 
+                inset -2px 0 0 0 rgba(0, 0, 0, 0.500), 
+                inset 0 -2px 0 0 rgba(0, 0, 0, 0.500);
+}
+
+.inside-border {
+    box-shadow: inset 2px 0 0 0 rgba(0, 0, 0, 0.500), 
+                inset 0 2px 0 0 rgba(0, 0, 0, 0.500), 
+                inset -2px 0 0 0 white, 
+                inset 0 -2px 0 0 white;
+}
+
+
+
+.shadow-press {
+    box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.500);
+}
+
+.pattern-background {
+    background-image: url("../public/backgrounds/background.png");
+    background-repeat: repeat;
+    background-size: 128px;
+    image-rendering: crisp-edges; 
+}
+
+*:not(i) {
+    font-family: 'DepartureMono', monospace;
+}

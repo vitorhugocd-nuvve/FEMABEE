@@ -1,0 +1,1 @@
+export const TAMANHO_TILE = 16;
