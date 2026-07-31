@@ -10,7 +10,7 @@ import { MapComponent } from "./map/map.component";
 @Component({
   selector: 'app-root',
   template: `
-  <app-desafio-complete-codigo />
+  <app-map />
   `,
   imports: [RouterOutlet, DesafioCompleteTextoComponent, DesafioQuizComponent, DesafioEncontreParesComponent, DesafioEncontreBugComponent, DesafioCompleteCodigoComponent, MapComponent],
 })

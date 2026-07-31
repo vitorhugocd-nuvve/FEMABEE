@@ -1,0 +1,12 @@
+import { TamanhoAbelha } from "../models/aparencia/tamanhos";
+
+export const TAMANHO_APARENCIA_ABELHA = 32;
+
+export const LOCALIZACAO_ICONE_APARENCIA_IMAGEM = 0;
+
+export const LOCALIZACAO_APARENCIA_NA_IMAGEM: Record<TamanhoAbelha, number> = {
+    PEQUENA_MAGRA: TAMANHO_APARENCIA_ABELHA,
+    ALTA_MAGRA: TAMANHO_APARENCIA_ABELHA * 2,
+    PEQUENA_GORDA: TAMANHO_APARENCIA_ABELHA * 3,
+    ALTA_GORDA: TAMANHO_APARENCIA_ABELHA * 4
+}
