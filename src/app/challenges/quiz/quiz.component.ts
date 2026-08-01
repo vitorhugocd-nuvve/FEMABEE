@@ -11,6 +11,7 @@ import { Resposta } from "../../core/models/desafios/quiz/resposta";
 import { NgClass } from "@angular/common";
 import { IndicatorComponent } from "../../../ui/indicator/indicator.component";
 import { Indication } from "../../../ui/indicator/indication";
+import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
 @Component({
     selector: 'app-desafio-quiz',
@@ -31,6 +32,9 @@ import { Indication } from "../../../ui/indicator/indication";
                 <button bee-button size="small">
                     <bee-icon icon="heart" />
                     10
+                </button>
+                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
+                    <bee-icon icon="x" />
                 </button>
             </div>
         </bee-card-header>
@@ -91,6 +95,7 @@ import { Indication } from "../../../ui/indicator/indication";
 export class DesafioQuizComponent {
     private readonly indicator = viewChild<IndicatorComponent>('indicator');
     private readonly buscarQuizService = inject(BuscarQuizService);
+    private readonly desafioAtualService = inject(DesafioAtualService);
     readonly quizService = inject(QuizService);
 
     readonly selecao = signal<Resposta | undefined>(undefined);
@@ -110,5 +115,9 @@ export class DesafioQuizComponent {
 
     show() {
         this.indicator()?.show(new Indication({title: 'Errou!', message: "A resposta escolhida foi incorrreta.", severity: 'danger' }))
+    }
+
+    fechar() {
+        this.desafioAtualService.fechar();
     }
 }

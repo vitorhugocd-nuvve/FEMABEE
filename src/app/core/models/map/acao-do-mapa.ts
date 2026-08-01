@@ -1,34 +1,36 @@
 import { MapActionData } from "../../../../ui/map";
 import { TAMANHO_TILE } from "../../constants/tile";
+import { TipoDesafio } from "../desafios/tipo-desafio";
 import { TipoAcao } from "./tipo-acao";
 
 export type AcaoDoMapaProps = {
     id: string;
     tipo: TipoAcao;
     titulo: string;
-    concluida: boolean;
-    concluidaEm?: Date;
     posicaoEmPx: { x: number, y: number }
+    /** Referencia a Loja exibida quando `tipo` é `TipoAcao.Loja`. */
+    lojaId?: string;
+    /** Tipo do desafio exibido quando `tipo` é `TipoAcao.Desafio`. */
+    tipoDesafio?: TipoDesafio;
+    /** Mapa para o qual a ação navega quando `tipo` é `TipoAcao.Onibus` ou `TipoAcao.Aviao`. */
+    mapaDestinoId?: string;
+    /** Desafio aberto quando `tipo` é `TipoAcao.Desafio`. */
+    desafioId?: string;
 }
 
 export class AcaoDoMapa {
     constructor (
-        private props: Omit<AcaoDoMapaProps, 'concluida' | 'concluidaEm'> & {
-            concluida?: boolean,
-            concluidaEm?: Date
-        }
-    ) {
-        this.props.concluida = props.concluida ?? false;
-    }
+        private props: AcaoDoMapaProps
+    ) {}
 
     get id() { return this.props.id; }
     get tipo() { return this.props.tipo; }
     get titulo() { return this.props.titulo; }
-    get concluida() { return this.props.concluida; }
-    get concluidaEm() { return this.props.concluidaEm; }
     get posicaoEmPx() { return this.props.posicaoEmPx; }
-
-    public marcarComoConluida() {}
+    get lojaId() { return this.props.lojaId; }
+    get tipoDesafio() { return this.props.tipoDesafio; }
+    get mapaDestinoId() { return this.props.mapaDestinoId; }
+    get desafioId() { return this.props.desafioId; }
 
     public posicaoEmTiles() {
         return {

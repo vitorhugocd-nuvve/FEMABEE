@@ -8,6 +8,7 @@ import { CodeDiffComponent } from "../../../ui/code-diff/code-diff.component";
 import { CompleteCodigoService } from "./complete-codigo.service";
 import { BuscarCompleteCodigoService } from "./buscar-complete-codigo.service";
 import { Trecho } from "../../core/models/desafios/complete-codigo/trecho";
+import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
 @Component({
     selector: 'app-desafio-complete-codigo',
@@ -29,6 +30,9 @@ import { Trecho } from "../../core/models/desafios/complete-codigo/trecho";
                 <button bee-button size="small">
                     <bee-icon icon="heart" />
                     10
+                </button>
+                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
+                    <bee-icon icon="x" />
                 </button>
             </div>
         </bee-card-header>
@@ -134,6 +138,7 @@ import { Trecho } from "../../core/models/desafios/complete-codigo/trecho";
 })
 export class DesafioCompleteCodigoComponent {
     private readonly buscarService = inject(BuscarCompleteCodigoService);
+    private readonly desafioAtualService = inject(DesafioAtualService);
     readonly completeCodigoService = inject(CompleteCodigoService);
 
     readonly padrao        = computed(() => this.completeCodigoService.desafio()?.padrao);
@@ -211,5 +216,9 @@ export class DesafioCompleteCodigoComponent {
 
     voltar(): void {
         this.completeCodigoService.voltar();
+    }
+
+    fechar(): void {
+        this.desafioAtualService.fechar();
     }
 }

@@ -47,3 +47,43 @@
 *:not(i) {
     font-family: 'DepartureMono', monospace;
 }
+
+.licao-conteudo {
+    width: 100%;
+}
+
+.licao-conteudo :is(h1, h2, h3, h4, h5, h6) {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.licao-conteudo p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.licao-conteudo img {
+    max-width: 100%;
+    image-rendering: pixelated;
+    margin-bottom: 1rem;
+}
+
+.licao-conteudo :is(ul, ol) {
+    margin: 0 0 1rem 1.25rem;
+}
+
+.licao-conteudo li {
+    margin-bottom: 0.25rem;
+}
+
+.licao-conteudo code {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 0.1rem 0.3rem;
+}
+
+.licao-conteudo blockquote {
+    border-left: 2px solid black;
+    padding-left: 0.75rem;
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}

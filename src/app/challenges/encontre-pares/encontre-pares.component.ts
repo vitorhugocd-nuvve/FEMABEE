@@ -10,6 +10,7 @@ import { BeeDividerComponent } from "../../../ui/divider/divider.component";
 import { EncontreParesService } from "./encontre-pares.service";
 import { BuscarEncontreParesService } from "./buscar-encontre-pares.service";
 import { Par } from "../../core/models/desafios/encontre-pares/par";
+import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
 @Component({
     selector: 'app-desafio-encontre-pares',
@@ -31,6 +32,9 @@ import { Par } from "../../core/models/desafios/encontre-pares/par";
                 <button bee-button size="small">
                     <bee-icon icon="heart" />
                     10
+                </button>
+                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
+                    <bee-icon icon="x" />
                 </button>
             </div>
         </bee-card-header>
@@ -126,6 +130,7 @@ import { Par } from "../../core/models/desafios/encontre-pares/par";
 export class DesafioEncontreParesComponent {
     private readonly indicator = viewChild<IndicatorComponent>('indicator');
     private readonly buscarService = inject(BuscarEncontreParesService);
+    private readonly desafioAtualService = inject(DesafioAtualService);
     readonly encontreParesService = inject(EncontreParesService);
 
     /** Id do `Par` selecionado do lado das afirmações / correspondências */
@@ -218,5 +223,9 @@ export class DesafioEncontreParesComponent {
     voltarRodada(): void {
         this.encontreParesService.voltar();
         this.limparSelecao();
+    }
+
+    fechar(): void {
+        this.desafioAtualService.fechar();
     }
 }

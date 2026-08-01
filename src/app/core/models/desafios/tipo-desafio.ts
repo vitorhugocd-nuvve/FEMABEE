@@ -3,5 +3,6 @@ export enum TipoDesafio {
     EncontreBug = "ENCONTRE_BUG",
     PerguntasRespostas = "PERGUNTAS_RESPOSTAS",
     CompleteCodigo = "COMPLETE_CODIGO",
-    EncontrePares = "ENCONTRE_PARES"
+    EncontrePares = "ENCONTRE_PARES",
+    Licao = "LICAO"
 }

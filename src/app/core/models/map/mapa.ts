@@ -1,9 +1,11 @@
 import { TAMANHO_TILE } from "../../constants/tile";
 import { AcaoDoMapa } from "./acao-do-mapa";
+import { TipoMapa } from "./tipo-mapa";
 
 export type MapaProps = {
     id: string;
     nome: string;
+    tipo: TipoMapa;
     padrao: string;
     url: string;
     acoes: AcaoDoMapa[],
@@ -17,9 +19,11 @@ export class Mapa {
 
     get id() { return this.props.id; }
     get nome() { return this.props.nome; }
+    get tipo() { return this.props.tipo; }
     get padrao() { return this.props.padrao; }
     get url() { return this.props.url; }
     get tamanhoEmPx() { return this.props.tamanhoEmPx; }
+    get acoes() { return this.props.acoes; }
 
     get quantidadeTiles() {
         return {

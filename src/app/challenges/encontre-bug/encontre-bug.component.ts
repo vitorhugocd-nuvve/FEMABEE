@@ -12,6 +12,7 @@ import { EncontreBugService } from "./encontre-bug.service";
 import { BuscarEncontreBugService } from "./buscar-encontre-bug.service";
 import { Arquivo } from "../../core/models/desafios/encontre-bug/arquivo";
 import { RespostaBug } from "../../core/models/desafios/encontre-bug/resposta-bug";
+import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
 @Component({
     selector: 'app-desafio-encontre-bug',
@@ -33,6 +34,9 @@ import { RespostaBug } from "../../core/models/desafios/encontre-bug/resposta-bu
                 <button bee-button size="small">
                     <bee-icon icon="heart" />
                     10
+                </button>
+                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
+                    <bee-icon icon="x" />
                 </button>
             </div>
         </bee-card-header>
@@ -146,6 +150,7 @@ import { RespostaBug } from "../../core/models/desafios/encontre-bug/resposta-bu
 })
 export class DesafioEncontreBugComponent {
     private readonly buscarService = inject(BuscarEncontreBugService);
+    private readonly desafioAtualService = inject(DesafioAtualService);
     readonly encontreBugService = inject(EncontreBugService);
 
     /** Índice do arquivo em exibição, dentro da pergunta atual */
@@ -204,5 +209,9 @@ export class DesafioEncontreBugComponent {
 
     voltarPergunta(): void {
         this.encontreBugService.voltar();
+    }
+
+    fechar(): void {
+        this.desafioAtualService.fechar();
     }
 }

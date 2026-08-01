@@ -1,0 +1,147 @@
+import { Component, computed, DestroyRef, ElementRef, effect, inject, signal, viewChild } from "@angular/core";
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
+import { marked, Token } from "marked";
+import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
+import { IconComponent } from "../../../ui/icon/icon.component";
+import { ButtonComponent } from "../../../ui/button/button.component";
+import { CodeEditorComponent } from "../../../ui/code-editor/code-editor.component";
+import { MermaidComponent } from "../../../ui/mermaid/mermaid.component";
+import { LicaoService } from "./licao.service";
+import { BuscarLicaoService } from "./buscar-licao.service";
+import { DesafioAtualService } from "../../core/services/desafio-atual.service";
+
+type BlocoLicao =
+    | { tipo: 'codigo'; linguagem: string; conteudo: string }
+    | { tipo: 'html'; conteudo: SafeHtml };
+
+@Component({
+    selector: 'app-desafio-licao',
+    template: `
+    <bee-card class="w-full h-full!">
+        <!-- Cabeçalho -->
+        <bee-card-header>
+            <div class="flex flex-row gap-2 items-center">
+                <span class="font-semibold">Lição · {{ padrao() }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
+                    <bee-icon icon="x" />
+                </button>
+            </div>
+        </bee-card-header>
+
+        <bee-card-content #conteudoScroll class="flex flex-col items-center h-full gap-4 overflow-auto!">
+            <div class="flex flex-col w-full gap-4 shrink-0">
+                @for (bloco of blocos(); track $index) {
+                    @if (bloco.tipo === 'codigo' && bloco.linguagem === 'mermaid') {
+                        <bee-mermaid class="shrink-0" [diagrama]="bloco.conteudo" />
+                    } @else if (bloco.tipo === 'codigo') {
+                        <bee-code-editor class="w-full h-48 shrink-0" [value]="bloco.conteudo" [language]="bloco.linguagem" [readOnly]="true" />
+                    } @else {
+                        <div class="licao-conteudo" [innerHTML]="bloco.conteudo"></div>
+                    }
+                }
+                <div #fimDoTexto></div>
+
+                <!-- Resultado final -->
+                @if (concluida()) {
+                    <div class="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
+                        <p class="font-bold text-lg">Lição concluída! 🏆</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Botão de ação principal -->
+            <button
+                (click)="concluir()"
+                bee-button
+                size="large"
+                class="w-full text-center shrink-0"
+                [disabled]="!chegouAoFim() || concluida() || solicitando()">
+                @if (solicitando()) {
+                    <bee-icon icon="loader-2" class="animate-spin" />
+                    Concluindo...
+                } @else if (concluida()) {
+                    <bee-icon icon="check-circle" />
+                    Concluído
+                } @else if (chegouAoFim()) {
+                    <bee-icon icon="check" />
+                    Concluir
+                } @else {
+                    Continue lendo até o final...
+                }
+            </button>
+        </bee-card-content>
+    </bee-card>
+    `,
+    host: { class: 'p-4 pattern-background h-screen w-screen flex' },
+    providers: [BuscarLicaoService],
+    imports: [
+        BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
+        IconComponent, ButtonComponent, CodeEditorComponent, MermaidComponent
+    ]
+})
+export class DesafioLicaoComponent {
+    private readonly buscarService = inject(BuscarLicaoService);
+    private readonly desafioAtualService = inject(DesafioAtualService);
+    private readonly sanitizer = inject(DomSanitizer);
+    readonly licaoService = inject(LicaoService);
+
+    private readonly containerRef = viewChild('conteudoScroll', { read: ElementRef<HTMLElement> });
+    private readonly sentinelRef = viewChild('fimDoTexto', { read: ElementRef<HTMLElement> });
+
+    private observer?: IntersectionObserver;
+
+    readonly padrao = computed(() => this.licaoService.padrao());
+    readonly concluida = computed(() => this.licaoService.concluida());
+    readonly solicitando = computed(() => this.licaoService.solicitando());
+    readonly chegouAoFim = signal(false);
+
+    readonly blocos = computed<BlocoLicao[]>(() => {
+        const markdown = this.licaoService.licao()?.conteudoMarkdown;
+        if (!markdown) return [];
+
+        return marked.lexer(markdown).map((token: Token): BlocoLicao => {
+            if (token.type === 'code') {
+                return { tipo: 'codigo', linguagem: token.lang || 'plaintext', conteudo: token.text };
+            }
+            return { tipo: 'html', conteudo: this.sanitizer.bypassSecurityTrustHtml(marked.parser([token])) };
+        });
+    });
+
+    private readonly _carregarDados = effect(() => {
+        const desafio = this.buscarService.data();
+        if (!desafio) return;
+        this.licaoService.iniciar(desafio);
+        this.chegouAoFim.set(false);
+    });
+
+    private readonly _observarFim = effect(() => {
+        this.blocos();
+        const container = this.containerRef()?.nativeElement;
+        const sentinela = this.sentinelRef()?.nativeElement;
+        if (!container || !sentinela) return;
+
+        this.observer?.disconnect();
+        this.observer = new IntersectionObserver(
+            entradas => {
+                if (entradas.some(entrada => entrada.isIntersecting)) this.chegouAoFim.set(true);
+            },
+            { root: container, threshold: 0 }
+        );
+        this.observer.observe(sentinela);
+    });
+
+    constructor() {
+        inject(DestroyRef).onDestroy(() => this.observer?.disconnect());
+    }
+
+    concluir(): void {
+        if (!this.chegouAoFim()) return;
+        this.licaoService.concluir();
+    }
+
+    fechar(): void {
+        this.desafioAtualService.fechar();
+    }
+}

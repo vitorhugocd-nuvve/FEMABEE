@@ -1,18 +1,30 @@
 import { Component, computed, inject, input, signal } from "@angular/core";
-import { AsyncPipe, NgStyle } from "@angular/common";
-import { MapActionData, BeeMapActionComponent } from "../../../ui/map";
-import { ZardPopoverDirective, ZardPopoverComponent } from "../../../ui/popover";
-import { DesafioActionComponent } from "./desafio/desafio.component";
+import { NgStyle } from "@angular/common";
+import { BeeMapActionComponent } from "../../../ui/map";
 import { ScreenService } from "../../../services/tela/screen.service";
-import { BottomDrawerComponent } from "../../../ui/bottom-drawer/bottom-drawer.component";
 import { MobileAcaoSelecionadaService } from "./mobile-acao-selecionada.component";
+import { AcaoDoMapa } from "../../core/models/map/acao-do-mapa";
+import { TipoAcao } from "../../core/models/map/tipo-acao";
+import { TipoDesafio } from "../../core/models/desafios/tipo-desafio";
+import { NiveisConcluidosAbelhaService } from "../../core/progresso/niveis-concluidos-abelha.service";
+import { OnibusObtidoService } from "../../core/progresso/onibus-obtido.service";
+import { AviaoObtidoService } from "../../core/progresso/aviao-obtido.service";
+import { TAMANHO_TILE } from "../../core/constants/tile";
+import {
+    CAMINHO_TILESET_UTILITARIOS,
+    COLUNAS_TILESET_UTILITARIOS,
+    ICONE_ACAO_OBTIDO_POR_TIPO,
+    ICONE_ACAO_POR_TIPO,
+    ICONE_DESAFIO_CONCLUIDO_POR_TIPO,
+    ICONE_DESAFIO_POR_TIPO
+} from "../../core/constants/utilitarios";
 
 @Component({
     selector: 'app-acao',
     template: `
-    <bee-map-action [x]="acao().x" [y]="acao().y"> 
+    <bee-map-action [x]="mapActionData().x" [y]="mapActionData().y">
         <div>
-            <div (click)="mobileAcaoSelecionadaService.isOpen.set(true)" class="tile-icon cursor-pointer hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px" [ngStyle]="tileStyle()"></div>
+            <div (click)="mobileAcaoSelecionadaService.selecionar(acao())" class="tile-icon cursor-pointer hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px" [ngStyle]="tileStyle()"></div>
             <!-- @if (screenService.isMobile()) {
             } @else {
                 <div zPopover [zContent]="popoverContent" class="tile-icon cursor-pointer hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px" [ngStyle]="tileStyle()"></div>
@@ -30,20 +42,42 @@ import { MobileAcaoSelecionadaService } from "./mobile-acao-selecionada.componen
 export class AcaoComponent {
     readonly mobileAcaoSelecionadaService = inject(MobileAcaoSelecionadaService);
     readonly screenService = inject(ScreenService);
-    
+    private readonly niveisConcluidosAbelhaService = inject(NiveisConcluidosAbelhaService);
+    private readonly onibusObtidoService = inject(OnibusObtidoService);
+    private readonly aviaoObtidoService = inject(AviaoObtidoService);
+
     readonly isOpen = signal(false);
-    readonly acao = input.required<MapActionData>();
+    readonly acao = input.required<AcaoDoMapa>();
+
+    protected readonly mapActionData = computed(() => this.acao().toMapActionData());
+
+    protected readonly tileIndex = computed(() => {
+        const acao = this.acao();
+
+        if (acao.tipo === TipoAcao.Desafio) {
+            const tipoDesafio = acao.tipoDesafio ?? TipoDesafio.EncontreBug;
+            const concluido = this.niveisConcluidosAbelhaService.estaConcluido(acao.id);
+            return concluido ? ICONE_DESAFIO_CONCLUIDO_POR_TIPO[tipoDesafio] : ICONE_DESAFIO_POR_TIPO[tipoDesafio];
+        }
+
+        const obtido = acao.tipo === TipoAcao.Onibus
+            ? this.onibusObtidoService.estaObtido(acao.id)
+            : acao.tipo === TipoAcao.Aviao
+                ? this.aviaoObtidoService.estaObtido(acao.id)
+                : false;
+
+        return (obtido ? ICONE_ACAO_OBTIDO_POR_TIPO[acao.tipo] : undefined) ?? ICONE_ACAO_POR_TIPO[acao.tipo] ?? 0;
+    });
 
     protected readonly tileStyle = computed(() => {
-        const tileIndex = this.acao().tileIndex ?? 0;
-        const tileSize = 16;
-        const col = tileIndex % 16;
-        const row = Math.floor(tileIndex / 16);
+        const tileIndex = this.tileIndex();
+        const col = tileIndex % COLUNAS_TILESET_UTILITARIOS;
+        const row = Math.floor(tileIndex / COLUNAS_TILESET_UTILITARIOS);
 
         return {
-            backgroundImage: "url('/utils/utilitario.gif')",
+            backgroundImage: `url('${CAMINHO_TILESET_UTILITARIOS}')`,
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: `${-col * tileSize}px ${-row * tileSize}px`,
+            backgroundPosition: `${-col * TAMANHO_TILE}px ${-row * TAMANHO_TILE}px`,
             backgroundSize: 'auto',
         };
     });

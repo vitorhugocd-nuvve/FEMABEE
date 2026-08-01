@@ -1,5 +1,6 @@
 export enum TipoAcao {
     Desafio = "DESAFIO",
     Onibus = "ONIBUS",
-    Aviao = "AVIAO"
+    Aviao = "AVIAO",
+    Loja = "LOJA"
 }

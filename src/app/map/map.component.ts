@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from "@angular/core";
+import { Component, inject } from "@angular/core";
 import { BeeMapComponent, BeeMapActionComponent } from "../../ui/map";
 import { MapaAtualService } from "./services/mapa-atual.service";
 import { LoaderComponent } from "../../ui/loader/loader.component";
@@ -19,13 +19,9 @@ import { MapaFooterComponent } from "./footer/mapa-footer.component";
     host: { class: 'w-dvw h-dvh' },
     imports: [BeeMapComponent, LoaderComponent, CenterComponent, TextComponent, AcaoComponent, MobileAcaoSelecionadaComponent, MapaHeaderComponent, MapaFooterComponent]
 })
-export class MapComponent implements OnInit {
+export class MapComponent {
     private readonly mapaAtualService = inject(MapaAtualService);
 
     readonly mapa = this.mapaAtualService.mapa.asReadonly();
     readonly requesting = this.mapaAtualService.requesting.asReadonly();
-
-    ngOnInit(): void {
-        this.mapaAtualService.request();
-    }
 }

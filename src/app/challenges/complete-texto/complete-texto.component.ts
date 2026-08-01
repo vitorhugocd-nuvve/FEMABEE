@@ -6,6 +6,7 @@ import { BuscarCompleteTextoService } from "./buscar-complete-texto.service";
 import { ProgressbarComponent } from "../../../ui/progressbar/progressbar.component";
 import { CompleteTextoService } from "./complete-texto.service";
 import { NgClass } from "@angular/common";
+import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
 @Component({
     selector: 'app-desafio-complete-texto',
@@ -26,6 +27,9 @@ import { NgClass } from "@angular/common";
                 <button bee-button size="small">
                     <bee-icon icon="heart" />
                     10
+                </button>
+                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
+                    <bee-icon icon="x" />
                 </button>
             </div>
         </bee-card-header>
@@ -134,6 +138,7 @@ import { NgClass } from "@angular/common";
 })
 export class DesafioCompleteTextoComponent {
     private readonly buscarService = inject(BuscarCompleteTextoService);
+    private readonly desafioAtualService = inject(DesafioAtualService);
     readonly completeTextoService  = inject(CompleteTextoService);
 
     /** Opções selecionadas para cada lacuna: índice (1-based) → string | undefined */
@@ -254,5 +259,9 @@ export class DesafioCompleteTextoComponent {
     voltar(): void {
         this.completeTextoService.voltar();
         this._selecionadas.set(new Map());
+    }
+
+    fechar(): void {
+        this.desafioAtualService.fechar();
     }
 }
