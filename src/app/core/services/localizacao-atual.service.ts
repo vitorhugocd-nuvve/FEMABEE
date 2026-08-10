@@ -1,5 +1,5 @@
 import { Injectable, signal } from "@angular/core";
-import { ID_MAPA_INICIAL } from "../seeds/data/maps/maps.seed";
+import { ID_MAPA_INICIAL } from "../seeds/data/maps/mapa-mundi";
 
 /** Serviço global: em qual mapa a abelha está localizada agora, e a navegação entre mapas. */
 @Injectable({

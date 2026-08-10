@@ -11,6 +11,8 @@ import { EncontreParesService } from "./encontre-pares.service";
 import { BuscarEncontreParesService } from "./buscar-encontre-pares.service";
 import { Par } from "../../core/models/desafios/encontre-pares/par";
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
+import { SomService } from "../../../services/som/som.service";
+import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
 
 @Component({
     selector: 'app-desafio-encontre-pares',
@@ -85,7 +87,7 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
                 <!-- Resultado final -->
                 @if (concluidoDesafio()) {
-                    <div class="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
+                    <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
                         <p class="font-bold text-lg">Desafio concluído! 🏆</p>
                         <p class="text-sm text-muted-foreground">
                             Você formou todos os pares de <strong>{{ totalRodadas() }}</strong> rodadas.
@@ -96,27 +98,26 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
             <bee-indicator class="w-full!" #indicator />
 
-            <!-- Botão de ação principal -->
-            <button
-                (click)="proximaRodada()"
-                bee-button
-                size="large"
-                class="w-full text-center"
-                [disabled]="!concluidoRodada() || solicitando() || concluidoDesafio()">
-                @if (solicitando()) {
-                    <bee-icon icon="loader-2" class="animate-spin" />
-                    Conferindo...
-                } @else if (concluidoDesafio()) {
-                    <bee-icon icon="check-circle" />
-                    Concluído!
-                } @else if (concluidoRodada()) {
-                    Próxima rodada
-                    <bee-icon icon="arrow-right" />
-                } @else {
-                    <bee-icon icon="link" />
-                    Toque nas cartas para formar os pares
-                }
-            </button>
+            <!-- Botão de ação principal — só aparece quando dá pra fazer algo -->
+            @if (mostrarBotaoAcao()) {
+                <button
+                    (click)="acao()"
+                    bee-button
+                    size="large"
+                    class="w-full text-center"
+                    [disabled]="solicitando()">
+                    @if (solicitando()) {
+                        <bee-icon icon="loader-2" class="animate-spin" />
+                        Conferindo...
+                    } @else if (concluidoDesafio()) {
+                        <bee-icon icon="check-circle" />
+                        Voltar ao mapa
+                    } @else {
+                        Próxima rodada
+                        <bee-icon icon="arrow-right" />
+                    }
+                </button>
+            }
         </bee-card-content>
     </bee-card>
     `,
@@ -131,6 +132,8 @@ export class DesafioEncontreParesComponent {
     private readonly indicator = viewChild<IndicatorComponent>('indicator');
     private readonly buscarService = inject(BuscarEncontreParesService);
     private readonly desafioAtualService = inject(DesafioAtualService);
+    private readonly somService = inject(SomService);
+    private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
     readonly encontreParesService = inject(EncontreParesService);
 
     /** Id do `Par` selecionado do lado das afirmações / correspondências */
@@ -145,6 +148,11 @@ export class DesafioEncontreParesComponent {
     readonly concluidoRodada = computed(() => this.encontreParesService.stateAtual()?.concluido ?? false);
     readonly concluidoDesafio = computed(() => this.encontreParesService.concluido());
     readonly podeVoltar      = computed(() => this.encontreParesService.podeVoltar());
+
+    /** O botão só aparece quando dá pra fazer algo (avançar de rodada ou voltar ao mapa) — senão fica omitido em vez de desabilitado. */
+    readonly mostrarBotaoAcao = computed(() => {
+        return this.concluidoRodada() || this.solicitando();
+    });
 
     /** Ordem fixa (mesma ordem cadastrada na rodada) */
     readonly afirmacoes = computed<Par[]>(() => this.encontreParesService.stateAtual()?.rodada.pares ?? []);
@@ -199,12 +207,16 @@ export class DesafioEncontreParesComponent {
         const resultado = await this.encontreParesService.confirmarPar(afirmacaoId, correspondenciaId);
 
         if (resultado === 'incorreto') {
+            this.somService.erro();
+            this.sequenciaSemErrarService.registrarErro();
             this.indicator()?.show(new Indication({
                 title: 'Não foi dessa vez!',
                 message: 'Essas cartas não formam um par.',
                 severity: 'danger',
                 ttlInMs: 1500,
             }));
+        } else if (resultado === 'correto') {
+            this.somService.sucesso();
         }
 
         this.limparSelecao();
@@ -213,6 +225,14 @@ export class DesafioEncontreParesComponent {
     private limparSelecao(): void {
         this.selecaoAfirmacao.set(undefined);
         this.selecaoCorrespondencia.set(undefined);
+    }
+
+    acao(): void {
+        if (this.concluidoDesafio()) {
+            this.fechar();
+            return;
+        }
+        this.proximaRodada();
     }
 
     proximaRodada(): void {

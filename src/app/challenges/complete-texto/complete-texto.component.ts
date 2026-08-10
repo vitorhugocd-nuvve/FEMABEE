@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from "@angular/core";
+import { Component, computed, effect, inject, signal, viewChild } from "@angular/core";
 import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
@@ -7,6 +7,10 @@ import { ProgressbarComponent } from "../../../ui/progressbar/progressbar.compon
 import { CompleteTextoService } from "./complete-texto.service";
 import { NgClass } from "@angular/common";
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
+import { SomService } from "../../../services/som/som.service";
+import { IndicatorComponent } from "../../../ui/indicator/indicator.component";
+import { Indication } from "../../../ui/indicator/indication";
+import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
 
 @Component({
     selector: 'app-desafio-complete-texto',
@@ -50,7 +54,7 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
                             } @else {
                                 <!-- Lacuna interativa -->
                                 <span
-                                    class="inline-flex items-center mx-1 px-3 py-0.5 rounded-full border text-sm font-medium transition-all duration-200 cursor-pointer"
+                                    class="inline-flex items-center mx-1 px-3 py-0.5 border text-sm font-medium transition-all duration-200 cursor-pointer"
                                     [ngClass]="classeSlot(parte.indice)"
                                     (click)="removerSelecao(parte.indice)">
                                     {{ opcaoSelecionada(parte.indice) ?? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' }}
@@ -80,23 +84,11 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
                     }
                 </div>
 
-                <!-- Feedback -->
-                @if (feedback()) {
-                    <div
-                        class="rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2 transition-all duration-300"
-                        [ngClass]="feedback() === 'correto'
-                            ? 'bg-green-500/15 text-green-600 border border-green-500/30'
-                            : 'bg-red-500/15 text-red-600 border border-red-500/30'">
-                        <bee-icon [icon]="feedback() === 'correto' ? 'check-circle' : 'x-circle'" />
-                        {{ feedback() === 'correto'
-                            ? '🎉 Perfeito! Todas as lacunas estão corretas!'
-                            : '❌ Algumas respostas estão incorretas. Tente novamente!' }}
-                    </div>
-                }
+                <bee-indicator #indicator class="w-full!" />
 
                 <!-- Resultado final -->
                 @if (concluido()) {
-                    <div class="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
+                    <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
                         <p class="font-bold text-lg">Desafio concluído! 🏆</p>
                         <p class="text-sm text-muted-foreground">
                             Você completou <strong>{{ totalCorretas() }}</strong> de <strong>{{ totalTextos() }}</strong> textos corretamente.
@@ -105,27 +97,29 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
                 }
             </div>
 
-            <!-- Botão de ação principal -->
-            <button
-                (click)="acao()"
-                bee-button
-                size="large"
-                class="w-full text-center"
-                [disabled]="!todasLacunasPreenchidas() && !jaRespondeu() || solicitando()">
-                @if (solicitando()) {
-                    <bee-icon icon="loader-2" class="animate-spin" />
-                    Verificando...
-                } @else if (jaRespondeu() && podeAvancar()) {
-                    Próximo
-                    <bee-icon icon="arrow-right" />
-                } @else if (jaRespondeu() && !podeAvancar() && !concluido()) {
-                    Tentar novamente
-                    <bee-icon icon="refresh-cw" />
-                } @else {
-                    <bee-icon icon="send" />
-                    Verificar
-                }
-            </button>
+            <!-- Botão de ação principal — só aparece quando dá pra fazer algo -->
+            @if (mostrarBotaoAcao()) {
+                <button
+                    (click)="acao()"
+                    bee-button
+                    size="large"
+                    class="w-full text-center"
+                    [disabled]="solicitando()">
+                    @if (solicitando()) {
+                        <bee-icon icon="loader-2" class="animate-spin" />
+                        Verificando...
+                    } @else if (jaRespondeu() && podeAvancar()) {
+                        Próximo
+                        <bee-icon icon="arrow-right" />
+                    } @else if (jaRespondeu()) {
+                        <bee-icon icon="check-circle" />
+                        Voltar ao mapa
+                    } @else {
+                        <bee-icon icon="send" />
+                        Verificar
+                    }
+                </button>
+            }
         </bee-card-content>
     </bee-card>
     `,
@@ -133,19 +127,21 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
     providers: [BuscarCompleteTextoService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
-        IconComponent, ButtonComponent, ProgressbarComponent, NgClass
+        IconComponent, ButtonComponent, ProgressbarComponent, NgClass, IndicatorComponent
     ]
 })
 export class DesafioCompleteTextoComponent {
     private readonly buscarService = inject(BuscarCompleteTextoService);
     private readonly desafioAtualService = inject(DesafioAtualService);
+    private readonly somService = inject(SomService);
+    private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
+    private readonly indicator = viewChild<IndicatorComponent>('indicator');
     readonly completeTextoService  = inject(CompleteTextoService);
 
     /** Opções selecionadas para cada lacuna: índice (1-based) → string | undefined */
     private readonly _selecionadas = signal<Map<number, string>>(new Map());
 
     readonly jaRespondeu  = computed(() => this.completeTextoService.stateAtual()?.concluido ?? false);
-    readonly feedback     = computed(() => this.completeTextoService.feedback());
     readonly podeAvancar  = computed(() => this.completeTextoService.podeAvancar());
     readonly podeVoltar   = computed(() => this.completeTextoService.podeVoltar());
     readonly concluido    = computed(() => this.completeTextoService.concluido());
@@ -155,6 +151,12 @@ export class DesafioCompleteTextoComponent {
     readonly totalTextos  = computed(() => this.completeTextoService.totalTextos());
     readonly padrao       = computed(() => this.completeTextoService.desafio()?.padrao);
     readonly numeroTexto  = computed(() => (this.completeTextoService.desafio()?.indice ?? 0) + 1);
+
+    /** O botão só aparece quando há algo a fazer (verificar, avançar ou voltar ao mapa) — senão fica omitido em vez de desabilitado. */
+    readonly mostrarBotaoAcao = computed(() => {
+        if (this.solicitando() || this.jaRespondeu()) return true;
+        return this.todasLacunasPreenchidas();
+    });
 
     private readonly _carregarDados = effect(() => {
         const desafio = this.buscarService.data();
@@ -238,10 +240,7 @@ export class DesafioCompleteTextoComponent {
                 this.completeTextoService.avancar();
                 this._selecionadas.set(new Map());
             } else {
-                // tenta de novo: limpa o estado
-                this.completeTextoService.stateAtual()?.reset();
-                this.completeTextoService.limparFeedback();
-                this._selecionadas.set(new Map());
+                this.fechar();
             }
             return;
         }
@@ -253,7 +252,16 @@ export class DesafioCompleteTextoComponent {
             .sort((a, b) => a.indice - b.indice);
 
         const opcoesSelecionadas = lacunas.map(l => this._selecionadas().get(l.indice) ?? '');
-        await this.completeTextoService.validar(opcoesSelecionadas);
+        const resultado = await this.completeTextoService.validar(opcoesSelecionadas);
+
+        if (resultado === 'correto') {
+            this.somService.sucesso();
+            this.indicator()?.show(new Indication({ message: 'Perfeito! Todas as lacunas estão corretas.', severity: 'success', ttlInMs: 2000 }));
+        } else if (resultado === 'incorreto') {
+            this.somService.erro();
+            this.sequenciaSemErrarService.registrarErro();
+            this.indicator()?.show(new Indication({ message: 'Algumas respostas estão incorretas. Tente novamente!', severity: 'danger', ttlInMs: 2000 }));
+        }
     }
 
     voltar(): void {

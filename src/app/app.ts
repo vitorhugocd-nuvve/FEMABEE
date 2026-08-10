@@ -9,6 +9,10 @@ import { DesafioLicaoComponent } from "./challenges/licao/licao.component";
 import { MapComponent } from "./map/map.component";
 import { DesafioAtualService } from "./core/services/desafio-atual.service";
 import { TipoDesafio } from "./core/models/desafios/tipo-desafio";
+import { ConquistaProgressoService } from "./core/services/conquista-progresso.service";
+import { DialogoGatilhoService } from "./core/services/dialogo-gatilho.service";
+import { MusicaAmbienteService } from "./core/services/musica-ambiente.service";
+import { DialogoComponent } from "./dialogo/dialogo.component";
 
 @Component({
   selector: 'app-root',
@@ -26,12 +30,20 @@ import { TipoDesafio } from "./core/models/desafios/tipo-desafio";
       }
     </div>
   }
+  <app-dialogo />
   `,
-  imports: [RouterOutlet, DesafioCompleteTextoComponent, DesafioQuizComponent, DesafioEncontreParesComponent, DesafioEncontreBugComponent, DesafioCompleteCodigoComponent, DesafioLicaoComponent, MapComponent],
+  imports: [RouterOutlet, DesafioCompleteTextoComponent, DesafioQuizComponent, DesafioEncontreParesComponent, DesafioEncontreBugComponent, DesafioCompleteCodigoComponent, DesafioLicaoComponent, MapComponent, DialogoComponent],
 })
 export class App {
   protected readonly title = signal('client');
 
   protected readonly desafioAtualService = inject(DesafioAtualService);
   protected readonly tipoDesafio = TipoDesafio;
+
+  // Injetados só pra instanciar eagerly — os efeitos que observam conclusão de desafios,
+  // reavaliam conquistas, disparam diálogos e tocam a trilha ambiente precisam começar
+  // a rodar desde a subida do app.
+  private readonly conquistaProgressoService = inject(ConquistaProgressoService);
+  private readonly dialogoGatilhoService = inject(DialogoGatilhoService);
+  private readonly musicaAmbienteService = inject(MusicaAmbienteService);
 }

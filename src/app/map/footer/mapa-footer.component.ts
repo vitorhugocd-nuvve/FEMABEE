@@ -5,6 +5,7 @@ import { RegionalTicketsComponent } from "../header/regional-tickets.component";
 import { UserMenuTriggerComponent } from "./user-menu-trigger.component";
 import { WardrobeTriggerComponent } from "./wardrobe-trigger.component";
 import { BookTriggerComponent } from "./book-trigger.component";
+import { MusicaToggleComponent } from "./musica-toggle.component";
 
 @Component({
     selector: 'app-mapa-footer',
@@ -13,10 +14,11 @@ import { BookTriggerComponent } from "./book-trigger.component";
     <div class="pl-4! flex flex-row gap-4 items-center">
         <app-book-trigger />
         <app-wardrobe-trigger />
+        <app-musica-toggle />
     </div>
     <app-user-menu-trigger />
     `,
     host: { class: 'absolute bottom-0 left-0 w-full h-fit z-10 bg-gradient-to-t from-black/50 to-transparent flex flex-row justify-between gap-4 items-center' },
-    imports: [ContinentalTicketsComponent, RegionalTicketsComponent, MoneyCounterComponent, UserMenuTriggerComponent, WardrobeTriggerComponent, BookTriggerComponent]
+    imports: [ContinentalTicketsComponent, RegionalTicketsComponent, MoneyCounterComponent, UserMenuTriggerComponent, WardrobeTriggerComponent, BookTriggerComponent, MusicaToggleComponent]
 })
 export class MapaFooterComponent {}

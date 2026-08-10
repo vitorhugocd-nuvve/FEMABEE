@@ -10,23 +10,9 @@ import { LojaRepositoryService } from "../../../core/seeds/repositories/loja-rep
 import { TipoAparencia } from "../../../core/models/aparencia/tipo-aparencia";
 import { Aparencia } from "../../../core/models/aparencia/aparencia";
 import { TamanhoAbelha } from "../../../core/models/aparencia/tamanhos";
-import { LOCALIZACAO_ICONE_APARENCIA_IMAGEM, TAMANHO_APARENCIA_ABELHA } from "../../../core/constants/aparencia";
-
-const TITULO_TIPO_APARENCIA: Record<TipoAparencia, string> = {
-    [TipoAparencia.Corpo]: "Roupas",
-    [TipoAparencia.Rosto]: "Rostos",
-    [TipoAparencia.Oculos]: "Óculos",
-    [TipoAparencia.Chapeu]: "Chapéus",
-    [TipoAparencia.Jaqueta]: "Jaquetas",
-    [TipoAparencia.Detalhes]: "Detalhes"
-};
-
-const TITULO_TAMANHO_ABELHA: Record<TamanhoAbelha, string> = {
-    [TamanhoAbelha.PequenaMagra]: "Pequena Magrinha",
-    [TamanhoAbelha.AltaMagra]: "Alta Magrinha",
-    [TamanhoAbelha.PequenaGorda]: "Pequena Fofa",
-    [TamanhoAbelha.AltaGorda]: "Alta Fofa"
-};
+import { estiloIconeAparencia, TITULO_TAMANHO_ABELHA, TITULO_TIPO_APARENCIA } from "../../../core/constants/aparencia";
+import { AparenciaObtidaService } from "../../../core/progresso/aparencia-obtida.service";
+import { SomService } from "../../../../services/som/som.service";
 
 @Component({
     selector: 'app-loja-action',
@@ -67,10 +53,15 @@ const TITULO_TAMANHO_ABELHA: Record<TamanhoAbelha, string> = {
 
             <bee-divider direction="horizontal" />
             <footer class="w-full flex flex-row-reverse">
-                <bee-button>
-                    <bee-icon icon="shopping-cart" />
-                    Comprar
-                </bee-button>
+                <button bee-button [disabled]="jaPossui(item)" (click)="comprar(item)">
+                    @if (jaPossui(item)) {
+                        <bee-icon icon="check-circle" />
+                        Já possui
+                    } @else {
+                        <bee-icon icon="shopping-cart" />
+                        Comprar
+                    }
+                </button>
             </footer>
         } @else {
             <!-- Step 1: lista de itens da loja -->
@@ -87,7 +78,7 @@ const TITULO_TAMANHO_ABELHA: Record<TamanhoAbelha, string> = {
                             (click)="selecionar(aparencia)"
                             class="shadow-border border-2 bg-neutral-300 p-1.5 flex flex-col items-center gap-1 cursor-pointer"
                         >
-                            <div [style]="estiloIcone(aparencia)" role="img" [attr.aria-label]="aparencia.nome"></div>
+                            <div [style]="estiloIconeAparencia(aparencia)" role="img" [attr.aria-label]="aparencia.nome"></div>
                             <bee-description class="text-center!">{{ aparencia.nome }}</bee-description>
                             <div class="w-full flex flex-row items-center justify-between">
                                 <bee-description>Compra</bee-description>
@@ -119,10 +110,13 @@ const TITULO_TAMANHO_ABELHA: Record<TamanhoAbelha, string> = {
 })
 export class LojaActionComponent {
     private readonly lojaRepositoryService = inject(LojaRepositoryService);
+    private readonly aparenciaObtidaService = inject(AparenciaObtidaService);
+    private readonly somService = inject(SomService);
 
     protected readonly tituloTipoAparencia = TITULO_TIPO_APARENCIA;
     protected readonly tituloTamanhoAbelha = TITULO_TAMANHO_ABELHA;
     protected readonly tamanhosAbelha = Object.values(TamanhoAbelha);
+    protected readonly estiloIconeAparencia = estiloIconeAparencia;
 
     readonly lojaId = input.required<string>();
 
@@ -134,6 +128,16 @@ export class LojaActionComponent {
 
     protected voltar() {
         this.selecionado.set(null);
+    }
+
+    protected jaPossui(aparencia: Aparencia): boolean {
+        return this.aparenciaObtidaService.possui(aparencia.id);
+    }
+
+    protected comprar(aparencia: Aparencia): void {
+        if (this.jaPossui(aparencia)) return;
+        this.aparenciaObtidaService.marcarObtida(aparencia.id);
+        this.somService.sucesso();
     }
 
     protected readonly loja = computed(() => this.lojaRepositoryService.findById(this.lojaId()));
@@ -151,21 +155,4 @@ export class LojaActionComponent {
 
         return Array.from(porTipo.entries()).map(([tipo, itens]) => ({ tipo, itens }));
     });
-
-    /**
-     * As imagens de aparência são spritesheets de 32x160px (5 blocos de 32x32):
-     * o bloco 0 é o ícone, os blocos 1-4 são a aparência aplicada em cada TamanhoAbelha.
-     * Aqui recorta-se sempre o bloco do ícone (offset fixo em LOCALIZACAO_ICONE_APARENCIA_IMAGEM).
-     */
-    protected estiloIcone(aparencia: Aparencia) {
-        return {
-            width: `${TAMANHO_APARENCIA_ABELHA}px`,
-            height: `${TAMANHO_APARENCIA_ABELHA}px`,
-            backgroundImage: `url('${aparencia.urlImagem}')`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: `${-LOCALIZACAO_ICONE_APARENCIA_IMAGEM}px 0px`,
-            backgroundSize: 'auto',
-            imageRendering: 'pixelated'
-        };
-    }
 }

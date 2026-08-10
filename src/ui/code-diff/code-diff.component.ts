@@ -5,11 +5,13 @@ import {
     OnDestroy,
     ViewChild,
     effect,
+    inject,
     input,
     signal,
 } from '@angular/core';
 import loader, { Monaco } from '@monaco-editor/loader';
 import type { editor } from 'monaco-editor';
+import { ScreenService } from '../../services/tela/screen.service';
 
 /**
  * Visualizador de diff somente leitura baseado no Monaco Editor (modo inline,
@@ -59,6 +61,8 @@ export class CodeDiffComponent implements OnDestroy {
 
     protected readonly carregando = signal(true);
 
+    private readonly screenService = inject(ScreenService);
+
     private monaco?: Monaco;
     private diffEditor?: editor.IStandaloneDiffEditor;
     private originalModel?: editor.ITextModel;
@@ -78,8 +82,13 @@ export class CodeDiffComponent implements OnDestroy {
                 renderSideBySide: false,
                 automaticLayout: true,
                 minimap: { enabled: false },
-                fontSize: 13,
+                fontSize: this.screenService.isMobile() ? 15 : 13,
+                lineNumbersMinChars: 3,
                 scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                wrappingIndent: 'indent',
+                padding: { top: 8, bottom: 8 },
+                scrollbar: { horizontal: 'hidden', alwaysConsumeMouseWheel: false },
                 theme: 'vs-dark',
             });
             diffEditor.setModel({ original: originalModel, modified: modifiedModel });
@@ -105,6 +114,11 @@ export class CodeDiffComponent implements OnDestroy {
             const language = this.language();
             if (this.monaco && this.originalModel) this.monaco.editor.setModelLanguage(this.originalModel, language);
             if (this.monaco && this.modifiedModel) this.monaco.editor.setModelLanguage(this.modifiedModel, language);
+        });
+
+        effect(() => {
+            const fontSize = this.screenService.isMobile() ? 15 : 13;
+            this.diffEditor?.updateOptions({ fontSize });
         });
     }
 

@@ -1,17 +1,17 @@
 import {
-    Component,
-    ElementRef,
-    OnDestroy,
-    OnInit,
-    ViewChild,
-    afterNextRender,
-    computed,
-    inject,
-    input,
-    output,
-    signal,
-    ChangeDetectionStrategy,
-    effect,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+  effect,
 } from '@angular/core';
 import { NgStyle, NgClass } from '@angular/common';
 
@@ -41,12 +41,12 @@ import { TAMANHO_TILE } from '../../../app/core/constants/tile';
  * ```
  */
 @Component({
-    selector: 'bee-map',
-    standalone: true,
-    imports: [NgStyle, NgClass, BeeMapActionComponent],
-    providers: [MapCameraService, MapTileService, MapInteractionService],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    template: `
+  selector: 'bee-map',
+  standalone: true,
+  imports: [NgStyle, NgClass, BeeMapActionComponent],
+  providers: [MapCameraService, MapTileService, MapInteractionService],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
     <div
       #viewport
       class="map-viewport"
@@ -120,7 +120,7 @@ import { TAMANHO_TILE } from '../../../app/core/constants/tile';
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     :host {
       display: block;
       width: 100%;
@@ -130,7 +130,7 @@ import { TAMANHO_TILE } from '../../../app/core/constants/tile';
       position: relative;
       width: 100%;
       overflow: hidden;
-      background: #fff;
+      background: #dae0ea;
       user-select: none;
       touch-action: none;
       overscroll-behavior: none;
@@ -207,154 +207,154 @@ import { TAMANHO_TILE } from '../../../app/core/constants/tile';
   `],
 })
 export class BeeMapComponent implements OnInit, OnDestroy {
-    @ViewChild('viewport', { static: true })
-    private viewportEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('viewport', { static: true })
+  private viewportEl!: ElementRef<HTMLDivElement>;
 
-    protected readonly camera = inject(MapCameraService);
-    private readonly tileService = inject(MapTileService);
-    protected readonly interaction = inject(MapInteractionService);
+  protected readonly camera = inject(MapCameraService);
+  private readonly tileService = inject(MapTileService);
+  protected readonly interaction = inject(MapInteractionService);
 
-    // ── Inputs ─────────────────────────────────────────────────────────
-    readonly image = input.required<string>();
-    readonly tileSize = input<number | TileSize>(TAMANHO_TILE);
-    readonly size = input<{ x: number; y: number } | null>(null);
-    readonly actions = input<MapActionData[]>([]);
-    readonly initialZoom = input<number>(1);
-    readonly minZoom = input<number>(0.25);
-    readonly maxZoom = input<number>(4);
-    readonly interactive = input<boolean>(true);
-    readonly showControls = input<boolean>(true);
-    readonly alt = input<string>('Mapa');
-    readonly viewportHeight = input<string>('500px');
+  // ── Inputs ─────────────────────────────────────────────────────────
+  readonly image = input.required<string>();
+  readonly tileSize = input<number | TileSize>(TAMANHO_TILE);
+  readonly size = input<{ x: number; y: number } | null>(null);
+  readonly actions = input<MapActionData[]>([]);
+  readonly initialZoom = input<number>(1);
+  readonly minZoom = input<number>(0.25);
+  readonly maxZoom = input<number>(4);
+  readonly interactive = input<boolean>(true);
+  readonly showControls = input<boolean>(true);
+  readonly alt = input<string>('Mapa');
+  readonly viewportHeight = input<string>('500px');
 
-    // ── Outputs ───────────────────────────────────────────────────────
-    readonly actionClick = output<{ action: MapActionData; index: number }>();
+  // ── Outputs ───────────────────────────────────────────────────────
+  readonly actionClick = output<{ action: MapActionData; index: number }>();
 
-    // ── Estado interno ────────────────────────────────────────────────
-    protected readonly naturalSize = signal<{ width: number; height: number } | null>(null);
+  // ── Estado interno ────────────────────────────────────────────────
+  protected readonly naturalSize = signal<{ width: number; height: number } | null>(null);
 
-    protected readonly defaultActionColor = 'var(--color-primary, #3b82f6)';
+  protected readonly defaultActionColor = 'var(--color-primary, #3b82f6)';
 
-    // ── Computed styles ───────────────────────────────────────────────
-    protected readonly scalePercent = computed(() =>
-        Math.round(this.camera.scale() * 100)
+  // ── Computed styles ───────────────────────────────────────────────
+  protected readonly scalePercent = computed(() =>
+    Math.round(this.camera.scale() * 100)
+  );
+
+  protected readonly worldStyle = computed(() => {
+    const { x, y } = this.camera.offset();
+    const s = this.camera.scale();
+    const nat = this.naturalSize();
+    return {
+      width: nat ? `${nat.width}px` : 'auto',
+      height: nat ? `${nat.height}px` : 'auto',
+      transform: `translate3d(${x}px, ${y}px, 0) scale(${s})`,
+      transition: this.interaction.isDragging ? 'none' : 'transform 80ms ease-out',
+    };
+  });
+
+  protected readonly imageStyle = computed(() => {
+    const nat = this.naturalSize();
+    return nat
+      ? { width: `${nat.width}px`, height: `${nat.height}px` }
+      : {};
+  });
+
+  // ── Lifecycle ──────────────────────────────────────────────────────
+  private resizeObserver?: ResizeObserver;
+  private wheelHandler?: (e: WheelEvent) => void;
+
+  constructor() {
+    // Sincroniza inputs dos tiles com o serviço via effects
+    effect(() => {
+      this.tileService.setTileSize(this.tileSize());
+      this.tileService.setTileCount(this.size());
+    });
+
+    effect(() => {
+      this.camera.configure({
+        minZoom: this.minZoom(),
+        maxZoom: this.maxZoom(),
+        initialZoom: this.initialZoom(),
+      });
+    });
+  }
+
+  ngOnInit(): void {
+    const el = this.viewportEl.nativeElement;
+
+    // Viewport size inicial
+    this.camera.setViewportSize(el.clientWidth, el.clientHeight);
+
+    // ResizeObserver para re-clamp quando o container muda
+    this.resizeObserver = new ResizeObserver(() => {
+      this.camera.setViewportSize(el.clientWidth, el.clientHeight);
+      this.camera.setView(this.camera.scale(), this.camera.offset());
+    });
+    this.resizeObserver.observe(el);
+
+    // Wheel com { passive: false } para permitir preventDefault
+    if (this.interactive()) {
+      this.wheelHandler = (e: WheelEvent) => {
+        e.preventDefault();
+        const rect = el.getBoundingClientRect();
+        this.interaction.onWheel(e.deltaY, e.clientX - rect.left, e.clientY - rect.top);
+      };
+      el.addEventListener('wheel', this.wheelHandler, { passive: false });
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+    const el = this.viewportEl.nativeElement;
+    if (this.wheelHandler) {
+      el.removeEventListener('wheel', this.wheelHandler);
+    }
+  }
+
+  // ── Event handlers ────────────────────────────────────────────────
+  protected onImageLoad(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    const size = { width: img.naturalWidth, height: img.naturalHeight };
+    this.naturalSize.set(size);
+    this.tileService.setNaturalSize(size);
+    this.camera.setNaturalSize(size);
+    this.camera.reset();
+  }
+
+  protected onPointerDown(event: PointerEvent): void {
+    if (!this.interactive()) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    const rect = this.viewportEl.nativeElement.getBoundingClientRect();
+    this.interaction.onPointerDown(
+      event.clientX - rect.left,
+      event.clientY - rect.top,
+      event.pointerId,
+      event.pointerType,
     );
+  }
 
-    protected readonly worldStyle = computed(() => {
-        const { x, y } = this.camera.offset();
-        const s = this.camera.scale();
-        const nat = this.naturalSize();
-        return {
-            width: nat ? `${nat.width}px` : 'auto',
-            height: nat ? `${nat.height}px` : 'auto',
-            transform: `translate3d(${x}px, ${y}px, 0) scale(${s})`,
-            transition: this.interaction.isDragging ? 'none' : 'transform 80ms ease-out',
-        };
-    });
+  protected onPointerMove(event: PointerEvent): void {
+    if (!this.interactive()) return;
+    const rect = this.viewportEl.nativeElement.getBoundingClientRect();
+    this.interaction.onPointerMove(
+      event.clientX - rect.left,
+      event.clientY - rect.top,
+      event.pointerId,
+    );
+  }
 
-    protected readonly imageStyle = computed(() => {
-        const nat = this.naturalSize();
-        return nat
-            ? { width: `${nat.width}px`, height: `${nat.height}px` }
-            : {};
-    });
+  protected onPointerUp(event: PointerEvent): void {
+    try {
+      (event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
+    } catch { /* ignore */ }
+    this.interaction.onPointerUp(event.pointerId);
+  }
 
-    // ── Lifecycle ──────────────────────────────────────────────────────
-    private resizeObserver?: ResizeObserver;
-    private wheelHandler?: (e: WheelEvent) => void;
-
-    constructor() {
-        // Sincroniza inputs dos tiles com o serviço via effects
-        effect(() => {
-            this.tileService.setTileSize(this.tileSize());
-            this.tileService.setTileCount(this.size());
-        });
-
-        effect(() => {
-            this.camera.configure({
-                minZoom: this.minZoom(),
-                maxZoom: this.maxZoom(),
-                initialZoom: this.initialZoom(),
-            });
-        });
-    }
-
-    ngOnInit(): void {
-        const el = this.viewportEl.nativeElement;
-
-        // Viewport size inicial
-        this.camera.setViewportSize(el.clientWidth, el.clientHeight);
-
-        // ResizeObserver para re-clamp quando o container muda
-        this.resizeObserver = new ResizeObserver(() => {
-            this.camera.setViewportSize(el.clientWidth, el.clientHeight);
-            this.camera.setView(this.camera.scale(), this.camera.offset());
-        });
-        this.resizeObserver.observe(el);
-
-        // Wheel com { passive: false } para permitir preventDefault
-        if (this.interactive()) {
-            this.wheelHandler = (e: WheelEvent) => {
-                e.preventDefault();
-                const rect = el.getBoundingClientRect();
-                this.interaction.onWheel(e.deltaY, e.clientX - rect.left, e.clientY - rect.top);
-            };
-            el.addEventListener('wheel', this.wheelHandler, { passive: false });
-        }
-    }
-
-    ngOnDestroy(): void {
-        this.resizeObserver?.disconnect();
-        const el = this.viewportEl.nativeElement;
-        if (this.wheelHandler) {
-            el.removeEventListener('wheel', this.wheelHandler);
-        }
-    }
-
-    // ── Event handlers ────────────────────────────────────────────────
-    protected onImageLoad(event: Event): void {
-        const img = event.target as HTMLImageElement;
-        const size = { width: img.naturalWidth, height: img.naturalHeight };
-        this.naturalSize.set(size);
-        this.tileService.setNaturalSize(size);
-        this.camera.setNaturalSize(size);
-        this.camera.reset();
-    }
-
-    protected onPointerDown(event: PointerEvent): void {
-        if (!this.interactive()) return;
-        if (event.pointerType === 'mouse' && event.button !== 0) return;
-        (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-        const rect = this.viewportEl.nativeElement.getBoundingClientRect();
-        this.interaction.onPointerDown(
-            event.clientX - rect.left,
-            event.clientY - rect.top,
-            event.pointerId,
-            event.pointerType,
-        );
-    }
-
-    protected onPointerMove(event: PointerEvent): void {
-        if (!this.interactive()) return;
-        const rect = this.viewportEl.nativeElement.getBoundingClientRect();
-        this.interaction.onPointerMove(
-            event.clientX - rect.left,
-            event.clientY - rect.top,
-            event.pointerId,
-        );
-    }
-
-    protected onPointerUp(event: PointerEvent): void {
-        try {
-            (event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
-        } catch { /* ignore */ }
-        this.interaction.onPointerUp(event.pointerId);
-    }
-
-    protected onActionClick(action: MapActionData, index: number): void {
-        // Ignora se foi um arraste
-        if (this.interaction.totalMoved > 4) return;
-        action.onClick?.();
-        this.actionClick.emit({ action, index });
-    }
+  protected onActionClick(action: MapActionData, index: number): void {
+    // Ignora se foi um arraste
+    if (this.interaction.totalMoved > 4) return;
+    action.onClick?.();
+    this.actionClick.emit({ action, index });
+  }
 }

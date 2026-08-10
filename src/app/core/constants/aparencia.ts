@@ -1,3 +1,4 @@
+import { Aparencia } from "../models/aparencia/aparencia";
 import { TamanhoAbelha } from "../models/aparencia/tamanhos";
 import { TipoAparencia } from "../models/aparencia/tipo-aparencia";
 
@@ -24,3 +25,36 @@ export const ORDEM_RENDERIZACAO_APARENCIA: TipoAparencia[] = [
     TipoAparencia.Oculos,
     TipoAparencia.Chapeu
 ];
+
+export const TITULO_TIPO_APARENCIA: Record<TipoAparencia, string> = {
+    [TipoAparencia.Corpo]: "Roupas",
+    [TipoAparencia.Rosto]: "Rostos",
+    [TipoAparencia.Oculos]: "Óculos",
+    [TipoAparencia.Chapeu]: "Chapéus",
+    [TipoAparencia.Jaqueta]: "Jaquetas",
+    [TipoAparencia.Detalhes]: "Detalhes"
+};
+
+export const TITULO_TAMANHO_ABELHA: Record<TamanhoAbelha, string> = {
+    [TamanhoAbelha.PequenaMagra]: "Pequena Magrinha",
+    [TamanhoAbelha.AltaMagra]: "Alta Magrinha",
+    [TamanhoAbelha.PequenaGorda]: "Pequena Fofa",
+    [TamanhoAbelha.AltaGorda]: "Alta Fofa"
+};
+
+/**
+ * As imagens de aparência são spritesheets de 32x160px (5 blocos de 32x32):
+ * o bloco 0 é o ícone, os blocos 1-4 são a aparência aplicada em cada TamanhoAbelha.
+ * Recorta sempre o bloco do ícone (offset fixo em LOCALIZACAO_ICONE_APARENCIA_IMAGEM).
+ */
+export function estiloIconeAparencia(aparencia: Aparencia) {
+    return {
+        width: `${TAMANHO_APARENCIA_ABELHA}px`,
+        height: `${TAMANHO_APARENCIA_ABELHA}px`,
+        backgroundImage: `url('${aparencia.urlImagem}')`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: `${-LOCALIZACAO_ICONE_APARENCIA_IMAGEM}px 0px`,
+        backgroundSize: 'auto',
+        imageRendering: 'pixelated'
+    };
+}

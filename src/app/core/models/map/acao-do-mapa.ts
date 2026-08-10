@@ -16,6 +16,8 @@ export type AcaoDoMapaProps = {
     mapaDestinoId?: string;
     /** Desafio aberto quando `tipo` é `TipoAcao.Desafio`. */
     desafioId?: string;
+    /** Exibe o título embaixo da ação no mapa. Padrão: `false`. */
+    mostrarLabel?: boolean;
 }
 
 export class AcaoDoMapa {
@@ -31,6 +33,7 @@ export class AcaoDoMapa {
     get tipoDesafio() { return this.props.tipoDesafio; }
     get mapaDestinoId() { return this.props.mapaDestinoId; }
     get desafioId() { return this.props.desafioId; }
+    get mostrarLabel() { return this.props.mostrarLabel ?? false; }
 
     public posicaoEmTiles() {
         return {
@@ -45,7 +48,7 @@ export class AcaoDoMapa {
             x: this.posicaoEmTiles().x,
             y: this.posicaoEmTiles().y,
             color: '#fff',
-            label: this.titulo
+            label: this.mostrarLabel ? this.titulo : undefined
         }
     }
     

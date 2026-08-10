@@ -9,6 +9,7 @@ import { MermaidComponent } from "../../../ui/mermaid/mermaid.component";
 import { LicaoService } from "./licao.service";
 import { BuscarLicaoService } from "./buscar-licao.service";
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
+import { ScreenService } from "../../../services/tela/screen.service";
 
 type BlocoLicao =
     | { tipo: 'codigo'; linguagem: string; conteudo: string }
@@ -36,7 +37,7 @@ type BlocoLicao =
                     @if (bloco.tipo === 'codigo' && bloco.linguagem === 'mermaid') {
                         <bee-mermaid class="shrink-0" [diagrama]="bloco.conteudo" />
                     } @else if (bloco.tipo === 'codigo') {
-                        <bee-code-editor class="w-full h-48 shrink-0" [value]="bloco.conteudo" [language]="bloco.linguagem" [readOnly]="true" />
+                        <bee-code-editor class="w-full shrink-0" [class]="alturaCodigo()" [value]="bloco.conteudo" [language]="bloco.linguagem" [readOnly]="true" />
                     } @else {
                         <div class="licao-conteudo" [innerHTML]="bloco.conteudo"></div>
                     }
@@ -45,36 +46,39 @@ type BlocoLicao =
 
                 <!-- Resultado final -->
                 @if (concluida()) {
-                    <div class="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
+                    <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
                         <p class="font-bold text-lg">Lição concluída! 🏆</p>
                     </div>
                 }
             </div>
 
-            <!-- Botão de ação principal -->
-            <button
-                (click)="concluir()"
-                bee-button
-                size="large"
-                class="w-full text-center shrink-0"
-                [disabled]="!chegouAoFim() || concluida() || solicitando()">
-                @if (solicitando()) {
-                    <bee-icon icon="loader-2" class="animate-spin" />
-                    Concluindo...
-                } @else if (concluida()) {
-                    <bee-icon icon="check-circle" />
-                    Concluído
-                } @else if (chegouAoFim()) {
-                    <bee-icon icon="check" />
-                    Concluir
-                } @else {
-                    Continue lendo até o final...
-                }
-            </button>
+            <!-- Botão de ação principal — só aparece quando dá pra fazer algo -->
+            @if (mostrarBotaoAcao()) {
+                <button
+                    (click)="acao()"
+                    bee-button
+                    size="large"
+                    class="w-full text-center shrink-0"
+                    [disabled]="solicitando()">
+                    @if (solicitando()) {
+                        <bee-icon icon="loader-2" class="animate-spin" />
+                        Concluindo...
+                    } @else if (concluida()) {
+                        <bee-icon icon="check-circle" />
+                        Voltar ao mapa
+                    } @else {
+                        <bee-icon icon="check" />
+                        Concluir
+                    }
+                </button>
+            }
         </bee-card-content>
     </bee-card>
     `,
-    host: { class: 'p-4 pattern-background h-screen w-screen flex' },
+    host: {
+        class: 'pattern-background h-screen w-screen flex',
+        '[class]': 'hostPadding()'
+    },
     providers: [BuscarLicaoService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
@@ -85,6 +89,7 @@ export class DesafioLicaoComponent {
     private readonly buscarService = inject(BuscarLicaoService);
     private readonly desafioAtualService = inject(DesafioAtualService);
     private readonly sanitizer = inject(DomSanitizer);
+    private readonly screenService = inject(ScreenService);
     readonly licaoService = inject(LicaoService);
 
     private readonly containerRef = viewChild('conteudoScroll', { read: ElementRef<HTMLElement> });
@@ -96,6 +101,16 @@ export class DesafioLicaoComponent {
     readonly concluida = computed(() => this.licaoService.concluida());
     readonly solicitando = computed(() => this.licaoService.solicitando());
     readonly chegouAoFim = signal(false);
+
+    /** O botão só aparece quando dá pra fazer algo (concluir ou voltar ao mapa) — senão fica omitido em vez de desabilitado. */
+    readonly mostrarBotaoAcao = computed(() => {
+        if (this.concluida()) return true;
+        return this.chegouAoFim() || this.solicitando();
+    });
+
+    /** No mobile a tela tem menos espaço sobrando; menos padding e blocos de código mais altos (o wrap de linha ocupa mais altura). */
+    protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
+    protected readonly alturaCodigo = computed(() => this.screenService.isMobile() ? 'h-72' : 'h-56');
 
     readonly blocos = computed<BlocoLicao[]>(() => {
         const markdown = this.licaoService.licao()?.conteudoMarkdown;
@@ -136,7 +151,11 @@ export class DesafioLicaoComponent {
         inject(DestroyRef).onDestroy(() => this.observer?.disconnect());
     }
 
-    concluir(): void {
+    acao(): void {
+        if (this.concluida()) {
+            this.fechar();
+            return;
+        }
         if (!this.chegouAoFim()) return;
         this.licaoService.concluir();
     }

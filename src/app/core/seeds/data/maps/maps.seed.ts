@@ -3,63 +3,78 @@ import { Mapa } from "../../../models/map/mapa";
 import { TipoAcao } from "../../../models/map/tipo-acao";
 import { TipoDesafio } from "../../../models/desafios/tipo-desafio";
 import { TipoMapa } from "../../../models/map/tipo-mapa";
+import { ID_MAPA_INICIAL, MAPA_MUNDI } from "./mapa-mundi";
 
-/** Mapa em que a abelha começa (usado por LocalizacaoAtualService). */
-export const ID_MAPA_INICIAL = "mundi";
+import { CONTINENTE_CRIACIONAL } from "./continentes/criacaional";
+import { CONTINENTE_COMPORTAMENTAL } from "./continentes/comportamental";
+import { CONTINENTE_ESTRUTURAL } from "./continentes/estrutural";
+
+import { REGIAO_FACTORY } from "./regioes/criacionais/factory";
+import { REGIAO_PROTOTYPE } from "./regioes/criacionais/prototype";
+import { REGIAO_BUILDER } from "./regioes/criacionais/builder";
+import { REGIAO_SINGLETON } from "./regioes/criacionais/singleton";
+import { REGIAO_ABSTRACT_FACTORY } from "./regioes/criacionais/abstract-factory";
+
+import { REGIAO_CHAIN_OF_RESPONSIBILITY } from "./regioes/comportamentais/chain-of-responsibility";
+import { REGIAO_COMMAND } from "./regioes/comportamentais/command";
+import { REGIAO_INTERPRETER } from "./regioes/comportamentais/interpreter";
+import { REGIAO_ITERATOR } from "./regioes/comportamentais/iterator";
+import { REGIAO_MEDIATOR } from "./regioes/comportamentais/mediator";
+import { REGIAO_MEMENTO } from "./regioes/comportamentais/memento";
+import { REGIAO_OBSERVER } from "./regioes/comportamentais/observer";
+import { REGIAO_STATE } from "./regioes/comportamentais/state";
+import { REGIAO_STRATEGY } from "./regioes/comportamentais/strategy";
+import { REGIAO_TEMPLATE_METHOD } from "./regioes/comportamentais/template-method";
+import { REGIAO_VISITOR } from "./regioes/comportamentais/visitor";
+
+import { REGIAO_ADAPTER } from "./regioes/estruturais/adapter";
+import { REGIAO_BRIDGE } from "./regioes/estruturais/bridge";
+import { REGIAO_COMPOSITE } from "./regioes/estruturais/composite";
+import { REGIAO_DECORATOR } from "./regioes/estruturais/decorator";
+import { REGIAO_FACADE } from "./regioes/estruturais/facade";
+import { REGIAO_FLYWEIGHT } from "./regioes/estruturais/flyweight";
+import { REGIAO_PROXY } from "./regioes/estruturais/proxy";
+
 
 export const MapsSeeds = [
-    // Mundi: contém 1 aeroporto por continente. Só o continente Criacional está construído por enquanto;
-    // os outros 2 (Comportamental, Estrutural) entram quando houver mapa/arte pra eles.
-    new Mapa({
-        id: ID_MAPA_INICIAL,
-        nome: "Mundi",
-        tipo: TipoMapa.Mundi,
-        padrao: "Mundo",
-        url: "/maps/mapa1.webp",
-        tamanhoEmPx: {
-            x: 320,
-            y: 320
-        },
-        acoes: [
-            new AcaoDoMapa({
-                id: "m-aeroporto-criacional",
-                titulo: "Continente Criacional",
-                tipo: TipoAcao.Aviao,
-                mapaDestinoId: "continental-criacional",
-                posicaoEmPx: { x: 150, y: 150 }
-            })
-        ]
-    }),
+    // Mundi: contém 1 aeroporto por continente.
+    MAPA_MUNDI,
 
-    // Continental (Criacional): N paradas de ônibus (1 por região do continente) + 1 avião de volta ao Mundi.
-    new Mapa({
-        id: "continental-criacional",
-        nome: "Continente Criacional",
-        tipo: TipoMapa.Continental,
-        padrao: "Criacional",
-        url: "/maps/mapa1.webp",
-        tamanhoEmPx: {
-            x: 320,
-            y: 320
-        },
-        acoes: [
-            new AcaoDoMapa({
-                id: "cc-onibus-regional",
-                titulo: "Região Criacional",
-                tipo: TipoAcao.Onibus,
-                mapaDestinoId: "regional-criacional",
-                posicaoEmPx: { x: 100, y: 200 }
-            }),
+    // ── Continentes: N paradas de ônibus (1 por região) + 1 avião de volta ao Mundi. ──────────
+    CONTINENTE_CRIACIONAL,
+    CONTINENTE_COMPORTAMENTAL,
+    CONTINENTE_ESTRUTURAL,
 
-            new AcaoDoMapa({
-                id: "cc-aviao-mundi",
-                titulo: "Mundi",
-                tipo: TipoAcao.Aviao,
-                mapaDestinoId: ID_MAPA_INICIAL,
-                posicaoEmPx: { x: 250, y: 60 }
-            })
-        ]
-    }),
+    // ── Regiões Criacionais ────────────────────────────────────────────────────────────────
+    // Factory Method, Prototype e Builder têm os desafios do padrão implementados;
+    // Singleton e Abstract Factory por enquanto só têm a ilha navegável (sem fases ainda).
+    REGIAO_FACTORY,
+    REGIAO_PROTOTYPE,
+    REGIAO_BUILDER,
+    REGIAO_SINGLETON,
+    REGIAO_ABSTRACT_FACTORY,
+
+    // ── Regiões Comportamentais (só ilha navegável, sem fases ainda) ──────────────────────────
+    REGIAO_CHAIN_OF_RESPONSIBILITY,
+    REGIAO_COMMAND,
+    REGIAO_INTERPRETER,
+    REGIAO_ITERATOR,
+    REGIAO_MEDIATOR,
+    REGIAO_MEMENTO,
+    REGIAO_OBSERVER,
+    REGIAO_STATE,
+    REGIAO_STRATEGY,
+    REGIAO_TEMPLATE_METHOD,
+    REGIAO_VISITOR,
+
+    // ── Regiões Estruturais (só ilha navegável, sem fases ainda) ───────────────────────────────
+    REGIAO_ADAPTER,
+    REGIAO_BRIDGE,
+    REGIAO_COMPOSITE,
+    REGIAO_DECORATOR,
+    REGIAO_FACADE,
+    REGIAO_FLYWEIGHT,
+    REGIAO_PROXY,
 
     // Regional (Criacional): os desafios do padrão + 1 ônibus de volta ao Continental.
     new Mapa({

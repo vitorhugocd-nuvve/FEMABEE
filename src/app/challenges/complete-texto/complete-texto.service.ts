@@ -22,7 +22,12 @@ export class CompleteTextoService extends DesafioBaseService {
 
     public readonly podeAvancar = computed(() => this._desafio()?.podeAvancar ?? false);
     public readonly podeVoltar  = computed(() => this._desafio()?.podeVoltar  ?? false);
-    public readonly concluido   = computed(() => this._desafio()?.concluido   ?? false);
+
+    /** Concluído = não há mais textos à frente e o texto atual já foi respondido */
+    public readonly concluido = computed(() => {
+        if (!this._desafio()) return false;
+        return !this.podeAvancar() && (this.stateAtual()?.concluido ?? false);
+    });
 
     public readonly progressoReal = computed(() => {
         const states = this._states();
@@ -52,15 +57,17 @@ export class CompleteTextoService extends DesafioBaseService {
     }
 
     public avancar(): void {
-        this._desafio()?.avancar();
+        const atual = this._desafio();
+        if (!atual) return;
+        this._desafio.set(atual.avancar());
         this._feedback.set(undefined);
-        this._desafio.update(d => d); // força reatividade
     }
 
     public voltar(): void {
-        this._desafio()?.voltar();
+        const atual = this._desafio();
+        if (!atual) return;
+        this._desafio.set(atual.voltar());
         this._feedback.set(undefined);
-        this._desafio.update(d => d);
     }
 
     /**
@@ -79,10 +86,11 @@ export class CompleteTextoService extends DesafioBaseService {
             correto ? 'correto' : 'incorreto'
         );
 
-        state.marcarComo(opcoesSelecionadas, correto);
+        const novoState = state.comResultado(opcoesSelecionadas, correto);
+        this._states.update(states => states.map(s => s === state ? novoState : s));
+
         this._feedback.set(resultado);
         this._progresso.set(this.progressoReal());
-        this._states.update(s => [...s]); // força reatividade
         return resultado;
     }
 

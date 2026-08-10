@@ -10,6 +10,7 @@ import { NiveisConcluidosAbelhaService } from "../../core/progresso/niveis-concl
 import { OnibusObtidoService } from "../../core/progresso/onibus-obtido.service";
 import { AviaoObtidoService } from "../../core/progresso/aviao-obtido.service";
 import { TAMANHO_TILE } from "../../core/constants/tile";
+import { SomService } from "../../../services/som/som.service";
 import {
     CAMINHO_TILESET_UTILITARIOS,
     COLUNAS_TILESET_UTILITARIOS,
@@ -22,9 +23,9 @@ import {
 @Component({
     selector: 'app-acao',
     template: `
-    <bee-map-action [x]="mapActionData().x" [y]="mapActionData().y">
+    <bee-map-action [x]="mapActionData().x" [y]="mapActionData().y" [label]="mapActionData().label">
         <div>
-            <div (click)="mobileAcaoSelecionadaService.selecionar(acao())" class="tile-icon cursor-pointer hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px" [ngStyle]="tileStyle()"></div>
+            <div (click)="selecionar()" class="tile-icon cursor-pointer hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px" [ngStyle]="tileStyle()"></div>
             <!-- @if (screenService.isMobile()) {
             } @else {
                 <div zPopover [zContent]="popoverContent" class="tile-icon cursor-pointer hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px" [ngStyle]="tileStyle()"></div>
@@ -45,6 +46,7 @@ export class AcaoComponent {
     private readonly niveisConcluidosAbelhaService = inject(NiveisConcluidosAbelhaService);
     private readonly onibusObtidoService = inject(OnibusObtidoService);
     private readonly aviaoObtidoService = inject(AviaoObtidoService);
+    private readonly somService = inject(SomService);
 
     readonly isOpen = signal(false);
     readonly acao = input.required<AcaoDoMapa>();
@@ -81,4 +83,9 @@ export class AcaoComponent {
             backgroundSize: 'auto',
         };
     });
+
+    protected selecionar() {
+        this.somService.selecionar();
+        this.mobileAcaoSelecionadaService.selecionar(this.acao());
+    }
 }

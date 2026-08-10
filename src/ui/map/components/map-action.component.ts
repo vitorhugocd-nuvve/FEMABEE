@@ -1,14 +1,14 @@
 import {
-    Component,
-    inject,
-    input,
-    output,
-    computed,
-    signal,
-    afterRenderEffect,
-    ElementRef,
-    viewChild,
-    ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  output,
+  computed,
+  signal,
+  afterRenderEffect,
+  ElementRef,
+  viewChild,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgStyle, NgClass } from '@angular/common';
 import { MapTileService } from '../services/map-tile.service';
@@ -27,11 +27,11 @@ import { MapTileService } from '../services/map-tile.service';
  *   </bee-map-action>
  */
 @Component({
-    selector: 'bee-map-action',
-    standalone: true,
-    imports: [NgStyle, NgClass],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    template: `
+  selector: 'bee-map-action',
+  standalone: true,
+  imports: [NgStyle, NgClass],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
     <div
       class="map-action"
       [ngStyle]="containerStyle()"
@@ -63,7 +63,7 @@ import { MapTileService } from '../services/map-tile.service';
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     .map-action {
       position: absolute;
       display: flex;
@@ -118,7 +118,6 @@ import { MapTileService } from '../services/map-tile.service';
       pointer-events: none;
       margin-top: 4px;
       white-space: nowrap;
-      border-radius: 3px;
       background: rgba(0,0,0,.75);
       padding: 2px 6px;
       font-size: 10px;
@@ -129,79 +128,79 @@ import { MapTileService } from '../services/map-tile.service';
   `],
 })
 export class BeeMapActionComponent {
-    private readonly tileService = inject(MapTileService);
+  private readonly tileService = inject(MapTileService);
 
-    // ── Inputs ────────────────────────────────────────────────────────────
-    readonly x = input.required<number>();
-    readonly y = input.required<number>();
-    readonly label = input<string | undefined>(undefined);
-    readonly color = input<string>('var(--color-primary, #3b82f6)');
-    readonly anchor = input<'tile' | 'center'>('center');
-    readonly className = input<string>('');
-    readonly interactive = input<boolean>(true);
+  // ── Inputs ────────────────────────────────────────────────────────────
+  readonly x = input.required<number>();
+  readonly y = input.required<number>();
+  readonly label = input<string | undefined>(undefined);
+  readonly color = input<string>('var(--color-primary, #3b82f6)');
+  readonly anchor = input<'tile' | 'center'>('center');
+  readonly className = input<string>('');
+  readonly interactive = input<boolean>(true);
 
-    // ── Outputs ───────────────────────────────────────────────────────────
-    readonly actionClick = output<void>();
+  // ── Outputs ───────────────────────────────────────────────────────────
+  readonly actionClick = output<void>();
 
-    // ── Slot detection ────────────────────────────────────────────────────
-    private readonly slotWrapper = viewChild<ElementRef<HTMLElement>>('slotWrapper');
-    readonly hasProjectedContent = signal(false);
+  // ── Slot detection ────────────────────────────────────────────────────
+  private readonly slotWrapper = viewChild<ElementRef<HTMLElement>>('slotWrapper');
+  readonly hasProjectedContent = signal(false);
 
-    constructor() {
-        afterRenderEffect(() => {
-            const wrapper = this.slotWrapper()?.nativeElement;
-            if (!wrapper) return;
+  constructor() {
+    afterRenderEffect(() => {
+      const wrapper = this.slotWrapper()?.nativeElement;
+      if (!wrapper) return;
 
-            // Filtra nós de texto vazios (whitespace entre tags) e comentários
-            const hasContent = Array.from(wrapper.childNodes).some(
-                node =>
-                    node.nodeType === Node.ELEMENT_NODE ||
-                    (node.nodeType === Node.TEXT_NODE && !!node.textContent?.trim()),
-            );
+      // Filtra nós de texto vazios (whitespace entre tags) e comentários
+      const hasContent = Array.from(wrapper.childNodes).some(
+        node =>
+          node.nodeType === Node.ELEMENT_NODE ||
+          (node.nodeType === Node.TEXT_NODE && !!node.textContent?.trim()),
+      );
 
-            this.hasProjectedContent.set(hasContent);
-        });
-    }
-
-    // ── Computed ─────────────────────────────────────────────────────────
-    protected readonly hasClick = computed(() => this.interactive());
-
-    protected readonly containerStyle = computed(() => {
-        const { width, height } = this.tileService.tileSize();
-        const { left, top } = this.tileService.tileToPixel(this.x(), this.y());
-        const offsetX = this.anchor() === 'center' ? width / 2 : 0;
-        const offsetY = this.anchor() === 'center' ? height / 2 : 0;
-
-        return {
-            left: `${left + offsetX}px`,
-            top:  `${top  + offsetY}px`,
-        };
+      this.hasProjectedContent.set(hasContent);
     });
+  }
 
-    /** Estilos do botão no modo padrão (dot colorido, tamanho baseado no tile). */
-    protected readonly buttonStyle = computed(() => {
-        const { width, height } = this.tileService.tileSize();
-        return {
-            width:           `${Math.max(width  * 0.8, 14)}px`,
-            height:          `${Math.max(height * 0.8, 14)}px`,
-            backgroundColor: this.color(),
-        };
-    });
+  // ── Computed ─────────────────────────────────────────────────────────
+  protected readonly hasClick = computed(() => this.interactive());
 
-    /** Estilos do botão no modo customizado (sem dimensões impostas). */
-    protected readonly customButtonStyle = computed(() => ({
-        backgroundColor: 'transparent',
-        width:  'auto',
-        height: 'auto',
-    }));
+  protected readonly containerStyle = computed(() => {
+    const { width, height } = this.tileService.tileSize();
+    const { left, top } = this.tileService.tileToPixel(this.x(), this.y());
+    const offsetX = this.anchor() === 'center' ? width / 2 : 0;
+    const offsetY = this.anchor() === 'center' ? height / 2 : 0;
 
-    protected readonly buttonClass = computed(() => ({
-        'map-action__btn':              true,
-        'map-action__btn--interactive': this.hasClick(),
-        'map-action__btn--custom':      this.hasProjectedContent(),
-    }));
+    return {
+      left: `${left + offsetX}px`,
+      top: `${top + offsetY}px`,
+    };
+  });
 
-    onClick(): void {
-        this.actionClick.emit();
-    }
+  /** Estilos do botão no modo padrão (dot colorido, tamanho baseado no tile). */
+  protected readonly buttonStyle = computed(() => {
+    const { width, height } = this.tileService.tileSize();
+    return {
+      width: `${Math.max(width * 0.8, 14)}px`,
+      height: `${Math.max(height * 0.8, 14)}px`,
+      backgroundColor: this.color(),
+    };
+  });
+
+  /** Estilos do botão no modo customizado (sem dimensões impostas). */
+  protected readonly customButtonStyle = computed(() => ({
+    backgroundColor: 'transparent',
+    width: 'auto',
+    height: 'auto',
+  }));
+
+  protected readonly buttonClass = computed(() => ({
+    'map-action__btn': true,
+    'map-action__btn--interactive': this.hasClick(),
+    'map-action__btn--custom': this.hasProjectedContent(),
+  }));
+
+  onClick(): void {
+    this.actionClick.emit();
+  }
 }

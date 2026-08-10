@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from "@angular/core";
 import { NgClass } from "@angular/common";
 import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
@@ -8,11 +8,15 @@ import { LargeComponent } from "../../../ui/typography/large.component";
 import { TextComponent } from "../../../ui/typography/text.component";
 import { BottomDrawerComponent } from "../../../ui/bottom-drawer/bottom-drawer.component";
 import { CodeEditorComponent } from "../../../ui/code-editor/code-editor.component";
+import { IndicatorComponent } from "../../../ui/indicator/indicator.component";
+import { Indication } from "../../../ui/indicator/indication";
 import { EncontreBugService } from "./encontre-bug.service";
 import { BuscarEncontreBugService } from "./buscar-encontre-bug.service";
 import { Arquivo } from "../../core/models/desafios/encontre-bug/arquivo";
 import { RespostaBug } from "../../core/models/desafios/encontre-bug/resposta-bug";
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
+import { SomService } from "../../../services/som/som.service";
+import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
 
 @Component({
     selector: 'app-desafio-encontre-bug',
@@ -108,6 +112,7 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
     <!-- Drawer: escolher resposta / ver feedback -->
     <bee-bottom-drawer [(open)]="respostaDrawerAberto" [title]="tituloRespostaDrawer()">
+        <bee-indicator #resultadoIndicator class="w-full!" />
         @if (!jaRespondeu()) {
             <div class="flex flex-col gap-2">
                 @for (resposta of respostas(); track resposta.id) {
@@ -143,7 +148,7 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
     host: { class: 'p-4 pattern-background h-screen w-screen flex' },
     providers: [BuscarEncontreBugService],
     imports: [
-        BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
+        BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent, IndicatorComponent,
         IconComponent, ButtonComponent, ProgressbarComponent, LargeComponent, TextComponent,
         BottomDrawerComponent, CodeEditorComponent, NgClass
     ]
@@ -151,6 +156,9 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 export class DesafioEncontreBugComponent {
     private readonly buscarService = inject(BuscarEncontreBugService);
     private readonly desafioAtualService = inject(DesafioAtualService);
+    private readonly somService = inject(SomService);
+    private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
+    private readonly resultadoIndicator = viewChild<IndicatorComponent>('resultadoIndicator');
     readonly encontreBugService = inject(EncontreBugService);
 
     /** Índice do arquivo em exibição, dentro da pergunta atual */
@@ -197,12 +205,23 @@ export class DesafioEncontreBugComponent {
 
     async responder(respostaId: string): Promise<void> {
         if (this.jaRespondeu() || this.solicitando()) return;
-        await this.encontreBugService.responder(respostaId);
+        const resultado = await this.encontreBugService.responder(respostaId);
+
+        if (resultado === 'correto') {
+            this.somService.sucesso();
+            this.resultadoIndicator()?.show(new Indication({ message: 'Boa! Você encontrou o problema.', severity: 'success', ttlInMs: 2000 }));
+        } else if (resultado === 'incorreto') {
+            this.somService.erro();
+            this.sequenciaSemErrarService.registrarErro();
+            this.resultadoIndicator()?.show(new Indication({ message: 'Não foi dessa vez.', severity: 'danger', ttlInMs: 2000 }));
+        }
     }
 
     fecharDrawerResposta(): void {
         this.respostaDrawerAberto.set(false);
-        if (!this.concluidoDesafio()) {
+        if (this.concluidoDesafio()) {
+            this.fechar();
+        } else {
             this.encontreBugService.avancar();
         }
     }

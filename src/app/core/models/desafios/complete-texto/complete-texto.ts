@@ -13,9 +13,10 @@ export type CompleteTextoProps = {
 }
 
 export class CompleteTexto implements Desafio {
-    private indiceAtual = 0;
-
-    constructor(private props: CompleteTextoProps) {}
+    constructor(
+        private props: CompleteTextoProps,
+        private readonly indiceAtual: number = 0,
+    ) {}
 
     get id() { return this.props.id; }
     get textos(): Texto[] { return this.props.textos; }
@@ -39,19 +40,12 @@ export class CompleteTexto implements Desafio {
         return this.indiceAtual > 0;
     }
 
-    get concluido(): boolean {
-        return this.indiceAtual >= this.textos.length;
+    /** Retorna uma nova instância apontando para o próximo texto — nunca muta a atual */
+    public avancar(): CompleteTexto {
+        return this.podeAvancar ? new CompleteTexto(this.props, this.indiceAtual + 1) : this;
     }
 
-    public avancar(): void {
-        if (this.podeAvancar) this.indiceAtual++;
-    }
-
-    public voltar(): void {
-        if (this.podeVoltar) this.indiceAtual--;
-    }
-
-    public reset(): void {
-        this.indiceAtual = 0;
+    public voltar(): CompleteTexto {
+        return this.podeVoltar ? new CompleteTexto(this.props, this.indiceAtual - 1) : this;
     }
 }

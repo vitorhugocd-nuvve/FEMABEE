@@ -1,4 +1,5 @@
-import { booleanAttribute, Component, computed, Directive, input } from "@angular/core";
+import { booleanAttribute, Component, computed, Directive, inject, input } from "@angular/core";
+import { SomService } from "../../services/som/som.service";
 
 @Directive({
     selector: '[bee-button],bee-button',
@@ -23,10 +24,13 @@ import { booleanAttribute, Component, computed, Directive, input } from "@angula
             disabled:translate-y-0
         `,
         '[class.w-full]': 'fluid()',
-        '[class]': 'computedSize()'
+        '[class]': 'computedSize()',
+        '(click)': 'somService.clique()'
     }
 })
 export class ButtonComponent {
+    protected readonly somService = inject(SomService);
+
     readonly fluid = input(false, {transform: booleanAttribute})
 
     readonly size = input<'small' | 'medium' | 'large'>('medium');

@@ -1,14 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, effect, inject, viewChild } from "@angular/core";
 import { NgClass } from "@angular/common";
 import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
 import { ProgressbarComponent } from "../../../ui/progressbar/progressbar.component";
 import { CodeDiffComponent } from "../../../ui/code-diff/code-diff.component";
+import { IndicatorComponent } from "../../../ui/indicator/indicator.component";
+import { Indication } from "../../../ui/indicator/indication";
 import { CompleteCodigoService } from "./complete-codigo.service";
 import { BuscarCompleteCodigoService } from "./buscar-complete-codigo.service";
 import { Trecho } from "../../core/models/desafios/complete-codigo/trecho";
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
+import { SomService } from "../../../services/som/som.service";
+import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
 
 @Component({
     selector: 'app-desafio-complete-codigo',
@@ -71,19 +75,7 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
                     }
                 </div>
 
-                <!-- Feedback -->
-                @if (feedback()) {
-                    <div
-                        class="rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2 transition-all duration-300"
-                        [ngClass]="feedback() === 'correto'
-                            ? 'bg-green-500/15 text-green-600 border border-green-500/30'
-                            : 'bg-red-500/15 text-red-600 border border-red-500/30'">
-                        <bee-icon [icon]="feedback() === 'correto' ? 'check-circle' : 'x-circle'" />
-                        {{ feedback() === 'correto'
-                            ? '🎉 Perfeito! Esse é o trecho correto!'
-                            : '❌ Esse trecho não resolve o problema. Tente novamente!' }}
-                    </div>
-                }
+                <bee-indicator #indicator class="w-full!" />
 
                 @if (feedback()) {
                     <bee-card class="w-full! h-fit! p-2" direction="down">
@@ -93,7 +85,7 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 
                 <!-- Resultado final -->
                 @if (concluidoDesafio()) {
-                    <div class="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
+                    <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
                         <p class="font-bold text-lg">Desafio concluído! 🏆</p>
                         <p class="text-sm text-muted-foreground">
                             Você completou <strong>{{ totalCorretos() }}</strong> de <strong>{{ totalCodigos() }}</strong> códigos corretamente.
@@ -102,30 +94,32 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
                 }
             </div>
 
-            <!-- Botão de ação principal -->
-            <button
-                (click)="acao()"
-                bee-button
-                size="large"
-                class="w-full text-center"
-                [disabled]="botaoDesabilitado()">
-                @if (solicitando()) {
-                    <bee-icon icon="loader-2" class="animate-spin" />
-                    Verificando...
-                } @else if (concluidoAtual() && concluidoDesafio()) {
-                    <bee-icon icon="check-circle" />
-                    Concluído
-                } @else if (concluidoAtual()) {
-                    Próximo
-                    <bee-icon icon="arrow-right" />
-                } @else if (feedback() === 'incorreto') {
-                    Tentar novamente
-                    <bee-icon icon="refresh-cw" />
-                } @else {
-                    <bee-icon icon="send" />
-                    Verificar
-                }
-            </button>
+            <!-- Botão de ação principal — só aparece quando dá pra fazer algo -->
+            @if (mostrarBotaoAcao()) {
+                <button
+                    (click)="acao()"
+                    bee-button
+                    size="large"
+                    class="w-full text-center"
+                    [disabled]="solicitando()">
+                    @if (solicitando()) {
+                        <bee-icon icon="loader-2" class="animate-spin" />
+                        Verificando...
+                    } @else if (concluidoAtual() && concluidoDesafio()) {
+                        <bee-icon icon="check-circle" />
+                        Voltar ao mapa
+                    } @else if (concluidoAtual()) {
+                        Próximo
+                        <bee-icon icon="arrow-right" />
+                    } @else if (feedback() === 'incorreto') {
+                        Tentar novamente
+                        <bee-icon icon="refresh-cw" />
+                    } @else {
+                        <bee-icon icon="send" />
+                        Verificar
+                    }
+                </button>
+            }
         </bee-card-content>
     </bee-card>
     `,
@@ -133,12 +127,15 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
     providers: [BuscarCompleteCodigoService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
-        IconComponent, ButtonComponent, ProgressbarComponent, CodeDiffComponent, NgClass
+        IconComponent, ButtonComponent, ProgressbarComponent, CodeDiffComponent, NgClass, IndicatorComponent
     ]
 })
 export class DesafioCompleteCodigoComponent {
     private readonly buscarService = inject(BuscarCompleteCodigoService);
     private readonly desafioAtualService = inject(DesafioAtualService);
+    private readonly somService = inject(SomService);
+    private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
+    private readonly indicator = viewChild<IndicatorComponent>('indicator');
     readonly completeCodigoService = inject(CompleteCodigoService);
 
     readonly padrao        = computed(() => this.completeCodigoService.desafio()?.padrao);
@@ -166,11 +163,10 @@ export class DesafioCompleteCodigoComponent {
     readonly codigoOriginal   = computed(() => this.codigoAtualModel()?.montarCodigo() ?? '');
     readonly codigoModificado = computed(() => this.codigoAtualModel()?.montarCodigo(this.trechoSelecionado()) ?? '');
 
-    readonly botaoDesabilitado = computed(() => {
-        if (this.solicitando()) return true;
-        if (this.concluidoAtual()) return this.concluidoDesafio();
-        if (this.feedback() === 'incorreto') return false;
-        return !this.selecaoAtual();
+    /** O botão só aparece quando há algo a fazer (verificar, avançar ou voltar ao mapa) — senão fica omitido em vez de desabilitado. */
+    readonly mostrarBotaoAcao = computed(() => {
+        if (this.solicitando() || this.concluidoAtual() || this.feedback() === 'incorreto') return true;
+        return !!this.selecaoAtual();
     });
 
     private readonly _carregarDados = effect(() => {
@@ -200,7 +196,10 @@ export class DesafioCompleteCodigoComponent {
         if (this.solicitando()) return;
 
         if (this.concluidoAtual()) {
-            if (this.concluidoDesafio()) return;
+            if (this.concluidoDesafio()) {
+                this.fechar();
+                return;
+            }
             this.completeCodigoService.avancar();
             return;
         }
@@ -211,7 +210,16 @@ export class DesafioCompleteCodigoComponent {
         }
 
         if (!this.selecaoAtual()) return;
-        await this.completeCodigoService.validar();
+        const resultado = await this.completeCodigoService.validar();
+
+        if (resultado === 'correto') {
+            this.somService.sucesso();
+            this.indicator()?.show(new Indication({ message: 'Perfeito! Esse é o trecho correto.', severity: 'success', ttlInMs: 2000 }));
+        } else if (resultado === 'incorreto') {
+            this.somService.erro();
+            this.sequenciaSemErrarService.registrarErro();
+            this.indicator()?.show(new Indication({ message: 'Esse trecho não resolve o problema. Tente novamente!', severity: 'danger', ttlInMs: 2000 }));
+        }
     }
 
     voltar(): void {

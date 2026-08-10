@@ -5,11 +5,13 @@ import {
     OnDestroy,
     ViewChild,
     effect,
+    inject,
     input,
     signal,
 } from '@angular/core';
 import loader, { Monaco } from '@monaco-editor/loader';
 import type { editor } from 'monaco-editor';
+import { ScreenService } from '../../services/tela/screen.service';
 
 /**
  * Editor de código somente leitura baseado no Monaco Editor.
@@ -59,6 +61,8 @@ export class CodeEditorComponent implements OnDestroy {
 
     protected readonly carregando = signal(true);
 
+    private readonly screenService = inject(ScreenService);
+
     private monaco?: Monaco;
     private editor?: editor.IStandaloneCodeEditor;
     private readonly initPromise = loader.init();
@@ -72,8 +76,13 @@ export class CodeEditorComponent implements OnDestroy {
                 readOnly: this.readOnly(),
                 automaticLayout: true,
                 minimap: { enabled: false },
-                fontSize: 13,
+                fontSize: this.screenService.isMobile() ? 15 : 13,
+                lineNumbersMinChars: 3,
                 scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                wrappingIndent: 'indent',
+                padding: { top: 8, bottom: 8 },
+                scrollbar: { horizontal: 'hidden', alwaysConsumeMouseWheel: false },
                 theme: 'vs-dark',
             });
             this.carregando.set(false);
@@ -97,6 +106,10 @@ export class CodeEditorComponent implements OnDestroy {
 
         effect(() => {
             this.editor?.updateOptions({ readOnly: this.readOnly() });
+        });
+
+        effect(() => {
+            this.editor?.updateOptions({ fontSize: this.screenService.isMobile() ? 15 : 13 });
         });
     }
 

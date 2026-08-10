@@ -60,7 +60,7 @@ export class DesafioActionComponent {
     protected jogar() {
         const desafioId = this.acao().desafioId;
         if (!desafioId) return;
-        this.desafioAtualService.abrir(desafioId);
+        this.desafioAtualService.abrir(this.acao().id, desafioId);
         this.mobileAcaoSelecionadaService.isOpen.set(false);
     }
 }
