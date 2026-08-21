@@ -1,14 +1,20 @@
-import { Component } from "@angular/core";
+import { Component, inject, viewChild } from "@angular/core";
+import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { Router } from "@angular/router";
+import { HttpErrorResponse } from "@angular/common/http";
 import { TextComponent } from "../../ui/typography/text.component";
 import { LinkComponent } from "../../ui/typography/link.component";
 import { IconComponent } from "../../ui/icon/icon.component";
 import { ButtonComponent } from "../../ui/button/button.component";
 import { LabelComponent } from "../../ui/label/label.component";
 import { FieldComponent } from "../../ui/field/field.component";
-import { CheckboxDirective } from "../../ui/checkbox/checkbox.component";
 import { TitleComponent } from "../../ui/typography/title.component";
 import { BeeCardContentComponent, BeeCardHeaderComponent, BeeCardComponent } from "../../ui/card/card.component";
 import { InputComponent } from "../../ui/input/input.component";
+import { IndicatorComponent } from "../../ui/indicator/indicator.component";
+import { Indication } from "../../ui/indicator/indication";
+import { AuthService } from "../core/auth/auth.service";
+import { SomService } from "../../services/som/som.service";
 
 @Component({
     selector: 'bee-login',
@@ -16,40 +22,28 @@ import { InputComponent } from "../../ui/input/input.component";
     <bee-card class="w-fit">
         <bee-card-header>
             /realizar_login
-            <button bee-button size="small">
+            <a bee-button size="small" href="/cadastro">
                 Cadastrar-se
                 <bee-icon icon="external-link" />
-            </button>
+            </a>
         </bee-card-header>
         <bee-card-content class="flex items-center justify-center">
-            <form class="w-full max-w-full md:max-w-xl flex justify-center flex-col gap-4">
+            <form class="w-full max-w-full md:max-w-xl flex justify-center flex-col gap-4" [formGroup]="form" (ngSubmit)="onSubmit()">
                 <bee-title> Eaí! Bem vindo. </bee-title>
-        
+
                 <bee-field>
-                    <label bee-label for="input-nome">Nome</label>
-                    <input type="text" bee-input id="input-nome" />
+                    <label bee-label for="input-email">Email</label>
+                    <input type="email" bee-input id="input-email" formControlName="email" />
                 </bee-field>
-        
+
                 <bee-field>
                     <label bee-label for="input-senha">Senha</label>
-                    <div class="flex flex-row gap-1">
-                        <input type="password" bee-input id="input-senha" />
-                        <button bee-button>
-                            <bee-icon icon="eye" />
-                        </button>
-                    </div>
+                    <input type="password" bee-input id="input-senha" formControlName="senha" />
                 </bee-field>
 
-                <div class="w-full flex flex-row justify-between">
-                    <bee-field class="flex items-center flex-row! gap-1">
-                        <input type="checkbox" bee-checkbox id="input-lembrar" />
-                        <label bee-label for="input-lembrar">Lembrar-me</label>
-                    </bee-field>
+                <bee-indicator class="w-full!" #indicator />
 
-                    <bee-link href="/">Esqueci a Senha</bee-link>
-                </div>
-        
-                <button fluid bee-button>
+                <button fluid bee-button type="submit" [disabled]="form.invalid || authService.solicitando()">
                     <bee-icon icon="login-sharp" />
                     Entrar
                 </button>
@@ -58,19 +52,47 @@ import { InputComponent } from "../../ui/input/input.component";
 
                 <div class="w-full flex flex-row items-center justify-center gap-2">
                     <bee-text>Não tem uma conta? </bee-text>
-                    <bee-link href="/" class="text-amber-600!">Cadastre-se</bee-link>
+                    <bee-link href="/cadastro" class="text-amber-600!">Cadastre-se</bee-link>
                 </div>
-
             </form>
-
         </bee-card-content>
     </bee-card>
 
     <img src="/login-image.png" class="w-1/2" alt="">
     `,
-    host: { 
-        class: 'h-screen w-screen flex flex-row gap-16 items-center justify-center pattern-background' 
+    host: {
+        class: 'h-screen w-screen flex flex-row gap-16 items-center justify-center pattern-background'
     },
-    imports: [TextComponent, LinkComponent, IconComponent, ButtonComponent, LabelComponent, FieldComponent, CheckboxDirective, TitleComponent, BeeCardContentComponent, BeeCardHeaderComponent, BeeCardComponent, InputComponent]
+    imports: [TextComponent, LinkComponent, IconComponent, ButtonComponent, LabelComponent, FieldComponent, TitleComponent, BeeCardContentComponent, BeeCardHeaderComponent, BeeCardComponent, InputComponent, ReactiveFormsModule, IndicatorComponent]
 })
-export class LoginComponent { }
+export class LoginComponent {
+    protected readonly authService = inject(AuthService);
+    private readonly somService = inject(SomService);
+    private readonly formBuilder = inject(FormBuilder);
+    private readonly router = inject(Router);
+
+    private readonly indicator = viewChild<IndicatorComponent>('indicator');
+
+    protected readonly form = this.formBuilder.nonNullable.group({
+        email: ['', [Validators.required, Validators.email]],
+        senha: ['', Validators.required],
+    });
+
+    protected async onSubmit(): Promise<void> {
+        if (this.form.invalid) return;
+
+        const { email, senha } = this.form.getRawValue();
+
+        try {
+            await this.authService.login({ email, senha });
+            this.somService.sucesso();
+            this.router.navigateByUrl('/abelhas');
+        } catch (erro) {
+            this.somService.erro();
+            const mensagem = erro instanceof HttpErrorResponse
+                ? (erro.error?.mensagem ?? 'Não foi possível entrar.')
+                : 'Não foi possível entrar.';
+            this.indicator()?.show(new Indication({ title: 'Ops!', message: mensagem, severity: 'danger', ttlInMs: 3000 }));
+        }
+    }
+}
