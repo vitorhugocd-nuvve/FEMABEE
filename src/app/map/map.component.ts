@@ -5,6 +5,7 @@ import { LoaderComponent } from "../../ui/loader/loader.component";
 import { CenterComponent } from "../../ui/center/center.component";
 import { TextComponent } from "../../ui/typography/text.component";
 import { AcaoComponent } from "./actions/acao.component";
+import { ConexoesNiveisComponent } from "./actions/conexoes-niveis.component";
 import { MobileAcaoSelecionadaService, MobileAcaoSelecionadaComponent } from "./actions/mobile-acao-selecionada.component";
 import { MapaHeaderComponent } from "./header/mapa-header.component";
 import { MapaFooterComponent } from "./footer/mapa-footer.component";
@@ -17,7 +18,7 @@ import { MapaFooterComponent } from "./footer/mapa-footer.component";
         MobileAcaoSelecionadaService
     ],
     host: { class: 'w-dvw h-dvh' },
-    imports: [BeeMapComponent, LoaderComponent, CenterComponent, TextComponent, AcaoComponent, MobileAcaoSelecionadaComponent, MapaHeaderComponent, MapaFooterComponent]
+    imports: [BeeMapComponent, LoaderComponent, CenterComponent, TextComponent, AcaoComponent, ConexoesNiveisComponent, MobileAcaoSelecionadaComponent, MapaHeaderComponent, MapaFooterComponent]
 })
 export class MapComponent {
     private readonly mapaAtualService = inject(MapaAtualService);

@@ -1967,4 +1967,1627 @@ public class Caminhao {
         padrao: "Builder",
         conteudoMarkdown: CONTEUDO_LICAO_BUILDER_003
     }),
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // Singleton — continuação (fases 5-10). As fases 1-4 (licao-singleton-001, quiz-singleton-001,
+    // eb-singleton-001, ct-singleton-001) já existem acima, mas não estavam ligadas a nenhuma
+    // região — agora fazem parte do arco de 10 fases do padrão junto com estas.
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    new EncontrePares({
+        id: "ep-singleton-001",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Criacionais",
+        nivel: 2,
+        padrao: "Singleton",
+        rodadas: [
+            new Rodada({
+                id: "r1",
+                pares: [
+                    new Par({ id: "r1p1", afirmacao: "Eager Initialization", correspondencia: "Cria a instância assim que a classe é carregada, mesmo que ela nunca chegue a ser usada." }),
+                    new Par({ id: "r1p2", afirmacao: "Lazy Initialization", correspondencia: "Só cria a instância na primeira vez que alguém chama getInstance()." }),
+                    new Par({ id: "r1p3", afirmacao: "Double-Checked Locking", correspondencia: "Verifica se a instância é nula duas vezes, sincronizando só a primeira criação." }),
+                    new Par({ id: "r1p4", afirmacao: "Enum Singleton", correspondencia: "Usa um enum de um único valor pra garantir instância única e serialização segura de graça." }),
+                ]
+            }),
+            new Rodada({
+                id: "r2",
+                pares: [
+                    new Par({ id: "r2p1", afirmacao: "Estado global", correspondencia: "Qualquer parte do sistema pode ler e alterar os mesmos dados, dificultando rastrear bugs." }),
+                    new Par({ id: "r2p2", afirmacao: "Testabilidade ruim", correspondencia: "Testes unitários não conseguem isolar ou trocar a instância única por um dublê de teste facilmente." }),
+                    new Par({ id: "r2p3", afirmacao: "Quebra por Reflection", correspondencia: "Código externo torna o construtor privado acessível na marra e cria uma segunda instância." }),
+                    new Par({ id: "r2p4", afirmacao: "Quebra por Serialização", correspondencia: "Desserializar o objeto sem cuidado gera uma nova instância diferente da original." }),
+                ]
+            }),
+        ]
+    }),
+
+    new Licao({
+        id: "licao-singleton-002",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Criacionais",
+        nivel: 2,
+        padrao: "Singleton",
+        conteudoMarkdown: [
+            '# Singleton: a estrutura completa 🐝',
+            '',
+            'A versão mais simples do Singleton (a que você viu na primeira lição) funciona bem enquanto só existe uma abelha operária mexendo com o `getInstance()` por vez. Mas a colmeia é um lugar concorrido — várias abelhas (threads) podem chamar `getInstance()` ao mesmo tempo, e é aí que a implementação ingênua quebra.',
+            '',
+            '## Eager vs. Lazy Initialization',
+            '',
+            'Existem duas estratégias básicas pra decidir *quando* a instância é criada:',
+            '',
+            '| Estratégia | Quando cria | Vantagem | Desvantagem |',
+            '|---|---|---|---|',
+            '| **Eager** | Assim que a classe é carregada pela JVM | Simples, thread-safe de graça | Cria o objeto mesmo que ele nunca seja usado |',
+            '| **Lazy** | Só na primeira chamada de `getInstance()` | Só gasta recursos se for realmente usada | Precisa de cuidado extra pra ser thread-safe |',
+            '',
+            '```java',
+            '// Eager: a própria JVM garante que só roda uma vez, na carga da classe.',
+            'public class ConfigDaColmeia {',
+            '    private static final ConfigDaColmeia instancia = new ConfigDaColmeia();',
+            '',
+            '    private ConfigDaColmeia() {}',
+            '',
+            '    public static ConfigDaColmeia getInstance() {',
+            '        return instancia;',
+            '    }',
+            '}',
+            '```',
+            '',
+            '## O problema da Lazy Initialization ingênua',
+            '',
+            'Se duas threads chamarem `getInstance()` ao mesmo tempo e ambas passarem pelo `if (instancia == null)` antes de qualquer uma delas atribuir o valor, as duas vão criar sua própria instância — quebrando a garantia do padrão.',
+            '',
+            '```mermaid',
+            'sequenceDiagram',
+            '    participant T1 as Thread 1',
+            '    participant T2 as Thread 2',
+            '    participant S as Singleton.instancia',
+            '    T1->>S: if (instancia == null)? SIM',
+            '    T2->>S: if (instancia == null)? SIM',
+            '    T1->>S: cria instância A',
+            '    T2->>S: cria instância B',
+            '    Note over S: Duas instâncias diferentes — o padrão quebrou!',
+            '```',
+            '',
+            '## Double-Checked Locking',
+            '',
+            'A solução clássica é verificar a condição *duas vezes*: uma vez sem sincronizar (rápido, pro caso comum onde a instância já existe) e outra vez dentro de um bloco sincronizado (só quando a instância ainda não existe):',
+            '',
+            '```java',
+            'public class ConfigDaColmeia {',
+            '    private static volatile ConfigDaColmeia instancia;',
+            '',
+            '    private ConfigDaColmeia() {}',
+            '',
+            '    public static ConfigDaColmeia getInstance() {',
+            '        if (instancia == null) {',
+            '            synchronized (ConfigDaColmeia.class) {',
+            '                if (instancia == null) {',
+            '                    instancia = new ConfigDaColmeia();',
+            '                }',
+            '            }',
+            '        }',
+            '        return instancia;',
+            '    }',
+            '}',
+            '```',
+            '',
+            'O `volatile` aqui não é detalhe: sem ele, o compilador (ou o processador) pode reordenar as instruções de forma que outra thread enxergue uma referência não-nula apontando pra um objeto ainda **não totalmente construído**.',
+            '',
+            '## Enum Singleton',
+            '',
+            'Em Java, a forma recomendada por Joshua Bloch (autor de *Effective Java*) é usar um `enum` de um único valor — a própria linguagem garante instância única, thread-safety na inicialização e resistência a ataques por reflection e serialização:',
+            '',
+            '```java',
+            'public enum ConfigDaColmeia {',
+            '    INSTANCIA;',
+            '',
+            '    public void carregarConfiguracoes() {',
+            '        // ...',
+            '    }',
+            '}',
+            '',
+            '// Uso:',
+            'ConfigDaColmeia.INSTANCIA.carregarConfiguracoes();',
+            '```',
+        ].join('\n')
+    }),
+
+    new CompleteCodigo({
+        id: "cc-singleton-001",
+        dificuldade: Dificuldade.Dificil,
+        grupo: "Criacionais",
+        nivel: 2,
+        padrao: "Singleton",
+        codigos: [
+            new CodigoIncompleto({
+                id: "cc1",
+                arquivo: "SingletonThreadSafe.java",
+                linguagem: "java",
+                respostaCorretaId: "cc1-t1",
+                explicacao: "O double-checked locking precisa verificar \"instancia == null\" de novo DENTRO do bloco sincronizado — senão, duas threads que passaram pela primeira checagem ao mesmo tempo ainda criariam duas instâncias assim que entrassem no bloco, uma depois da outra.",
+                template:
+`public class SingletonThreadSafe {
+    private static volatile SingletonThreadSafe instancia;
+
+    private SingletonThreadSafe() {}
+
+    public static SingletonThreadSafe getInstance() {
+        if (instancia == null) {
+            synchronized (SingletonThreadSafe.class) {
+{{1}}
+            }
+        }
+        return instancia;
+    }
+}`,
+                opcoes: [
+                    new Trecho({ id: "cc1-t1", codigo: `                if (instancia == null) {\n                    instancia = new SingletonThreadSafe();\n                }` }),
+                    new Trecho({ id: "cc1-t2", codigo: `                instancia = new SingletonThreadSafe();` }),
+                    new Trecho({ id: "cc1-t3", codigo: `                if (instancia != null) {\n                    instancia = new SingletonThreadSafe();\n                }` }),
+                    new Trecho({ id: "cc1-t4", codigo: `                return new SingletonThreadSafe();` }),
+                ]
+            }),
+            new CodigoIncompleto({
+                id: "cc2",
+                arquivo: "SingletonEnum.java",
+                linguagem: "java",
+                respostaCorretaId: "cc2-t1",
+                explicacao: "Um enum de um único valor já é a instância — não precisa (e não pode) instanciar nada com \"new\" dentro dele. Declarar dois valores (ex.: INSTANCIA, OUTRA) quebraria a garantia de instância única.",
+                template:
+`public enum SingletonEnum {
+{{1}}
+
+    public void executar() {
+        System.out.println("Executando...");
+    }
+}`,
+                opcoes: [
+                    new Trecho({ id: "cc2-t1", codigo: `    INSTANCIA;` }),
+                    new Trecho({ id: "cc2-t2", codigo: `    INSTANCIA, OUTRA;` }),
+                    new Trecho({ id: "cc2-t3", codigo: `    private static SingletonEnum instancia = new SingletonEnum();` }),
+                    new Trecho({ id: "cc2-t4", codigo: `    INSTANCIA();\n    private SingletonEnum instancia;` }),
+                ]
+            }),
+        ]
+    }),
+
+    new EncontreBug({
+        id: "eb-singleton-002",
+        dificuldade: Dificuldade.Dificil,
+        grupo: "Criacionais",
+        nivel: 3,
+        padrao: "Singleton",
+        perguntas: [
+            new PerguntaBug({
+                id: "pb1",
+                enunciado: "Esse Singleton com double-checked locking tem um bug sutil de concorrência. Qual é o problema?",
+                explicacao: "O campo \"instancia\" não é \"volatile\". Sem isso, o compilador/processador pode reordenar as instruções de \"new Singleton()\" de forma que outra thread veja uma referência não-nula apontando pra um objeto ainda parcialmente construído — um bug que só aparece em produção, sob concorrência real.",
+                respostas: [
+                    new RespostaBug({ id: "pb1-r1", texto: "O construtor deveria ser público para permitir testes." }),
+                    new RespostaBug({ id: "pb1-r2", texto: "O campo \"instancia\" precisa ser \"volatile\" para impedir reordenação de instruções entre threads.", correta: true }),
+                    new RespostaBug({ id: "pb1-r3", texto: "O método getInstance() deveria retornar uma cópia da instância." }),
+                    new RespostaBug({ id: "pb1-r4", texto: "O bloco \"synchronized\" deveria envolver a classe inteira, não só o método." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb1-a1",
+                        nome: "Singleton.java",
+                        linguagem: "java",
+                        codigo:
+`public class Singleton {
+    private static Singleton instancia;
+
+    private Singleton() {}
+
+    public static Singleton getInstance() {
+        if (instancia == null) {
+            synchronized (Singleton.class) {
+                if (instancia == null) {
+                    instancia = new Singleton();
+                }
+            }
+        }
+        return instancia;
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb1-a2",
+                        nome: "ServidorApp.java",
+                        linguagem: "java",
+                        codigo:
+`public class ServidorApp {
+    public static void main(String[] args) {
+        Runnable tarefa = () -> {
+            Singleton s = Singleton.getInstance();
+            s.processar();
+        };
+
+        new Thread(tarefa).start();
+        new Thread(tarefa).start();
+        new Thread(tarefa).start();
+    }
+}`
+                    }),
+                ]
+            }),
+            new PerguntaBug({
+                id: "pb2",
+                enunciado: "Essa classe implementa Cloneable sem cuidado especial. Qual consequência isso tem para o Singleton?",
+                explicacao: "Como Singleton implementa Cloneable e não sobrescreve clone(), chamar \"getInstance().clone()\" cria uma SEGUNDA instância independente da original — quebrando a garantia de instância única, mesmo com o construtor privado intacto.",
+                respostas: [
+                    new RespostaBug({ id: "pb2-r1", texto: "Nenhuma — Cloneable não afeta o Singleton de forma alguma." }),
+                    new RespostaBug({ id: "pb2-r2", texto: "clone() lança uma exceção automaticamente para qualquer Singleton." }),
+                    new RespostaBug({ id: "pb2-r3", texto: "clone() cria uma segunda instância independente, quebrando a garantia de instância única.", correta: true }),
+                    new RespostaBug({ id: "pb2-r4", texto: "clone() sempre retorna a mesma referência da instância original, então não há problema." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb2-a1",
+                        nome: "Singleton.java",
+                        linguagem: "java",
+                        codigo:
+`public class Singleton implements Cloneable {
+    private static Singleton instancia;
+
+    private Singleton() {}
+
+    public static Singleton getInstance() {
+        if (instancia == null) {
+            instancia = new Singleton();
+        }
+        return instancia;
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb2-a2",
+                        nome: "App.java",
+                        linguagem: "java",
+                        codigo:
+`public class App {
+    public static void main(String[] args) throws CloneNotSupportedException {
+        Singleton a = Singleton.getInstance();
+        Singleton b = (Singleton) a.clone();
+
+        System.out.println(a == b);
+    }
+}`
+                    }),
+                ]
+            }),
+        ]
+    }),
+
+    new Licao({
+        id: "licao-singleton-003",
+        dificuldade: Dificuldade.Dificil,
+        grupo: "Criacionais",
+        nivel: 3,
+        padrao: "Singleton",
+        conteudoMarkdown: [
+            '# Singleton: variações e quando (não) usar 🐝',
+            '',
+            'O Singleton é, ao mesmo tempo, um dos padrões mais conhecidos e um dos mais criticados do GoF. Vale entender por quê antes de espalhar `getInstance()` pelo projeto inteiro.',
+            '',
+            '## Por que tanta crítica?',
+            '',
+            '- **Estado global disfarçado.** Um Singleton é, na prática, uma variável global — qualquer código pode lê-lo e alterá-lo, de qualquer lugar, sem passar por nenhuma interface explícita.',
+            '- **Dependências escondidas.** Um método que chama `Config.getInstance()` no meio do corpo não deixa claro, na sua assinatura, que depende de configuração global — dificultando entender o código só de olhar pra fora.',
+            '- **Testabilidade ruim.** Como a instância é única e fixa, é difícil substituí-la por um dublê de teste (mock/stub) sem recorrer a truques (reflection, frameworks especiais).',
+            '- **Acoplamento entre testes.** Se o Singleton guarda estado mutável, um teste pode "vazar" efeitos colaterais para o próximo teste que rodar depois, quebrando o isolamento que os testes deveriam ter.',
+            '',
+            '## A alternativa mais comum: Injeção de Dependência',
+            '',
+            'Em vez de a classe pedir a instância global sozinha (`Config.getInstance()`), ela recebe a dependência de fora, no construtor:',
+            '',
+            '```java',
+            '// Em vez disso:',
+            'public class ServicoDeEntrega {',
+            '    public void processar() {',
+            '        Config config = Config.getInstance();',
+            '        // ...',
+            '    }',
+            '}',
+            '',
+            '// Prefira isso:',
+            'public class ServicoDeEntrega {',
+            '    private final Config config;',
+            '',
+            '    public ServicoDeEntrega(Config config) {',
+            '        this.config = config;',
+            '    }',
+            '}',
+            '```',
+            '',
+            'O framework de injeção de dependência (Spring, por exemplo) ainda pode garantir que só existe **uma** instância de `Config` circulando pela aplicação — só que agora essa garantia é uma escolha de configuração externa, não uma regra hard-coded dentro da própria classe. Isso resolve boa parte das críticas: os testes podem injetar um `Config` de mentira, e a dependência fica visível na assinatura do construtor.',
+            '',
+            '## Quando o Singleton ainda faz sentido',
+            '',
+            '- **Loggers.** Não faz sentido ter várias instâncias competindo pelo mesmo arquivo de log.',
+            '- **Pools de conexão.** Gerenciar um conjunto compartilhado de conexões de banco de dados por um único ponto evita esgotar recursos.',
+            '- **Caches em memória compartilhados** dentro de um único processo.',
+            '',
+            '## Quando evitar',
+            '',
+            '- Em **regras de negócio** — qualquer coisa que possa precisar de mais de uma configuração ao mesmo tempo (ex.: multi-tenant, testes paralelos) não deveria ser um Singleton clássico.',
+            '- Quando **testabilidade** importa mais do que a conveniência de não passar a dependência explicitamente.',
+            '',
+            '## Variações',
+            '',
+            '- **Multiton**: como o Singleton, mas mantém um `Map<Chave, Instancia>` em vez de uma única instância — garante uma instância por chave (ex.: uma conexão por banco de dados diferente).',
+            '- **Thread-local Singleton**: uma instância por thread, útil quando o estado não pode ser compartilhado entre threads mas ainda faz sentido ser único *dentro* de cada uma.',
+        ].join('\n')
+    }),
+
+    new Quiz({
+        id: "quiz-singleton-002",
+        dificuldade: Dificuldade.Dificil,
+        padrao: "Singleton",
+        grupo: "Criacionais",
+        nivel: 3,
+        tipo: TipoDesafio.PerguntasRespostas,
+        perguntas: [
+            new Pergunta({
+                id: "p1",
+                texto: "Por que o campo da instância precisa ser \"volatile\" numa implementação com double-checked locking?",
+                repostas: [
+                    new Resposta({ id: "p1r1", texto: "Para o Java aceitar o modificador \"static\" no mesmo campo." }),
+                    new Resposta({ id: "p1r2", texto: "Para impedir que instruções sejam reordenadas, evitando que outra thread veja um objeto parcialmente construído.", correta: true }),
+                    new Resposta({ id: "p1r3", texto: "Para tornar o campo acessível fora da classe." }),
+                    new Resposta({ id: "p1r4", texto: "\"volatile\" só afeta desempenho, não corretude." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p2",
+                texto: "Por que a abordagem de Enum Singleton é considerada a mais segura em Java?",
+                repostas: [
+                    new Resposta({ id: "p2r1", texto: "Porque enums são compilados em bytecode mais rápido que classes comuns." }),
+                    new Resposta({ id: "p2r2", texto: "Porque a própria linguagem garante instância única e resistência a ataques por reflection e serialização.", correta: true }),
+                    new Resposta({ id: "p2r3", texto: "Porque enums não podem ter métodos, então não há como quebrar o encapsulamento." }),
+                    new Resposta({ id: "p2r4", texto: "Porque enums são sempre carregados de forma lazy (preguiçosa)." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p3",
+                texto: "Qual é o principal argumento a favor de substituir um Singleton por Injeção de Dependência?",
+                repostas: [
+                    new Resposta({ id: "p3r1", texto: "Injeção de Dependência é sempre mais rápida em tempo de execução." }),
+                    new Resposta({ id: "p3r2", texto: "Torna a dependência explícita na assinatura e facilita substituí-la por um mock nos testes.", correta: true }),
+                    new Resposta({ id: "p3r3", texto: "Elimina completamente a necessidade de qualquer configuração compartilhada." }),
+                    new Resposta({ id: "p3r4", texto: "Impede que a classe tenha qualquer tipo de estado." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p4",
+                texto: "Um Singleton comum (não-enum), com construtor privado, ainda pode ter sua garantia de instância única quebrada por qual mecanismo?",
+                repostas: [
+                    new Resposta({ id: "p4r1", texto: "Reflection, tornando o construtor privado acessível, ou clone()/serialização mal implementados.", correta: true }),
+                    new Resposta({ id: "p4r2", texto: "Não existe forma de quebrar um Singleton com construtor privado." }),
+                    new Resposta({ id: "p4r3", texto: "Só reiniciando a aplicação inteira." }),
+                    new Resposta({ id: "p4r4", texto: "Alterando o valor de retorno de getInstance() diretamente pelo código cliente." }),
+                ]
+            }),
+        ]
+    }),
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // Observer — arco completo de 10 fases (nenhuma existia antes).
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    new Licao({
+        id: "licao-observer-001",
+        dificuldade: Dificuldade.Facil,
+        grupo: "Comportamentais",
+        nivel: 1,
+        padrao: "Observer",
+        conteudoMarkdown: [
+            '# O padrão Observer 🐝',
+            '',
+            'Imagina o painel de controle do apiário: toda vez que o **estoque de mel** muda, várias telas diferentes precisam saber — o painel do apicultor, o alarme de estoque baixo, o app no celular. Se o código que atualiza o estoque tiver que chamar cada uma dessas telas manualmente, toda vez que surgir uma tela nova, alguém vai precisar lembrar de ir lá e adicionar mais uma chamada.',
+            '',
+            'O padrão **Observer** resolve isso definindo uma relação **um-para-muitos**: quando um objeto (o *Subject*, ou "sujeito") muda de estado, todos os objetos inscritos nele (os *Observers*) são notificados automaticamente — sem que o Subject precise saber quem são eles em detalhe, só que implementam uma interface em comum.',
+            '',
+            '## Por que isso importa?',
+            '',
+            'Sem o padrão, o código de quem gerencia o estoque ficaria assim:',
+            '',
+            '```java',
+            'void atualizarEstoque(int novaQuantidade) {',
+            '    quantidade = novaQuantidade;',
+            '    painelApicultor.atualizar(quantidade);',
+            '    alarmeEstoqueBaixo.atualizar(quantidade);',
+            '    appMobileApicultor.atualizar(quantidade);',
+            '    // toda tela nova = mais uma linha aqui, e alguém tem que lembrar de adicionar',
+            '}',
+            '```',
+            '',
+            '## Como funciona, passo a passo',
+            '',
+            '1. Define-se uma interface **Observador** com um método, ex.: `atualizar(int quantidade)`.',
+            '2. O **Subject** (`EstoqueDeMel`) guarda uma lista de observadores inscritos.',
+            '3. Métodos `inscrever(observador)` e `desinscrever(observador)` adicionam/removem da lista.',
+            '4. Quando o estado do Subject muda, ele chama `notificarTodos()`, que percorre a lista chamando `atualizar()` em cada observador.',
+            '5. Cada **Observador concreto** decide o que fazer com a notificação — o Subject não sabe nem se importa.',
+            '',
+            '## O fluxo, de um jeito simples',
+            '',
+            '```mermaid',
+            'flowchart LR',
+            '    A[EstoqueDeMel muda de quantidade] --> B[notificarTodos]',
+            '    B --> C[PainelApicultor.atualizar]',
+            '    B --> D[AlarmeEstoqueBaixo.atualizar]',
+            '    B --> E[AppMobileApicultor.atualizar]',
+            '```',
+            '',
+            '## Um exemplo mínimo',
+            '',
+            '```java',
+            'public interface Observador {',
+            '    void atualizar(int quantidade);',
+            '}',
+            '',
+            'public class EstoqueDeMel {',
+            '    private final List<Observador> observadores = new ArrayList<>();',
+            '    private int quantidade;',
+            '',
+            '    public void inscrever(Observador observador) {',
+            '        observadores.add(observador);',
+            '    }',
+            '',
+            '    public void definirQuantidade(int novaQuantidade) {',
+            '        this.quantidade = novaQuantidade;',
+            '        notificarTodos();',
+            '    }',
+            '',
+            '    private void notificarTodos() {',
+            '        for (Observador o : observadores) {',
+            '            o.atualizar(quantidade);',
+            '        }',
+            '    }',
+            '}',
+            '```',
+            '',
+            'Agora, adicionar uma tela nova é só criar uma classe que implementa `Observador` e chamar `inscrever(...)` — o `EstoqueDeMel` não muda nem uma linha.',
+        ].join('\n')
+    }),
+
+    new Quiz({
+        id: "quiz-observer-001",
+        dificuldade: Dificuldade.Facil,
+        padrao: "Observer",
+        grupo: "Comportamentais",
+        nivel: 1,
+        tipo: TipoDesafio.PerguntasRespostas,
+        perguntas: [
+            new Pergunta({
+                id: "p1",
+                texto: "Qual das afirmações abaixo descreve melhor o padrão Observer?",
+                repostas: [
+                    new Resposta({ id: "p1r1", texto: "Garante que uma classe tenha apenas uma instância." }),
+                    new Resposta({ id: "p1r2", texto: "Define uma dependência um-para-muitos: quando um objeto muda de estado, todos os seus dependentes são notificados automaticamente.", correta: true }),
+                    new Resposta({ id: "p1r3", texto: "Separa a construção de um objeto complexo de sua representação." }),
+                    new Resposta({ id: "p1r4", texto: "Converte a interface de uma classe em outra interface esperada pelo cliente." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p2",
+                texto: "No padrão Observer, quem chama o método atualizar() de cada observador?",
+                repostas: [
+                    new Resposta({ id: "p2r1", texto: "O próprio observador, periodicamente, verificando se algo mudou." }),
+                    new Resposta({ id: "p2r2", texto: "O Subject, ao notificar todos os observadores inscritos.", correta: true }),
+                    new Resposta({ id: "p2r3", texto: "Uma classe fábrica externa que cria os observadores." }),
+                    new Resposta({ id: "p2r4", texto: "O sistema operacional, via interrupção de hardware." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p3",
+                texto: "Qual é a principal vantagem de usar o Observer em vez de chamar cada dependente manualmente?",
+                repostas: [
+                    new Resposta({ id: "p3r1", texto: "O código fica mais rápido em tempo de execução." }),
+                    new Resposta({ id: "p3r2", texto: "O Subject não precisa conhecer os detalhes de cada observador — só a interface em comum, tornando fácil adicionar novos sem alterar o Subject.", correta: true }),
+                    new Resposta({ id: "p3r3", texto: "Elimina a necessidade de qualquer tipo de interface." }),
+                    new Resposta({ id: "p3r4", texto: "Garante que os observadores sejam notificados em ordem alfabética." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p4",
+                texto: "O que um método \"inscrever(observador)\" faz tipicamente num Subject?",
+                repostas: [
+                    new Resposta({ id: "p4r1", texto: "Remove o observador da lista de notificação." }),
+                    new Resposta({ id: "p4r2", texto: "Cria uma nova instância do Subject." }),
+                    new Resposta({ id: "p4r3", texto: "Adiciona o observador a uma lista interna, para que passe a receber notificações futuras.", correta: true }),
+                    new Resposta({ id: "p4r4", texto: "Executa imediatamente o método atualizar() do observador, uma única vez." }),
+                ]
+            }),
+        ]
+    }),
+
+    new CompleteTexto({
+        id: "ct-observer-001",
+        dificuldade: Dificuldade.Facil,
+        grupo: "Comportamentais",
+        nivel: 1,
+        padrao: "Observer",
+        textos: [
+            new Texto({
+                id: "t1",
+                texto: "O padrão {{1}} define uma dependência {{2}}: quando o {{3}} muda de estado, todos os observadores inscritos são notificados.",
+                opcoes: ["Observer", "um-para-muitos", "Subject", "Singleton", "um-para-um", "Cliente"],
+                respostas: ["Observer", "um-para-muitos", "Subject"]
+            }),
+            new Texto({
+                id: "t2",
+                texto: "Cada observador implementa uma {{1}} em comum, geralmente com um método chamado {{2}}, que o Subject chama pra avisar sobre a mudança.",
+                opcoes: ["interface", "classe final", "atualizar", "construir", "anotação", "destruir"],
+                respostas: ["interface", "atualizar"]
+            }),
+            new Texto({
+                id: "t3",
+                texto: "Os métodos {{1}} e {{2}} permitem que um observador entre ou saia da lista de notificação do Subject a qualquer momento.",
+                opcoes: ["inscrever", "desinscrever", "notificar", "clonar", "construir", "serializar"],
+                respostas: ["inscrever", "desinscrever"]
+            }),
+        ]
+    }),
+
+    new EncontreBug({
+        id: "eb-observer-001",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Comportamentais",
+        nivel: 2,
+        padrao: "Observer",
+        perguntas: [
+            new PerguntaBug({
+                id: "pb1",
+                enunciado: "O painel do apicultor nunca é atualizado quando o estoque muda. Qual é o problema neste código?",
+                explicacao: "O método definirQuantidade() atualiza o campo \"quantidade\" mas nunca chama notificarTodos() — os observadores continuam inscritos corretamente, mas simplesmente nunca são avisados da mudança.",
+                respostas: [
+                    new RespostaBug({ id: "pb1-r1", texto: "O PainelApicultor não implementa a interface Observador corretamente." }),
+                    new RespostaBug({ id: "pb1-r2", texto: "definirQuantidade() nunca chama notificarTodos() após alterar o estado.", correta: true }),
+                    new RespostaBug({ id: "pb1-r3", texto: "A lista de observadores foi declarada como Set em vez de List." }),
+                    new RespostaBug({ id: "pb1-r4", texto: "O método inscrever() está sendo chamado antes de instanciar o EstoqueDeMel." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb1-a1",
+                        nome: "EstoqueDeMel.java",
+                        linguagem: "java",
+                        codigo:
+`public class EstoqueDeMel {
+    private final List<Observador> observadores = new ArrayList<>();
+    private int quantidade;
+
+    public void inscrever(Observador observador) {
+        observadores.add(observador);
+    }
+
+    public void definirQuantidade(int novaQuantidade) {
+        this.quantidade = novaQuantidade;
+    }
+
+    private void notificarTodos() {
+        for (Observador o : observadores) {
+            o.atualizar(quantidade);
+        }
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb1-a2",
+                        nome: "PainelApicultor.java",
+                        linguagem: "java",
+                        codigo:
+`public class PainelApicultor implements Observador {
+    @Override
+    public void atualizar(int quantidade) {
+        System.out.println("Painel: estoque agora é " + quantidade);
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb1-a3",
+                        nome: "App.java",
+                        linguagem: "java",
+                        codigo:
+`public class App {
+    public static void main(String[] args) {
+        EstoqueDeMel estoque = new EstoqueDeMel();
+        estoque.inscrever(new PainelApicultor());
+        estoque.definirQuantidade(50);
+    }
+}`
+                    }),
+                ]
+            }),
+            new PerguntaBug({
+                id: "pb2",
+                enunciado: "Esse loop de busca lançou ArrayIndexOutOfBoundsException. Qual é o erro?",
+                explicacao: "A condição do laço usa \"<=\" em vez de \"<\", então tenta acessar \"itens[itens.length]\" — um índice que não existe (o último índice válido é \"itens.length - 1\").",
+                respostas: [
+                    new RespostaBug({ id: "pb2-r1", texto: "A condição do laço deveria usar \"<\" em vez de \"<=\".", correta: true }),
+                    new RespostaBug({ id: "pb2-r2", texto: "O array deveria ser inicializado com um elemento a mais." }),
+                    new RespostaBug({ id: "pb2-r3", texto: "O índice \"i\" deveria começar em 1, não em 0." }),
+                    new RespostaBug({ id: "pb2-r4", texto: "O método deveria usar um ArrayList em vez de um array." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb2-a1",
+                        nome: "Busca.java",
+                        linguagem: "java",
+                        codigo:
+`public class Busca {
+    public static int somar(int[] itens) {
+        int total = 0;
+        for (int i = 0; i <= itens.length; i++) {
+            total += itens[i];
+        }
+        return total;
+    }
+}`
+                    }),
+                ]
+            }),
+        ]
+    }),
+
+    new EncontrePares({
+        id: "ep-observer-001",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Comportamentais",
+        nivel: 2,
+        padrao: "Observer",
+        rodadas: [
+            new Rodada({
+                id: "r1",
+                pares: [
+                    new Par({ id: "r1p1", afirmacao: "Subject (Observable)", correspondencia: "Mantém o estado e a lista de observadores; notifica todos quando o estado muda." }),
+                    new Par({ id: "r1p2", afirmacao: "Observer", correspondencia: "Interface comum implementada por quem quer ser notificado das mudanças." }),
+                    new Par({ id: "r1p3", afirmacao: "inscrever() / desinscrever()", correspondencia: "Adicionam ou removem um observador da lista de notificação do Subject." }),
+                    new Par({ id: "r1p4", afirmacao: "notificarTodos()", correspondencia: "Percorre a lista de observadores chamando o método de atualização de cada um." }),
+                ]
+            }),
+            new Rodada({
+                id: "r2",
+                pares: [
+                    new Par({ id: "r2p1", afirmacao: "Modelo Push", correspondencia: "O Subject envia os dados atualizados diretamente como parâmetro do método de notificação." }),
+                    new Par({ id: "r2p2", afirmacao: "Modelo Pull", correspondencia: "O Subject só avisa que algo mudou; o observador busca os dados que precisa de volta no Subject." }),
+                    new Par({ id: "r2p3", afirmacao: "Lapsed listener problem", correspondencia: "Observadores que nunca se desinscrevem continuam na memória, causando vazamento de memória." }),
+                    new Par({ id: "r2p4", afirmacao: "Event Bus / Pub-Sub", correspondencia: "Uma variação do Observer onde um canal central desacopla totalmente quem publica de quem assina." }),
+                ]
+            }),
+        ]
+    }),
+
+    new Licao({
+        id: "licao-observer-002",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Comportamentais",
+        nivel: 2,
+        padrao: "Observer",
+        conteudoMarkdown: [
+            '# Observer: a estrutura completa 🐝',
+            '',
+            'Vamos formalizar as peças do padrão e ver as duas formas mais comuns de passar os dados na notificação.',
+            '',
+            '## As quatro peças',
+            '',
+            '| Papel | No nosso exemplo | O que faz |',
+            '|---|---|---|',
+            '| **Subject** | `EstoqueDeMel` | Guarda o estado e a lista de observadores; dispara as notificações. |',
+            '| **Observer** | `Observador` (interface) | Declara o método de atualização que todo observador precisa implementar. |',
+            '| **ConcreteSubject** | `EstoqueDeMel` (mesmo, quando não há interface separada) | Implementação concreta do estado observado. |',
+            '| **ConcreteObserver** | `PainelApicultor`, `AlarmeEstoqueBaixo` | Reage à notificação do jeito que faz sentido para aquela tela/funcionalidade. |',
+            '',
+            '## O diagrama de classes',
+            '',
+            '```mermaid',
+            'classDiagram',
+            '    class Subject {',
+            '        -List~Observador~ observadores',
+            '        +inscrever(Observador)',
+            '        +desinscrever(Observador)',
+            '        -notificarTodos()',
+            '    }',
+            '    class Observador {',
+            '        <<interface>>',
+            '        +atualizar(int)',
+            '    }',
+            '    class EstoqueDeMel {',
+            '        -int quantidade',
+            '        +definirQuantidade(int)',
+            '    }',
+            '    class PainelApicultor {',
+            '        +atualizar(int)',
+            '    }',
+            '    class AlarmeEstoqueBaixo {',
+            '        +atualizar(int)',
+            '    }',
+            '    Subject <|-- EstoqueDeMel',
+            '    Observador <|.. PainelApicultor',
+            '    Observador <|.. AlarmeEstoqueBaixo',
+            '    Subject o-- Observador',
+            '```',
+            '',
+            '## Modelo Push vs. Modelo Pull',
+            '',
+            'Existem duas formas de o Subject entregar informação na notificação:',
+            '',
+            '**Push** — o Subject já manda os dados relevantes como parâmetro do próprio método de atualização (foi o que fizemos até agora, com `atualizar(int quantidade)`). É simples, mas acopla a assinatura do método aos dados exatos que o Subject decidiu enviar.',
+            '',
+            '```java',
+            'void atualizar(int quantidade) {',
+            '    // já recebeu o dado pronto',
+            '}',
+            '```',
+            '',
+            '**Pull** — o Subject só avisa "algo mudou", e o próprio observador consulta o Subject de volta pra buscar exatamente o que precisa:',
+            '',
+            '```java',
+            'void atualizar(EstoqueDeMel subject) {',
+            '    int quantidade = subject.getQuantidade();',
+            '    // busca só o que interessa, quando precisar',
+            '}',
+            '```',
+            '',
+            'O modelo Pull é mais flexível quando o Subject tem muitos campos e observadores diferentes só precisam de partes específicas do estado — evita passar um parâmetro gigante "com tudo" pra todo mundo.',
+            '',
+            '## Múltiplos tipos de evento',
+            '',
+            'Em sistemas reais, é comum um Subject emitir *tipos* diferentes de evento (ex.: "estoque baixo" vs "estoque reabastecido"). Uma forma comum de organizar isso é passar um objeto de evento em vez de um valor solto:',
+            '',
+            '```java',
+            'public class EventoEstoque {',
+            '    public final int quantidadeAtual;',
+            '    public final boolean estoqueBaixo;',
+            '',
+            '    public EventoEstoque(int quantidadeAtual, boolean estoqueBaixo) {',
+            '        this.quantidadeAtual = quantidadeAtual;',
+            '        this.estoqueBaixo = estoqueBaixo;',
+            '    }',
+            '}',
+            '```',
+        ].join('\n')
+    }),
+
+    new CompleteCodigo({
+        id: "cc-observer-001",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Comportamentais",
+        nivel: 2,
+        padrao: "Observer",
+        codigos: [
+            new CodigoIncompleto({
+                id: "cc1",
+                arquivo: "EstoqueDeMel.java",
+                linguagem: "java",
+                respostaCorretaId: "cc1-t1",
+                explicacao: "definirQuantidade() precisa chamar notificarTodos() depois de atualizar o campo \"quantidade\" — senão os observadores inscritos nunca ficam sabendo que o estado mudou.",
+                template:
+`public class EstoqueDeMel {
+    private final List<Observador> observadores = new ArrayList<>();
+    private int quantidade;
+
+    public void inscrever(Observador observador) {
+        observadores.add(observador);
+    }
+
+    public void definirQuantidade(int novaQuantidade) {
+        this.quantidade = novaQuantidade;
+{{1}}
+    }
+
+    private void notificarTodos() {
+        for (Observador o : observadores) {
+            o.atualizar(quantidade);
+        }
+    }
+}`,
+                opcoes: [
+                    new Trecho({ id: "cc1-t1", codigo: `        notificarTodos();` }),
+                    new Trecho({ id: "cc1-t2", codigo: `        // nada a fazer` }),
+                    new Trecho({ id: "cc1-t3", codigo: `        observadores.clear();` }),
+                    new Trecho({ id: "cc1-t4", codigo: `        return;` }),
+                ]
+            }),
+            new CodigoIncompleto({
+                id: "cc2",
+                arquivo: "AlarmeEstoqueBaixo.java",
+                linguagem: "java",
+                respostaCorretaId: "cc2-t1",
+                explicacao: "Pra implementar a interface Observador, a classe precisa declarar o método atualizar(int) com a mesma assinatura — é isso que permite que o EstoqueDeMel chame esse método de forma polimórfica, sem saber o tipo concreto de cada observador.",
+                template:
+`public class AlarmeEstoqueBaixo implements Observador {
+    private static final int LIMITE = 10;
+
+{{1}}
+        if (quantidade < LIMITE) {
+            System.out.println("Alerta: estoque baixo!");
+        }
+    }
+}`,
+                opcoes: [
+                    new Trecho({ id: "cc2-t1", codigo: `    @Override\n    public void atualizar(int quantidade) {` }),
+                    new Trecho({ id: "cc2-t2", codigo: `    public void notificar(int quantidade) {` }),
+                    new Trecho({ id: "cc2-t3", codigo: `    private void atualizar(int quantidade) {` }),
+                    new Trecho({ id: "cc2-t4", codigo: `    @Override\n    public int atualizar() {` }),
+                ]
+            }),
+        ]
+    }),
+
+    new EncontreBug({
+        id: "eb-observer-002",
+        dificuldade: Dificuldade.Dificil,
+        grupo: "Comportamentais",
+        nivel: 3,
+        padrao: "Observer",
+        perguntas: [
+            new PerguntaBug({
+                id: "pb1",
+                enunciado: "Esse código lança ConcurrentModificationException quando um observador se desinscreve durante a notificação. Qual é o problema?",
+                explicacao: "desinscrever() remove um item da mesma lista \"observadores\" que notificarTodos() está percorrendo com um for-each — modificar uma lista enquanto ela é iterada lança ConcurrentModificationException. A correção comum é iterar sobre uma cópia da lista (ex.: \"new ArrayList<>(observadores)\") ou usar um iterator explícito com remove().",
+                respostas: [
+                    new RespostaBug({ id: "pb1-r1", texto: "A interface Observador está mal definida." }),
+                    new RespostaBug({ id: "pb1-r2", texto: "notificarTodos() está percorrendo a mesma lista que um observador pode modificar (via desinscrever) durante a própria notificação.", correta: true }),
+                    new RespostaBug({ id: "pb1-r3", texto: "O método atualizar() deveria ser \"static\"." }),
+                    new RespostaBug({ id: "pb1-r4", texto: "A lista de observadores deveria ser um array de tamanho fixo." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb1-a1",
+                        nome: "EstoqueDeMel.java",
+                        linguagem: "java",
+                        codigo:
+`public class EstoqueDeMel {
+    private final List<Observador> observadores = new ArrayList<>();
+    private int quantidade;
+
+    public void inscrever(Observador observador) {
+        observadores.add(observador);
+    }
+
+    public void desinscrever(Observador observador) {
+        observadores.remove(observador);
+    }
+
+    public void definirQuantidade(int novaQuantidade) {
+        this.quantidade = novaQuantidade;
+        notificarTodos();
+    }
+
+    private void notificarTodos() {
+        for (Observador o : observadores) {
+            o.atualizar(quantidade);
+        }
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb1-a2",
+                        nome: "AppMobileApicultor.java",
+                        linguagem: "java",
+                        codigo:
+`public class AppMobileApicultor implements Observador {
+    private final EstoqueDeMel estoque;
+
+    public AppMobileApicultor(EstoqueDeMel estoque) {
+        this.estoque = estoque;
+    }
+
+    @Override
+    public void atualizar(int quantidade) {
+        if (quantidade == 0) {
+            estoque.desinscrever(this);
+        }
+    }
+}`
+                    }),
+                ]
+            }),
+            new PerguntaBug({
+                id: "pb2",
+                enunciado: "Esse validador de senha aceita senhas vazias como válidas. Qual é o erro?",
+                explicacao: "A checagem \"senha.length() > 0\" é verdadeira mesmo para uma senha de 1 caractere, e o método retorna \"true\" nesse caso — a verificação deveria exigir um tamanho mínimo maior (ex.: 8), não apenas \"maior que zero\".",
+                respostas: [
+                    new RespostaBug({ id: "pb2-r1", texto: "A verificação usa \"length() > 0\" em vez de um tamanho mínimo real (ex.: 8 caracteres).", correta: true }),
+                    new RespostaBug({ id: "pb2-r2", texto: "O método deveria ser \"static\"." }),
+                    new RespostaBug({ id: "pb2-r3", texto: "A senha deveria ser comparada com \"==\" em vez de \".length()\"." }),
+                    new RespostaBug({ id: "pb2-r4", texto: "O tipo de retorno deveria ser \"String\", não \"boolean\"." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb2-a1",
+                        nome: "ValidadorSenha.java",
+                        linguagem: "java",
+                        codigo:
+`public class ValidadorSenha {
+    public static boolean ehValida(String senha) {
+        return senha != null && senha.length() > 0;
+    }
+}`
+                    }),
+                ]
+            }),
+        ]
+    }),
+
+    new Licao({
+        id: "licao-observer-003",
+        dificuldade: Dificuldade.Dificil,
+        grupo: "Comportamentais",
+        nivel: 3,
+        padrao: "Observer",
+        conteudoMarkdown: [
+            '# Observer: variações e quando (não) usar 🐝',
+            '',
+            'O Observer é um dos padrões mais usados no dia a dia — muitas vezes sem que a gente perceba (event listeners de UI, streams reativos, sistemas de eventos). Mas ele tem pegadinhas conhecidas.',
+            '',
+            '## O problema do "lapsed listener"',
+            '',
+            'Se um observador se inscreve e nunca se desinscreve, o Subject continua segurando uma referência pra ele pra sempre — mesmo que ninguém mais use aquele observador em nenhum outro lugar do código. Isso é um vazamento de memória clássico, especialmente comum em interfaces gráficas: uma tela é fechada, mas continua "viva" na memória porque ainda está inscrita em algum Subject de longa duração.',
+            '',
+            '**Mitigações comuns:**',
+            '- Sempre desinscrever explicitamente quando o observador não for mais necessário (ex.: ao fechar uma tela).',
+            '- Usar referências fracas (`WeakReference`) na lista de observadores, permitindo que o coletor de lixo remova observadores que não têm mais nenhuma outra referência viva.',
+            '',
+            '## Ordem de notificação não é garantida',
+            '',
+            'A maioria das implementações de Observer notifica na ordem em que os observadores foram inscritos — mas isso não deveria ser uma regra que o seu código depende. Se a ordem importa (ex.: "o alarme precisa disparar antes do log"), isso deveria ser modelado explicitamente, não deduzido pela ordem de `inscrever()`.',
+            '',
+            '## Notificações em cascata',
+            '',
+            'Cuidado com um observador que, ao ser notificado, altera o próprio Subject de novo — isso pode gerar uma cadeia de notificações recursivas difícil de rastrear (A notifica B, B muda o estado de A, A notifica de novo, ...). Prefira que o observador reaja *fora* do fluxo de notificação (ex.: enfileirando uma ação) quando precisar alterar o Subject observado.',
+            '',
+            '## Variações',
+            '',
+            '- **Event Bus / Pub-Sub**: em vez de o observador se inscrever diretamente no Subject, ele se inscreve num canal central (o "bus"). Quem publica um evento não precisa conhecer os assinantes, e quem assina não precisa conhecer quem publica — desacoplamento total entre as duas pontas.',
+            '- **Streams reativos** (RxJava, Observables do Angular): generalizam o Observer para permitir compor, filtrar e transformar sequências de eventos ao longo do tempo, em vez de só notificar "algo mudou".',
+            '',
+            '## Quando o Observer faz sentido',
+            '',
+            '- Múltiplas partes do sistema precisam **reagir** à mesma mudança de estado, sem ficar checando (polling) o tempo todo.',
+            '- Você quer desacoplar quem gera um evento de quem reage a ele.',
+            '',
+            '## Quando evitar',
+            '',
+            '- Quando há **poucos** dependentes e a relação é sempre a mesma — nesse caso, uma chamada direta de método é mais simples de seguir do que uma cadeia de notificações.',
+            '- Quando a **ordem** de execução entre os reatores é crítica e precisa ser garantida — o Observer não foi desenhado pra isso.',
+        ].join('\n')
+    }),
+
+    new Quiz({
+        id: "quiz-observer-002",
+        dificuldade: Dificuldade.Dificil,
+        padrao: "Observer",
+        grupo: "Comportamentais",
+        nivel: 3,
+        tipo: TipoDesafio.PerguntasRespostas,
+        perguntas: [
+            new Pergunta({
+                id: "p1",
+                texto: "O que é o \"lapsed listener problem\"?",
+                repostas: [
+                    new Resposta({ id: "p1r1", texto: "Um observador que nunca implementou a interface corretamente." }),
+                    new Resposta({ id: "p1r2", texto: "Observadores que nunca se desinscrevem e continuam referenciados pelo Subject, causando vazamento de memória.", correta: true }),
+                    new Resposta({ id: "p1r3", texto: "Um Subject que notifica os observadores fora de ordem." }),
+                    new Resposta({ id: "p1r4", texto: "Uma falha de compilação ao declarar múltiplos observadores." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p2",
+                texto: "Qual a diferença entre o modelo Push e o modelo Pull na notificação do Observer?",
+                repostas: [
+                    new Resposta({ id: "p2r1", texto: "Push é mais lento; Pull é sempre mais rápido." }),
+                    new Resposta({ id: "p2r2", texto: "No Push o Subject envia os dados prontos na notificação; no Pull o observador busca de volta só o que precisa.", correta: true }),
+                    new Resposta({ id: "p2r3", texto: "Push só funciona com um observador por vez; Pull permite vários." }),
+                    new Resposta({ id: "p2r4", texto: "Não há diferença prática entre os dois modelos." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p3",
+                texto: "Por que modificar a lista de observadores durante a própria notificação (ex.: desinscrever dentro de atualizar()) é arriscado?",
+                repostas: [
+                    new Resposta({ id: "p3r1", texto: "Não é arriscado, é a forma recomendada de desinscrever." }),
+                    new Resposta({ id: "p3r2", texto: "Pode lançar ConcurrentModificationException ao iterar e modificar a mesma lista simultaneamente.", correta: true }),
+                    new Resposta({ id: "p3r3", texto: "Só é arriscado em linguagens sem coletor de lixo." }),
+                    new Resposta({ id: "p3r4", texto: "Isso trava a thread principal indefinidamente." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p4",
+                texto: "O que um Event Bus / Pub-Sub adiciona em relação ao Observer clássico?",
+                repostas: [
+                    new Resposta({ id: "p4r1", texto: "Um canal central que desacopla totalmente quem publica de quem assina, sem inscrição direta no Subject.", correta: true }),
+                    new Resposta({ id: "p4r2", texto: "Elimina a necessidade de qualquer interface em comum." }),
+                    new Resposta({ id: "p4r3", texto: "Garante que só existe um único assinante por evento." }),
+                    new Resposta({ id: "p4r4", texto: "Torna as notificações síncronas obrigatoriamente." }),
+                ]
+            }),
+        ]
+    }),
+
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+    // Bridge — arco completo de 10 fases (nenhuma existia antes).
+    // ═══════════════════════════════════════════════════════════════════════════════════════
+
+    new Licao({
+        id: "licao-bridge-001",
+        dificuldade: Dificuldade.Facil,
+        grupo: "Estruturais",
+        nivel: 1,
+        padrao: "Bridge",
+        conteudoMarkdown: [
+            '# O padrão Bridge 🐝',
+            '',
+            'O apiário tem vários **dispositivos** (luz, ventilador) e vários tipos de **controle remoto** (básico, avançado). Se você criar uma classe para cada combinação — `ControleBasicoLuz`, `ControleAvancadoLuz`, `ControleBasicoVentilador`, `ControleAvancadoVentilador`... — toda vez que surgir um dispositivo novo ou um controle novo, o número de classes **multiplica**, não soma.',
+            '',
+            '```mermaid',
+            'flowchart TB',
+            '    subgraph "Sem Bridge: explosão de classes"',
+            '    A1[ControleBasicoLuz]',
+            '    A2[ControleAvancadoLuz]',
+            '    A3[ControleBasicoVentilador]',
+            '    A4[ControleAvancadoVentilador]',
+            '    end',
+            '```',
+            '',
+            'O padrão **Bridge** resolve isso separando duas hierarquias que estavam misturadas em uma só:',
+            '',
+            '- A hierarquia de **Abstração** (os tipos de controle: básico, avançado).',
+            '- A hierarquia de **Implementação** (os tipos de dispositivo: luz, ventilador).',
+            '',
+            'Em vez de o controle *herdar* de uma combinação fixa, ele **guarda uma referência** para um dispositivo e delega as chamadas pra ele. Isso é a "ponte" (bridge) entre as duas hierarquias — e ela é feita por **composição**, não herança.',
+            '',
+            '## Como funciona, passo a passo',
+            '',
+            '1. Define-se uma interface **Implementor** (`Dispositivo`) com as operações básicas: `ligar()`, `desligar()`.',
+            '2. Cada dispositivo concreto (`LuzApiario`, `VentiladorApiario`) implementa essa interface do seu próprio jeito.',
+            '3. Define-se uma classe **Abstraction** (`ControleRemoto`) que guarda uma referência a um `Dispositivo` e delega as chamadas pra ele.',
+            '4. Subclasses da Abstraction (`ControleRemotoAvancado`) podem adicionar funcionalidades extras, sem precisar saber qual dispositivo concreto está por trás.',
+            '',
+            '```java',
+            'public interface Dispositivo {',
+            '    void ligar();',
+            '    void desligar();',
+            '}',
+            '',
+            'public class LuzApiario implements Dispositivo {',
+            '    public void ligar() { System.out.println("Luz acesa"); }',
+            '    public void desligar() { System.out.println("Luz apagada"); }',
+            '}',
+            '',
+            'public class ControleRemoto {',
+            '    protected final Dispositivo dispositivo;',
+            '',
+            '    public ControleRemoto(Dispositivo dispositivo) {',
+            '        this.dispositivo = dispositivo;',
+            '    }',
+            '',
+            '    public void alternar(boolean ligado) {',
+            '        if (ligado) dispositivo.ligar(); else dispositivo.desligar();',
+            '    }',
+            '}',
+            '```',
+            '',
+            'Agora, `ControleRemoto` funciona com **qualquer** `Dispositivo` — luz, ventilador, ou um dispositivo novo que ainda nem existe — sem precisar de uma classe nova pra cada combinação.',
+        ].join('\n')
+    }),
+
+    new Quiz({
+        id: "quiz-bridge-001",
+        dificuldade: Dificuldade.Facil,
+        padrao: "Bridge",
+        grupo: "Estruturais",
+        nivel: 1,
+        tipo: TipoDesafio.PerguntasRespostas,
+        perguntas: [
+            new Pergunta({
+                id: "p1",
+                texto: "Qual das afirmações abaixo descreve melhor o padrão Bridge?",
+                repostas: [
+                    new Resposta({ id: "p1r1", texto: "Converte a interface de uma classe existente na interface esperada pelo cliente." }),
+                    new Resposta({ id: "p1r2", texto: "Separa uma abstração da sua implementação, para que as duas possam variar de forma independente.", correta: true }),
+                    new Resposta({ id: "p1r3", texto: "Garante que uma classe tenha apenas uma instância." }),
+                    new Resposta({ id: "p1r4", texto: "Define uma sequência de passos para construir um objeto complexo." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p2",
+                texto: "Qual problema o Bridge evita ao separar as duas hierarquias?",
+                repostas: [
+                    new Resposta({ id: "p2r1", texto: "A explosão combinatória de classes (uma classe para cada combinação de abstração × implementação).", correta: true }),
+                    new Resposta({ id: "p2r2", texto: "A necessidade de usar interfaces em qualquer parte do código." }),
+                    new Resposta({ id: "p2r3", texto: "O uso de herança em qualquer situação." }),
+                    new Resposta({ id: "p2r4", texto: "A necessidade de testar o código." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p3",
+                texto: "Como a Abstraction se conecta ao Implementor no padrão Bridge?",
+                repostas: [
+                    new Resposta({ id: "p3r1", texto: "Por herança múltipla das duas classes." }),
+                    new Resposta({ id: "p3r2", texto: "Por composição: a Abstraction guarda uma referência ao Implementor e delega chamadas para ele.", correta: true }),
+                    new Resposta({ id: "p3r3", texto: "Por meio de um método estático compartilhado." }),
+                    new Resposta({ id: "p3r4", texto: "Elas não se conectam — são totalmente independentes." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p4",
+                texto: "No exemplo do controle remoto e dos dispositivos do apiário, o que representa o \"Implementor\"?",
+                repostas: [
+                    new Resposta({ id: "p4r1", texto: "A interface Dispositivo e suas implementações concretas (LuzApiario, VentiladorApiario).", correta: true }),
+                    new Resposta({ id: "p4r2", texto: "A classe ControleRemoto." }),
+                    new Resposta({ id: "p4r3", texto: "O método main() da aplicação." }),
+                    new Resposta({ id: "p4r4", texto: "A classe ControleRemotoAvancado." }),
+                ]
+            }),
+        ]
+    }),
+
+    new CompleteTexto({
+        id: "ct-bridge-001",
+        dificuldade: Dificuldade.Facil,
+        grupo: "Estruturais",
+        nivel: 1,
+        padrao: "Bridge",
+        textos: [
+            new Texto({
+                id: "t1",
+                texto: "O padrão {{1}} separa uma {{2}} da sua {{3}}, permitindo que as duas variem de forma independente.",
+                opcoes: ["Bridge", "abstração", "implementação", "Adapter", "instância", "interface gráfica"],
+                respostas: ["Bridge", "abstração", "implementação"]
+            }),
+            new Texto({
+                id: "t2",
+                texto: "Em vez de usar {{1}}, a Abstraction se conecta ao Implementor por {{2}}, guardando uma referência e delegando chamadas.",
+                opcoes: ["herança", "composição", "reflection", "clonagem", "polimorfismo estático", "serialização"],
+                respostas: ["herança", "composição"]
+            }),
+            new Texto({
+                id: "t3",
+                texto: "Sem o Bridge, criar uma classe para cada combinação de abstração e implementação causa uma {{1}} de {{2}}.",
+                opcoes: ["explosão combinatória", "classes", "redução", "métodos", "simplificação", "instâncias"],
+                respostas: ["explosão combinatória", "classes"]
+            }),
+        ]
+    }),
+
+    new EncontreBug({
+        id: "eb-bridge-001",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Estruturais",
+        nivel: 2,
+        padrao: "Bridge",
+        perguntas: [
+            new PerguntaBug({
+                id: "pb1",
+                enunciado: "O ControleRemotoAvancado nunca liga o ventilador de verdade, mesmo chamando alternar(true). Qual é o problema?",
+                explicacao: "modoEconomico() cria um NOVO objeto Dispositivo (\"new VentiladorApiario()\") em vez de usar o \"dispositivo\" já recebido no construtor — então quando alternar() é chamado depois, ele delega para o dispositivo original (que nunca teve modoEconomico aplicado), não para essa instância nova e descartada.",
+                respostas: [
+                    new RespostaBug({ id: "pb1-r1", texto: "A interface Dispositivo está incompleta." }),
+                    new RespostaBug({ id: "pb1-r2", texto: "modoEconomico() cria uma nova instância de Dispositivo em vez de usar a referência já guardada em \"dispositivo\".", correta: true }),
+                    new RespostaBug({ id: "pb1-r3", texto: "ControleRemotoAvancado deveria implementar Dispositivo diretamente." }),
+                    new RespostaBug({ id: "pb1-r4", texto: "O construtor de ControleRemoto está com visibilidade errada." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb1-a1",
+                        nome: "ControleRemoto.java",
+                        linguagem: "java",
+                        codigo:
+`public class ControleRemoto {
+    protected final Dispositivo dispositivo;
+
+    public ControleRemoto(Dispositivo dispositivo) {
+        this.dispositivo = dispositivo;
+    }
+
+    public void alternar(boolean ligado) {
+        if (ligado) dispositivo.ligar(); else dispositivo.desligar();
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb1-a2",
+                        nome: "ControleRemotoAvancado.java",
+                        linguagem: "java",
+                        codigo:
+`public class ControleRemotoAvancado extends ControleRemoto {
+    public ControleRemotoAvancado(Dispositivo dispositivo) {
+        super(dispositivo);
+    }
+
+    public void modoEconomico() {
+        Dispositivo economico = new VentiladorApiario();
+        economico.ligar();
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb1-a3",
+                        nome: "App.java",
+                        linguagem: "java",
+                        codigo:
+`public class App {
+    public static void main(String[] args) {
+        ControleRemotoAvancado controle = new ControleRemotoAvancado(new VentiladorApiario());
+        controle.modoEconomico();
+        controle.alternar(true);
+    }
+}`
+                    }),
+                ]
+            }),
+            new PerguntaBug({
+                id: "pb2",
+                enunciado: "Essa conversão de temperatura retorna sempre 32, não importa o valor de entrada. Qual é o erro?",
+                explicacao: "A fórmula está com a ordem das operações errada: deveria ser \"(celsius * 9 / 5) + 32\". Como está escrito, \"9 / 5\" já é calculado à parte igual a 32 só quando celsius é 0 por conta da precedência, mas o erro real aqui é que \"celsius\" nunca entra na conta por causa dos parênteses colocados no lugar errado.",
+                respostas: [
+                    new RespostaBug({ id: "pb2-r1", texto: "A fórmula está com os parênteses no lugar errado, fazendo \"celsius\" não entrar de fato no cálculo.", correta: true }),
+                    new RespostaBug({ id: "pb2-r2", texto: "O tipo do parâmetro deveria ser \"double\" em vez de \"int\"." }),
+                    new RespostaBug({ id: "pb2-r3", texto: "Falta multiplicar o resultado final por 100." }),
+                    new RespostaBug({ id: "pb2-r4", texto: "O método deveria ser \"static\"." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb2-a1",
+                        nome: "Temperatura.java",
+                        linguagem: "java",
+                        codigo:
+`public class Temperatura {
+    public static int celsiusParaFahrenheit(int celsius) {
+        return celsius * (9 / 5 + 32);
+    }
+}`
+                    }),
+                ]
+            }),
+        ]
+    }),
+
+    new EncontrePares({
+        id: "ep-bridge-001",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Estruturais",
+        nivel: 2,
+        padrao: "Bridge",
+        rodadas: [
+            new Rodada({
+                id: "r1",
+                pares: [
+                    new Par({ id: "r1p1", afirmacao: "Abstraction", correspondencia: "Guarda uma referência ao Implementor e define a interface de alto nível usada pelo cliente." }),
+                    new Par({ id: "r1p2", afirmacao: "Implementor", correspondencia: "Interface que declara as operações básicas, implementadas de formas diferentes por cada dispositivo concreto." }),
+                    new Par({ id: "r1p3", afirmacao: "RefinedAbstraction", correspondencia: "Subclasse da Abstraction que adiciona funcionalidades extras, sem conhecer o dispositivo concreto por trás." }),
+                    new Par({ id: "r1p4", afirmacao: "ConcreteImplementor", correspondencia: "Implementação concreta do Implementor — ex.: LuzApiario, VentiladorApiario." }),
+                ]
+            }),
+            new Rodada({
+                id: "r2",
+                pares: [
+                    new Par({ id: "r2p1", afirmacao: "Bridge", correspondencia: "Planejado desde o início para permitir que duas hierarquias variem juntas, mas de forma independente." }),
+                    new Par({ id: "r2p2", afirmacao: "Adapter", correspondencia: "Aplicado depois, para tornar compatível uma interface já existente que não foi feita para se encaixar." }),
+                    new Par({ id: "r2p3", afirmacao: "Explosão combinatória de classes", correspondencia: "O problema que o Bridge evita ao não criar uma subclasse para cada combinação possível." }),
+                    new Par({ id: "r2p4", afirmacao: "Composição sobre herança", correspondencia: "Princípio de design que o Bridge aplica ao conectar as duas hierarquias por referência, não por extends." }),
+                ]
+            }),
+        ]
+    }),
+
+    new Licao({
+        id: "licao-bridge-002",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Estruturais",
+        nivel: 2,
+        padrao: "Bridge",
+        conteudoMarkdown: [
+            '# Bridge: a estrutura completa 🐝',
+            '',
+            '## As quatro peças',
+            '',
+            '| Papel | No nosso exemplo | O que faz |',
+            '|---|---|---|',
+            '| **Abstraction** | `ControleRemoto` | Guarda a referência ao Implementor e expõe a interface de alto nível usada pelo cliente. |',
+            '| **RefinedAbstraction** | `ControleRemotoAvancado` | Estende a Abstraction com funcionalidades extras, sem saber qual dispositivo concreto está por trás. |',
+            '| **Implementor** | `Dispositivo` (interface) | Declara as operações básicas que toda implementação concreta precisa oferecer. |',
+            '| **ConcreteImplementor** | `LuzApiario`, `VentiladorApiario` | Implementações concretas e independentes entre si do Implementor. |',
+            '',
+            '## O diagrama de classes',
+            '',
+            '```mermaid',
+            'classDiagram',
+            '    class ControleRemoto {',
+            '        #Dispositivo dispositivo',
+            '        +alternar(boolean)',
+            '    }',
+            '    class ControleRemotoAvancado {',
+            '        +modoEconomico()',
+            '    }',
+            '    class Dispositivo {',
+            '        <<interface>>',
+            '        +ligar()',
+            '        +desligar()',
+            '    }',
+            '    class LuzApiario {',
+            '        +ligar()',
+            '        +desligar()',
+            '    }',
+            '    class VentiladorApiario {',
+            '        +ligar()',
+            '        +desligar()',
+            '    }',
+            '    ControleRemoto <|-- ControleRemotoAvancado',
+            '    ControleRemoto o-- Dispositivo',
+            '    Dispositivo <|.. LuzApiario',
+            '    Dispositivo <|.. VentiladorApiario',
+            '```',
+            '',
+            'Repare que existem **duas hierarquias de herança separadas** (`ControleRemoto`→`ControleRemotoAvancado` e `Dispositivo`→`LuzApiario`/`VentiladorApiario`), ligadas por uma única seta de **composição** (`o--`) entre elas. É essa composição que é a "ponte": qualquer subclasse de `ControleRemoto` funciona com qualquer implementação de `Dispositivo`, em qualquer combinação, sem precisar de uma classe pra cada par.',
+            '',
+            '## Sem Bridge vs. com Bridge',
+            '',
+            '```java',
+            '// Sem Bridge: cada combinação é uma classe.',
+            'class ControleBasicoLuz { }',
+            'class ControleAvancadoLuz { }',
+            'class ControleBasicoVentilador { }',
+            'class ControleAvancadoVentilador { }',
+            '// 2 controles × 2 dispositivos = 4 classes. Um 3º dispositivo = 6 classes.',
+            '',
+            '// Com Bridge: as hierarquias são independentes.',
+            'class ControleRemoto { protected Dispositivo dispositivo; }',
+            'class ControleRemotoAvancado extends ControleRemoto { }',
+            'interface Dispositivo { }',
+            'class LuzApiario implements Dispositivo { }',
+            'class VentiladorApiario implements Dispositivo { }',
+            '// 2 controles + 2 dispositivos = 4 classes. Um 3º dispositivo = 5 classes, não 6.',
+            '```',
+            '',
+            'Quanto mais variações em cada lado, maior a economia: com *m* abstrações e *n* implementações, sem Bridge você precisaria de até *m × n* classes; com Bridge, precisa de apenas *m + n*.',
+        ].join('\n')
+    }),
+
+    new CompleteCodigo({
+        id: "cc-bridge-001",
+        dificuldade: Dificuldade.Medio,
+        grupo: "Estruturais",
+        nivel: 2,
+        padrao: "Bridge",
+        codigos: [
+            new CodigoIncompleto({
+                id: "cc1",
+                arquivo: "ControleRemotoAvancado.java",
+                linguagem: "java",
+                respostaCorretaId: "cc1-t1",
+                explicacao: "modoEconomico() deve reutilizar o \"dispositivo\" recebido no construtor (herdado da Abstraction), não criar uma instância nova — é essa referência compartilhada que faz a ponte funcionar de verdade.",
+                template:
+`public class ControleRemotoAvancado extends ControleRemoto {
+    public ControleRemotoAvancado(Dispositivo dispositivo) {
+        super(dispositivo);
+    }
+
+    public void modoEconomico() {
+{{1}}
+    }
+}`,
+                opcoes: [
+                    new Trecho({ id: "cc1-t1", codigo: `        dispositivo.desligar();\n        System.out.println("Modo econômico ativado");` }),
+                    new Trecho({ id: "cc1-t2", codigo: `        Dispositivo novo = new LuzApiario();\n        novo.desligar();` }),
+                    new Trecho({ id: "cc1-t3", codigo: `        this.dispositivo = null;` }),
+                    new Trecho({ id: "cc1-t4", codigo: `        // não faz nada com o dispositivo` }),
+                ]
+            }),
+            new CodigoIncompleto({
+                id: "cc2",
+                arquivo: "VentiladorApiario.java",
+                linguagem: "java",
+                respostaCorretaId: "cc2-t1",
+                explicacao: "Pra ser um ConcreteImplementor válido, a classe precisa implementar a interface Dispositivo por completo, incluindo o método desligar() — sem ele, a classe nem compila, já que a interface exige as duas operações.",
+                template:
+`public class VentiladorApiario implements Dispositivo {
+    private boolean ligado = false;
+
+    @Override
+    public void ligar() {
+        ligado = true;
+        System.out.println("Ventilador ligado");
+    }
+
+{{1}}
+}`,
+                opcoes: [
+                    new Trecho({ id: "cc2-t1", codigo: `    @Override\n    public void desligar() {\n        ligado = false;\n        System.out.println("Ventilador desligado");\n    }` }),
+                    new Trecho({ id: "cc2-t2", codigo: `    public void desligar(boolean estado) {\n        ligado = estado;\n    }` }),
+                    new Trecho({ id: "cc2-t3", codigo: `    private void desligar() {\n        ligado = false;\n    }` }),
+                    new Trecho({ id: "cc2-t4", codigo: `    // desligar() não é obrigatório` }),
+                ]
+            }),
+        ]
+    }),
+
+    new EncontreBug({
+        id: "eb-bridge-002",
+        dificuldade: Dificuldade.Dificil,
+        grupo: "Estruturais",
+        nivel: 3,
+        padrao: "Bridge",
+        perguntas: [
+            new PerguntaBug({
+                id: "pb1",
+                enunciado: "Ao adicionar um terceiro dispositivo, o time criou uma nova classe pra cada combinação com os controles existentes. O que isso indica sobre o design?",
+                explicacao: "Criar ControleBasicoAquecedor e ControleAvancadoAquecedor para o novo dispositivo é sintoma de que a ponte (composição entre ControleRemoto e Dispositivo) foi abandonada em algum lugar — no Bridge corretamente aplicado, um dispositivo novo só precisa implementar a interface Dispositivo; nenhuma classe nova de controle deveria ser necessária.",
+                respostas: [
+                    new RespostaBug({ id: "pb1-r1", texto: "É o comportamento esperado — cada dispositivo novo sempre exige novas classes de controle." }),
+                    new RespostaBug({ id: "pb1-r2", texto: "Indica que a ponte por composição foi abandonada em algum lugar do código — um Bridge correto não precisaria de classes novas de controle para um dispositivo novo.", correta: true }),
+                    new RespostaBug({ id: "pb1-r3", texto: "Indica que Dispositivo deveria ser uma classe abstrata em vez de interface." }),
+                    new RespostaBug({ id: "pb1-r4", texto: "Indica que ControleRemoto deveria ser \"final\"." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb1-a1",
+                        nome: "ControleBasicoAquecedor.java",
+                        linguagem: "java",
+                        codigo:
+`public class ControleBasicoAquecedor {
+    private final AquecedorApiario aquecedor = new AquecedorApiario();
+
+    public void ligar() {
+        aquecedor.ligar();
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb1-a2",
+                        nome: "ControleAvancadoAquecedor.java",
+                        linguagem: "java",
+                        codigo:
+`public class ControleAvancadoAquecedor {
+    private final AquecedorApiario aquecedor = new AquecedorApiario();
+
+    public void ligar() {
+        aquecedor.ligar();
+    }
+
+    public void modoTurbo() {
+        System.out.println("Aquecendo no máximo");
+    }
+}`
+                    }),
+                    new Arquivo({
+                        id: "pb1-a3",
+                        nome: "ControleRemoto.java",
+                        linguagem: "java",
+                        codigo:
+`public class ControleRemoto {
+    protected final Dispositivo dispositivo;
+
+    public ControleRemoto(Dispositivo dispositivo) {
+        this.dispositivo = dispositivo;
+    }
+
+    public void alternar(boolean ligado) {
+        if (ligado) dispositivo.ligar(); else dispositivo.desligar();
+    }
+}`
+                    }),
+                ]
+            }),
+            new PerguntaBug({
+                id: "pb2",
+                enunciado: "Esse método de desconto aplica um desconto negativo (aumenta o preço) para valores de porcentagem acima de 100. Qual correção evita isso?",
+                explicacao: "O método não valida o intervalo de \"percentual\" — valores acima de 100 fazem \"preco * (1 - percentual/100)\" ficar negativo. É preciso validar (ex.: lançar exceção ou limitar entre 0 e 100) antes de aplicar a fórmula.",
+                respostas: [
+                    new RespostaBug({ id: "pb2-r1", texto: "Validar que \"percentual\" está entre 0 e 100 antes de aplicar o desconto.", correta: true }),
+                    new RespostaBug({ id: "pb2-r2", texto: "Trocar o tipo de \"preco\" de double para int." }),
+                    new RespostaBug({ id: "pb2-r3", texto: "Multiplicar o resultado final por -1." }),
+                    new RespostaBug({ id: "pb2-r4", texto: "Remover o parâmetro \"percentual\" do método." }),
+                ],
+                arquivos: [
+                    new Arquivo({
+                        id: "pb2-a1",
+                        nome: "Desconto.java",
+                        linguagem: "java",
+                        codigo:
+`public class Desconto {
+    public static double aplicar(double preco, double percentual) {
+        return preco * (1 - percentual / 100);
+    }
+}`
+                    }),
+                ]
+            }),
+        ]
+    }),
+
+    new Licao({
+        id: "licao-bridge-003",
+        dificuldade: Dificuldade.Dificil,
+        grupo: "Estruturais",
+        nivel: 3,
+        padrao: "Bridge",
+        conteudoMarkdown: [
+            '# Bridge: variações e quando (não) usar 🐝',
+            '',
+            '## Bridge vs. Adapter',
+            '',
+            'Os dois padrões têm uma estrutura parecida (uma classe guarda uma referência a outra e delega chamadas), mas resolvem problemas diferentes — a diferença está na **intenção** e no **momento**:',
+            '',
+            '| | Bridge | Adapter |',
+            '|---|---|---|',
+            '| **Quando é aplicado** | Planejado desde o início do design. | Aplicado depois, sobre código/API já existente. |',
+            '| **Objetivo** | Permitir que duas hierarquias variem de forma independente. | Tornar compatíveis duas interfaces que não foram feitas uma para a outra. |',
+            '| **Quantas implementações** | Geralmente várias, desde o começo. | Geralmente uma — só a que já existe e precisa ser encaixada. |',
+            '',
+            'Na prática: se você está desenhando o sistema do zero e já sabe que vai ter múltiplas variações dos dois lados (vários controles, vários dispositivos), comece com Bridge. Se você está integrando uma biblioteca de terceiros cuja interface não bate com a que seu código espera, isso é Adapter.',
+            '',
+            '## Bridge vs. Strategy',
+            '',
+            'Estruturalmente, Bridge e Strategy também se parecem (composição + delegação). A diferença é de **intenção**: Strategy troca um **algoritmo** (o *como fazer* uma única operação) em tempo de execução; Bridge separa duas **hierarquias inteiras de abstração**, cada uma podendo ter várias camadas de subclasses dos dois lados.',
+            '',
+            '## Quando o Bridge faz sentido',
+            '',
+            '- Quando você já enxerga, no design, **duas dimensões de variação** que crescem de forma independente (ex.: tipos de controle × tipos de dispositivo; formas × plataformas de renderização).',
+            '- Quando trocar a implementação **em tempo de execução** é um requisito (ex.: o mesmo controle remoto passando a operar um dispositivo diferente sem recompilar nada).',
+            '- Quando você quer evitar acoplar a interface pública (Abstraction) aos detalhes internos de implementação, permitindo publicar a Abstraction sem expor a implementação.',
+            '',
+            '## Quando evitar',
+            '',
+            '- Quando só existe **uma** implementação e não há sinal de que outra vá aparecer — nesse caso, a indireção da Bridge só adiciona complexidade sem benefício real.',
+            '- Quando as duas hierarquias estão fortemente amarradas por natureza (mudar uma sempre implica mudar a outra) — aí a separação é artificial e não compra flexibilidade nenhuma.',
+        ].join('\n')
+    }),
+
+    new Quiz({
+        id: "quiz-bridge-002",
+        dificuldade: Dificuldade.Dificil,
+        padrao: "Bridge",
+        grupo: "Estruturais",
+        nivel: 3,
+        tipo: TipoDesafio.PerguntasRespostas,
+        perguntas: [
+            new Pergunta({
+                id: "p1",
+                texto: "Qual é a principal diferença de intenção entre Bridge e Adapter?",
+                repostas: [
+                    new Resposta({ id: "p1r1", texto: "Bridge é planejado desde o design para permitir duas hierarquias variarem independentemente; Adapter é aplicado depois, para compatibilizar uma interface já existente.", correta: true }),
+                    new Resposta({ id: "p1r2", texto: "Adapter só funciona com classes finais; Bridge não." }),
+                    new Resposta({ id: "p1r3", texto: "Não há diferença real entre os dois padrões." }),
+                    new Resposta({ id: "p1r4", texto: "Bridge exige herança múltipla; Adapter não." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p2",
+                texto: "Com 3 tipos de Abstraction e 4 tipos de Implementor, quantas classes o Bridge precisa, no total, comparado à abordagem sem Bridge?",
+                repostas: [
+                    new Resposta({ id: "p2r1", texto: "Bridge: 3 + 4 = 7 classes. Sem Bridge: até 3 × 4 = 12 classes.", correta: true }),
+                    new Resposta({ id: "p2r2", texto: "As duas abordagens sempre resultam no mesmo número de classes." }),
+                    new Resposta({ id: "p2r3", texto: "Bridge sempre precisa de mais classes do que a abordagem sem Bridge." }),
+                    new Resposta({ id: "p2r4", texto: "Bridge elimina a necessidade de qualquer classe de Implementor." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p3",
+                texto: "Qual sinal no código indica que a ponte (composição) foi abandonada em algum lugar do design?",
+                repostas: [
+                    new Resposta({ id: "p3r1", texto: "Um dispositivo novo exige criar novas classes de controle para cada combinação existente.", correta: true }),
+                    new Resposta({ id: "p3r2", texto: "A interface Implementor ter mais de um método." }),
+                    new Resposta({ id: "p3r3", texto: "A Abstraction ser uma classe abstrata em vez de concreta." }),
+                    new Resposta({ id: "p3r4", texto: "O uso de \"protected\" no campo que guarda o Implementor." }),
+                ]
+            }),
+            new Pergunta({
+                id: "p4",
+                texto: "Quando faz mais sentido EVITAR o padrão Bridge?",
+                repostas: [
+                    new Resposta({ id: "p4r1", texto: "Quando existem várias implementações conhecidas desde o início do design." }),
+                    new Resposta({ id: "p4r2", texto: "Quando só existe uma implementação e não há indício de que outra vá surgir.", correta: true }),
+                    new Resposta({ id: "p4r3", texto: "Quando é necessário trocar a implementação em tempo de execução." }),
+                    new Resposta({ id: "p4r4", texto: "Quando a Abstraction precisa ser publicada sem expor a implementação." }),
+                ]
+            }),
+        ]
+    }),
 ];

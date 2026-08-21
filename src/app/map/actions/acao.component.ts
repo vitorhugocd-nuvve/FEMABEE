@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, signal } from "@angular/core";
 import { NgStyle } from "@angular/common";
 import { BeeMapActionComponent } from "../../../ui/map";
+import { IconComponent } from "../../../ui/icon/icon.component";
 import { ScreenService } from "../../../services/tela/screen.service";
 import { MobileAcaoSelecionadaService } from "./mobile-acao-selecionada.component";
 import { AcaoDoMapa } from "../../core/models/map/acao-do-mapa";
@@ -9,6 +10,7 @@ import { TipoDesafio } from "../../core/models/desafios/tipo-desafio";
 import { NiveisConcluidosAbelhaService } from "../../core/progresso/niveis-concluidos-abelha.service";
 import { OnibusObtidoService } from "../../core/progresso/onibus-obtido.service";
 import { AviaoObtidoService } from "../../core/progresso/aviao-obtido.service";
+import { MapaRepositoryService } from "../../core/seeds/repositories/mapa-repository.service";
 import { TAMANHO_TILE } from "../../core/constants/tile";
 import { SomService } from "../../../services/som/som.service";
 import {
@@ -24,21 +26,22 @@ import {
     selector: 'app-acao',
     template: `
     <bee-map-action [x]="mapActionData().x" [y]="mapActionData().y" [label]="mapActionData().label">
-        <div>
-            <div (click)="selecionar()" class="tile-icon cursor-pointer hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px" [ngStyle]="tileStyle()"></div>
-            <!-- @if (screenService.isMobile()) {
-            } @else {
-                <div zPopover [zContent]="popoverContent" class="tile-icon cursor-pointer hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px" [ngStyle]="tileStyle()"></div>
-                <ng-template #popoverContent>
-                    <z-popover>
-                        <app-desafio-action />
-                    </z-popover>
-                </ng-template>
-            } -->
+        <div class="relative">
+            <div
+                (click)="selecionar()"
+                class="tile-icon hover:transition-all hover:-translate-y-0.5 duration-150 active:-translate-y-px"
+                [class.cursor-pointer]="!bloqueado()"
+                [class.cursor-not-allowed]="bloqueado()"
+                [class.opacity-40]="bloqueado()"
+                [class.grayscale]="bloqueado()"
+                [ngStyle]="tileStyle()"></div>
+            @if (bloqueado()) {
+                <bee-icon icon="stop" [width]="10" class="absolute -top-1 -right-1" />
+            }
         </div>
     </bee-map-action>
     `,
-    imports: [BeeMapActionComponent, NgStyle]
+    imports: [BeeMapActionComponent, NgStyle, IconComponent]
 })
 export class AcaoComponent {
     readonly mobileAcaoSelecionadaService = inject(MobileAcaoSelecionadaService);
@@ -46,12 +49,25 @@ export class AcaoComponent {
     private readonly niveisConcluidosAbelhaService = inject(NiveisConcluidosAbelhaService);
     private readonly onibusObtidoService = inject(OnibusObtidoService);
     private readonly aviaoObtidoService = inject(AviaoObtidoService);
+    private readonly mapaRepositoryService = inject(MapaRepositoryService);
     private readonly somService = inject(SomService);
 
     readonly isOpen = signal(false);
     readonly acao = input.required<AcaoDoMapa>();
 
     protected readonly mapActionData = computed(() => this.acao().toMapActionData());
+
+    /**
+     * Só nesta fase do jogo: viagens (ônibus/avião) pra uma região cujo mapa foi comentado
+     * (padrão ainda sem fases liberadas) ficam com estilo desabilitado em vez de sumir —
+     * clicar mostra o aviso em vez de navegar.
+     */
+    protected readonly bloqueado = computed(() => {
+        const acao = this.acao();
+        if (acao.tipo !== TipoAcao.Onibus && acao.tipo !== TipoAcao.Aviao) return false;
+        const destinoId = acao.mapaDestinoId;
+        return !!destinoId && !this.mapaRepositoryService.findById(destinoId);
+    });
 
     protected readonly tileIndex = computed(() => {
         const acao = this.acao();
@@ -85,6 +101,11 @@ export class AcaoComponent {
     });
 
     protected selecionar() {
+        if (this.bloqueado()) {
+            this.somService.erro();
+            this.mobileAcaoSelecionadaService.selecionarBloqueado();
+            return;
+        }
         this.somService.selecionar();
         this.mobileAcaoSelecionadaService.selecionar(this.acao());
     }

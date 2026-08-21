@@ -116,13 +116,13 @@ import { MapTileService } from '../services/map-tile.service';
 
     .map-action__label {
       pointer-events: none;
-      margin-top: 4px;
+      margin-top: 3px;
       white-space: nowrap;
       background: rgba(0,0,0,.75);
-      padding: 2px 6px;
-      font-size: 10px;
+      padding: 1px 4px;
+      font-size: 8px;
       font-weight: 500;
-      line-height: 1;
+      line-height: 1.4;
       color: #fff;
     }
   `],

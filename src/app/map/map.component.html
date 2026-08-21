@@ -13,6 +13,7 @@
                 [maxZoom]="10"
                 [size]="{ x: map.quantidadeTiles.x, y: map.quantidadeTiles.y }" 
                 [image]="map.url" class="w-dvw h-dvh" viewportHeight="100%">
+                <app-conexoes-niveis [acoes]="map.acoes" />
                 @for (acao of map.acoes; track acao.id) {
                     <app-acao [acao]="acao" />
                 }

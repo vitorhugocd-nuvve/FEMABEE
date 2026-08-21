@@ -18,6 +18,8 @@ export type AcaoDoMapaProps = {
     desafioId?: string;
     /** Exibe o título embaixo da ação no mapa. Padrão: `false`. */
     mostrarLabel?: boolean;
+    /** Ids de outras ações do mesmo mapa que precisam estar concluídas antes desta. Desenha uma linha de conexão no mapa. */
+    niveisDependentes?: string[];
 }
 
 export class AcaoDoMapa {
@@ -34,6 +36,7 @@ export class AcaoDoMapa {
     get mapaDestinoId() { return this.props.mapaDestinoId; }
     get desafioId() { return this.props.desafioId; }
     get mostrarLabel() { return this.props.mostrarLabel ?? false; }
+    get niveisDependentes() { return this.props.niveisDependentes ?? []; }
 
     public posicaoEmTiles() {
         return {

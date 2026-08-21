@@ -9,31 +9,33 @@ import { CONTINENTE_CRIACIONAL } from "./continentes/criacaional";
 import { CONTINENTE_COMPORTAMENTAL } from "./continentes/comportamental";
 import { CONTINENTE_ESTRUTURAL } from "./continentes/estrutural";
 
-import { REGIAO_FACTORY } from "./regioes/criacionais/factory";
-import { REGIAO_PROTOTYPE } from "./regioes/criacionais/prototype";
-import { REGIAO_BUILDER } from "./regioes/criacionais/builder";
+// Somente Singleton, Observer e Bridge estão liberados nesta fase do jogo — as demais
+// regiões ficam comentadas (não removidas) até terem suas fases implementadas.
+// import { REGIAO_FACTORY } from "./regioes/criacionais/factory";
+// import { REGIAO_PROTOTYPE } from "./regioes/criacionais/prototype";
+// import { REGIAO_BUILDER } from "./regioes/criacionais/builder";
 import { REGIAO_SINGLETON } from "./regioes/criacionais/singleton";
-import { REGIAO_ABSTRACT_FACTORY } from "./regioes/criacionais/abstract-factory";
+// import { REGIAO_ABSTRACT_FACTORY } from "./regioes/criacionais/abstract-factory";
 
-import { REGIAO_CHAIN_OF_RESPONSIBILITY } from "./regioes/comportamentais/chain-of-responsibility";
-import { REGIAO_COMMAND } from "./regioes/comportamentais/command";
-import { REGIAO_INTERPRETER } from "./regioes/comportamentais/interpreter";
-import { REGIAO_ITERATOR } from "./regioes/comportamentais/iterator";
-import { REGIAO_MEDIATOR } from "./regioes/comportamentais/mediator";
-import { REGIAO_MEMENTO } from "./regioes/comportamentais/memento";
+// import { REGIAO_CHAIN_OF_RESPONSIBILITY } from "./regioes/comportamentais/chain-of-responsibility";
+// import { REGIAO_COMMAND } from "./regioes/comportamentais/command";
+// import { REGIAO_INTERPRETER } from "./regioes/comportamentais/interpreter";
+// import { REGIAO_ITERATOR } from "./regioes/comportamentais/iterator";
+// import { REGIAO_MEDIATOR } from "./regioes/comportamentais/mediator";
+// import { REGIAO_MEMENTO } from "./regioes/comportamentais/memento";
 import { REGIAO_OBSERVER } from "./regioes/comportamentais/observer";
-import { REGIAO_STATE } from "./regioes/comportamentais/state";
-import { REGIAO_STRATEGY } from "./regioes/comportamentais/strategy";
-import { REGIAO_TEMPLATE_METHOD } from "./regioes/comportamentais/template-method";
-import { REGIAO_VISITOR } from "./regioes/comportamentais/visitor";
+// import { REGIAO_STATE } from "./regioes/comportamentais/state";
+// import { REGIAO_STRATEGY } from "./regioes/comportamentais/strategy";
+// import { REGIAO_TEMPLATE_METHOD } from "./regioes/comportamentais/template-method";
+// import { REGIAO_VISITOR } from "./regioes/comportamentais/visitor";
 
-import { REGIAO_ADAPTER } from "./regioes/estruturais/adapter";
+// import { REGIAO_ADAPTER } from "./regioes/estruturais/adapter";
 import { REGIAO_BRIDGE } from "./regioes/estruturais/bridge";
-import { REGIAO_COMPOSITE } from "./regioes/estruturais/composite";
-import { REGIAO_DECORATOR } from "./regioes/estruturais/decorator";
-import { REGIAO_FACADE } from "./regioes/estruturais/facade";
-import { REGIAO_FLYWEIGHT } from "./regioes/estruturais/flyweight";
-import { REGIAO_PROXY } from "./regioes/estruturais/proxy";
+// import { REGIAO_COMPOSITE } from "./regioes/estruturais/composite";
+// import { REGIAO_DECORATOR } from "./regioes/estruturais/decorator";
+// import { REGIAO_FACADE } from "./regioes/estruturais/facade";
+// import { REGIAO_FLYWEIGHT } from "./regioes/estruturais/flyweight";
+// import { REGIAO_PROXY } from "./regioes/estruturais/proxy";
 
 
 export const MapsSeeds = [
@@ -46,35 +48,35 @@ export const MapsSeeds = [
     CONTINENTE_ESTRUTURAL,
 
     // ── Regiões Criacionais ────────────────────────────────────────────────────────────────
-    // Factory Method, Prototype e Builder têm os desafios do padrão implementados;
-    // Singleton e Abstract Factory por enquanto só têm a ilha navegável (sem fases ainda).
-    REGIAO_FACTORY,
-    REGIAO_PROTOTYPE,
-    REGIAO_BUILDER,
+    // Só Singleton está liberado nesta fase — as demais regiões ficam comentadas acima
+    // (não removidas) até terem suas fases implementadas.
+    // REGIAO_FACTORY,
+    // REGIAO_PROTOTYPE,
+    // REGIAO_BUILDER,
     REGIAO_SINGLETON,
-    REGIAO_ABSTRACT_FACTORY,
+    // REGIAO_ABSTRACT_FACTORY,
 
-    // ── Regiões Comportamentais (só ilha navegável, sem fases ainda) ──────────────────────────
-    REGIAO_CHAIN_OF_RESPONSIBILITY,
-    REGIAO_COMMAND,
-    REGIAO_INTERPRETER,
-    REGIAO_ITERATOR,
-    REGIAO_MEDIATOR,
-    REGIAO_MEMENTO,
+    // ── Regiões Comportamentais — só Observer está liberado nesta fase ────────────────────────
+    // REGIAO_CHAIN_OF_RESPONSIBILITY,
+    // REGIAO_COMMAND,
+    // REGIAO_INTERPRETER,
+    // REGIAO_ITERATOR,
+    // REGIAO_MEDIATOR,
+    // REGIAO_MEMENTO,
     REGIAO_OBSERVER,
-    REGIAO_STATE,
-    REGIAO_STRATEGY,
-    REGIAO_TEMPLATE_METHOD,
-    REGIAO_VISITOR,
+    // REGIAO_STATE,
+    // REGIAO_STRATEGY,
+    // REGIAO_TEMPLATE_METHOD,
+    // REGIAO_VISITOR,
 
-    // ── Regiões Estruturais (só ilha navegável, sem fases ainda) ───────────────────────────────
-    REGIAO_ADAPTER,
+    // ── Regiões Estruturais — só Bridge está liberado nesta fase ──────────────────────────────
+    // REGIAO_ADAPTER,
     REGIAO_BRIDGE,
-    REGIAO_COMPOSITE,
-    REGIAO_DECORATOR,
-    REGIAO_FACADE,
-    REGIAO_FLYWEIGHT,
-    REGIAO_PROXY,
+    // REGIAO_COMPOSITE,
+    // REGIAO_DECORATOR,
+    // REGIAO_FACADE,
+    // REGIAO_FLYWEIGHT,
+    // REGIAO_PROXY,
 
     // Regional (Criacional): os desafios do padrão + 1 ônibus de volta ao Continental.
     new Mapa({
