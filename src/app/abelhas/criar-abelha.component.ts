@@ -9,6 +9,7 @@ import { ButtonComponent } from "../../ui/button/button.component";
 import { IndicatorComponent } from "../../ui/indicator/indicator.component";
 import { Indication } from "../../ui/indicator/indication";
 import { AbelhaComponent } from "../../ui/abelha/abelha.component";
+import { AuthService } from "../core/auth/auth.service";
 import { JogadorService } from "../core/jogador/jogador.service";
 import { TamanhoAbelha } from "../core/models/aparencia/tamanhos";
 import { TITULO_TAMANHO_ABELHA } from "../core/constants/aparencia";
@@ -22,12 +23,7 @@ const TAMANHOS = Object.values(TamanhoAbelha);
         <form class="flex flex-col gap-4 p-4" [formGroup]="form" (ngSubmit)="onSubmit()">
             @if (precisaCriarJogador()) {
                 <bee-field>
-                    <label bee-label for="input-nome-jogador">Seu nome</label>
-                    <input type="text" bee-input id="input-nome-jogador" formControlName="nomeJogador" />
-                </bee-field>
-
-                <bee-field>
-                    <label bee-label for="input-comida-favorita">Comida favorita</label>
+                    <label bee-label for="input-comida-favorita">Sua comida favorita</label>
                     <input type="text" bee-input id="input-comida-favorita" formControlName="comidaFavorita" />
                 </bee-field>
 
@@ -65,6 +61,7 @@ const TAMANHOS = Object.values(TamanhoAbelha);
 })
 export class CriarAbelhaComponent {
     protected readonly jogadorService = inject(JogadorService);
+    private readonly authService = inject(AuthService);
     private readonly formBuilder = inject(FormBuilder);
 
     readonly open = model.required<boolean>();
@@ -77,7 +74,6 @@ export class CriarAbelhaComponent {
     private readonly indicator = viewChild<IndicatorComponent>('indicator');
 
     protected readonly form = this.formBuilder.nonNullable.group({
-        nomeJogador: [''],
         comidaFavorita: [''],
         nomeAbelha: ['', [Validators.required, Validators.maxLength(50)]],
         tamanho: [TamanhoAbelha.AltaGorda, Validators.required],
@@ -85,9 +81,7 @@ export class CriarAbelhaComponent {
 
     protected async onSubmit(): Promise<void> {
         if (this.precisaCriarJogador()) {
-            this.form.controls.nomeJogador.addValidators(Validators.required);
             this.form.controls.comidaFavorita.addValidators(Validators.required);
-            this.form.controls.nomeJogador.updateValueAndValidity();
             this.form.controls.comidaFavorita.updateValueAndValidity();
         }
 
@@ -97,8 +91,10 @@ export class CriarAbelhaComponent {
 
         try {
             if (this.precisaCriarJogador()) {
+                // O nome do jogador é o nome de usuário da conta — não faz sentido pedir de novo aqui.
+                const nome = this.authService.usuarioLogado()?.nomeDeUsuario ?? '';
                 await this.jogadorService.criarJogador({
-                    nome: valores.nomeJogador,
+                    nome,
                     comidaFavorita: valores.comidaFavorita,
                     abelha: { nome: valores.nomeAbelha, tamanho: valores.tamanho },
                 });
@@ -109,7 +105,7 @@ export class CriarAbelhaComponent {
                 });
             }
 
-            this.form.reset({ nomeJogador: '', comidaFavorita: '', nomeAbelha: '', tamanho: TamanhoAbelha.AltaGorda });
+            this.form.reset({ comidaFavorita: '', nomeAbelha: '', tamanho: TamanhoAbelha.AltaGorda });
             this.criada.emit();
         } catch (erro) {
             const mensagem = erro instanceof HttpErrorResponse
