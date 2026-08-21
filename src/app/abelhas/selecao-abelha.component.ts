@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { JogadorService } from "../core/jogador/jogador.service";
-import { AbelhaAtivaService } from "../core/jogador/abelha-ativa.service";
+import { AbelhaSelecionadaService } from "../core/jogador/abelha-selecionada.service";
 import { Abelha } from "../core/models/abelha/abelha";
 import { AbelhaComponent } from "../../ui/abelha/abelha.component";
 import { LoaderComponent } from "../../ui/loader/loader.component";
@@ -53,7 +53,7 @@ const POSICOES: Slot['posicao'][] = ['esquerda', 'centro', 'direita'];
 })
 export class SelecaoAbelhaComponent implements OnInit {
     private readonly jogadorService = inject(JogadorService);
-    private readonly abelhaAtivaService = inject(AbelhaAtivaService);
+    private readonly abelhaSelecionadaService = inject(AbelhaSelecionadaService);
     private readonly router = inject(Router);
 
     protected readonly tamanhoPadrao = TamanhoAbelha.AltaGorda;
@@ -75,7 +75,7 @@ export class SelecaoAbelhaComponent implements OnInit {
 
     protected onSlotClick(slot: Slot): void {
         if (slot.abelha) {
-            this.abelhaAtivaService.selecionar(slot.abelha.id);
+            this.abelhaSelecionadaService.selecionar(slot.abelha);
             this.router.navigateByUrl('/');
             return;
         }

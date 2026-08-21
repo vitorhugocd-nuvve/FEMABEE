@@ -1,12 +1,12 @@
 import { inject } from "@angular/core";
 import { CanActivateFn, Router } from "@angular/router";
-import { AbelhaAtivaService } from "./abelha-ativa.service";
+import { AbelhaSelecionadaService } from "./abelha-selecionada.service";
 
 export const abelhaSelecionadaGuard: CanActivateFn = () => {
-    const abelhaAtivaService = inject(AbelhaAtivaService);
+    const abelhaSelecionadaService = inject(AbelhaSelecionadaService);
     const router = inject(Router);
 
-    if (abelhaAtivaService.abelhaAtivaId()) return true;
+    if (abelhaSelecionadaService.abelha()) return true;
 
     router.navigateByUrl('/abelhas');
     return false;

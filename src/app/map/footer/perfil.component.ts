@@ -6,9 +6,10 @@ import { DescriptionComponent } from "../../../ui/typography/description.compone
 import { BeeDividerComponent } from "../../../ui/divider/divider.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { BeeCardComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
-import { NICK_USUARIO_MOCK, NOME_USUARIO_MOCK } from "./usuario-mock";
 import { AparenciaEquipadaService } from "../../core/progresso/aparencia-equipada.service";
 import { UserStatsService } from "../../core/services/user-stats.service";
+import { AuthService } from "../../core/auth/auth.service";
+import { AbelhaSelecionadaService } from "../../core/jogador/abelha-selecionada.service";
 
 @Component({
     selector: 'app-perfil',
@@ -19,8 +20,8 @@ import { UserStatsService } from "../../core/services/user-stats.service";
                 <bee-abelha [tamanho]="tamanhoEquipado()" [aparencias]="aparenciasEquipadas()" [scale]="2.2" />
             </div>
             <div class="flex flex-col items-center">
-                <bee-large>{{ nome }}</bee-large>
-                <bee-description>{{ nick }}</bee-description>
+                <bee-large>{{ nome() }}</bee-large>
+                <bee-description>{{ nick() }}</bee-description>
             </div>
         </div>
 
@@ -47,13 +48,18 @@ import { UserStatsService } from "../../core/services/user-stats.service";
 export class PerfilComponent {
     private readonly aparenciaEquipadaService = inject(AparenciaEquipadaService);
     private readonly userStatsService = inject(UserStatsService);
+    private readonly authService = inject(AuthService);
+    private readonly abelhaSelecionadaService = inject(AbelhaSelecionadaService);
 
     readonly open = model.required<boolean>();
 
     protected readonly aparenciasEquipadas = this.aparenciaEquipadaService.equipadas;
     protected readonly tamanhoEquipado = this.aparenciaEquipadaService.tamanho;
-    protected readonly nome = NOME_USUARIO_MOCK;
-    protected readonly nick = NICK_USUARIO_MOCK;
+    protected readonly nome = computed(() => this.abelhaSelecionadaService.abelha()?.nome ?? '');
+    protected readonly nick = computed(() => {
+        const nomeDeUsuario = this.authService.usuarioLogado()?.nomeDeUsuario;
+        return nomeDeUsuario ? `@${nomeDeUsuario}` : '';
+    });
 
     protected readonly cards = computed(() => {
         const stats = this.userStatsService.stats();

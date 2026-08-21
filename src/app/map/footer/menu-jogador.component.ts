@@ -1,4 +1,5 @@
-import { Component, inject, model, signal } from "@angular/core";
+import { Component, computed, inject, model, signal } from "@angular/core";
+import { Router } from "@angular/router";
 import { SideDrawerComponent } from "../../../ui/side-drawer/side-drawer.component";
 import { AbelhaComponent } from "../../../ui/abelha/abelha.component";
 import { LargeComponent } from "../../../ui/typography/large.component";
@@ -6,15 +7,16 @@ import { DescriptionComponent } from "../../../ui/typography/description.compone
 import { BeeDividerComponent } from "../../../ui/divider/divider.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
-import { NICK_USUARIO_MOCK, NOME_USUARIO_MOCK } from "./usuario-mock";
 import { ConquistasComponent } from "./conquistas.component";
 import { PerfilComponent } from "./perfil.component";
 import { AparenciaEquipadaService } from "../../core/progresso/aparencia-equipada.service";
+import { AuthService } from "../../core/auth/auth.service";
+import { AbelhaSelecionadaService } from "../../core/jogador/abelha-selecionada.service";
 
-/** Itens do menu — só "Conquistas" tem ação ligada por enquanto, o resto é só visual. */
 const ITENS_MENU_JOGADOR = [
     { icon: 'human', label: 'Perfil', chave: 'perfil' as const },
     { icon: 'star', label: 'Conquistas', chave: 'conquistas' as const },
+    { icon: 'repeat', label: 'Trocar de Abelha', chave: 'trocar-abelha' as const },
     { icon: 'logout', label: 'Sair', chave: 'sair' as const },
 ];
 
@@ -27,8 +29,8 @@ const ITENS_MENU_JOGADOR = [
                 <bee-abelha [tamanho]="tamanhoEquipado()" [aparencias]="aparenciasEquipadas()" [scale]="2.2" />
             </div>
             <div class="flex flex-col items-center">
-                <bee-large>{{ nome }}</bee-large>
-                <bee-description>{{ nick }}</bee-description>
+                <bee-large>{{ nome() }}</bee-large>
+                <bee-description>{{ nick() }}</bee-description>
             </div>
         </div>
 
@@ -57,13 +59,19 @@ const ITENS_MENU_JOGADOR = [
 })
 export class MenuJogadorComponent {
     private readonly aparenciaEquipadaService = inject(AparenciaEquipadaService);
+    private readonly authService = inject(AuthService);
+    private readonly abelhaSelecionadaService = inject(AbelhaSelecionadaService);
+    private readonly router = inject(Router);
 
     readonly open = model.required<boolean>();
 
     protected readonly aparenciasEquipadas = this.aparenciaEquipadaService.equipadas;
     protected readonly tamanhoEquipado = this.aparenciaEquipadaService.tamanho;
-    protected readonly nome = NOME_USUARIO_MOCK;
-    protected readonly nick = NICK_USUARIO_MOCK;
+    protected readonly nome = computed(() => this.abelhaSelecionadaService.abelha()?.nome ?? '');
+    protected readonly nick = computed(() => {
+        const nomeDeUsuario = this.authService.usuarioLogado()?.nomeDeUsuario;
+        return nomeDeUsuario ? `@${nomeDeUsuario}` : '';
+    });
     protected readonly itensMenu = ITENS_MENU_JOGADOR;
 
     protected readonly conquistasAbertas = signal(false);
@@ -78,6 +86,16 @@ export class MenuJogadorComponent {
             this.open.set(false);
             this.perfilAberto.set(true);
         }
-        // Configurações / Sair: só visual por enquanto.
+        if (chave === 'trocar-abelha') {
+            this.open.set(false);
+            this.abelhaSelecionadaService.limpar();
+            this.router.navigateByUrl('/abelhas');
+        }
+        if (chave === 'sair') {
+            this.open.set(false);
+            this.abelhaSelecionadaService.limpar();
+            this.authService.logout();
+            this.router.navigateByUrl('/login');
+        }
     }
 }
