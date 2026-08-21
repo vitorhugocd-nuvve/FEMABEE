@@ -1,5 +1,7 @@
 import { Component, DestroyRef, ElementRef, effect, inject, input, signal, viewChild } from "@angular/core";
 import { DescriptionComponent } from "../typography/description.component";
+import { DialogComponent } from "../dialog/dialog.component";
+import { ZoomPanComponent } from "../zoom-pan/zoom-pan.component";
 
 declare const mermaid: {
     initialize(config: Record<string, unknown>): void;
@@ -28,23 +30,38 @@ function carregarMermaid(): Promise<void> {
     return promessaCarregamento;
 }
 
-/** Renderiza um diagrama UML/Mermaid a partir do texto (ex.: `classDiagram ...`). */
+/**
+ * Renderiza um diagrama UML/Mermaid a partir do texto (ex.: `classDiagram ...`).
+ * Tocar no diagrama abre uma visualização em tela cheia com pinça-zoom/arraste
+ * (`bee-zoom-pan`) — no tamanho normal o SVG costuma ficar pequeno demais pra
+ * ler no mobile.
+ */
 @Component({
     selector: 'bee-mermaid',
     template: `
     @if (carregando()) {
         <bee-description>Carregando diagrama...</bee-description>
     }
-    <div #container class="w-full overflow-auto"></div>
+    <div #container class="w-full overflow-auto cursor-zoom-in" (click)="abrirZoom()"></div>
+
+    <bee-dialog [(open)]="zoomAberto" title="Diagrama">
+        <bee-zoom-pan class="block w-full h-[75dvh]">
+            <div #containerZoom></div>
+        </bee-zoom-pan>
+    </bee-dialog>
     `,
     host: { class: 'block w-full' },
-    imports: [DescriptionComponent]
+    imports: [DescriptionComponent, DialogComponent, ZoomPanComponent]
 })
 export class MermaidComponent {
     readonly diagrama = input.required<string>();
 
     protected readonly carregando = signal(true);
+    protected readonly zoomAberto = signal(false);
+
+    private readonly svgAtual = signal('');
     private readonly containerRef = viewChild('container', { read: ElementRef<HTMLDivElement> });
+    private readonly containerZoomRef = viewChild('containerZoom', { read: ElementRef<HTMLDivElement> });
 
     constructor() {
         const destroyRef = inject(DestroyRef);
@@ -61,14 +78,32 @@ export class MermaidComponent {
                 .then(() => mermaid.render(`mermaid-${proximoId++}`, diagrama))
                 .then(({ svg }) => {
                     if (destruido) return;
-                    container.innerHTML = svg;
+                    this.svgAtual.set(svg);
                     this.carregando.set(false);
                 })
                 .catch(() => {
                     if (destruido) return;
-                    container.innerHTML = '';
+                    this.svgAtual.set('');
                     this.carregando.set(false);
                 });
         });
+
+        // Espelha o SVG renderizado tanto na prévia inline quanto na cópia do dialog de zoom.
+        effect(() => {
+            const svg = this.svgAtual();
+            const container = this.containerRef()?.nativeElement;
+            if (container) container.innerHTML = svg;
+        });
+
+        effect(() => {
+            const svg = this.svgAtual();
+            const containerZoom = this.containerZoomRef()?.nativeElement;
+            if (containerZoom) containerZoom.innerHTML = svg;
+        });
+    }
+
+    protected abrirZoom(): void {
+        if (!this.svgAtual()) return;
+        this.zoomAberto.set(true);
     }
 }

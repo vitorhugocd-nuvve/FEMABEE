@@ -50,6 +50,9 @@
 
 .licao-conteudo {
     width: 100%;
+    max-width: 65ch;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .licao-conteudo :is(h1, h2, h3, h4, h5, h6) {
@@ -59,7 +62,7 @@
 
 .licao-conteudo p {
     margin-bottom: 1rem;
-    line-height: 1.6;
+    line-height: 1.75;
 }
 
 .licao-conteudo img {
@@ -86,4 +89,37 @@
     padding-left: 0.75rem;
     opacity: 0.8;
     margin-bottom: 1rem;
+}
+
+/* Tabelas costumam precisar de mais que 65ch (3+ colunas) — libera a largura só pro bloco que tem uma. */
+.licao-conteudo:has(table) {
+    max-width: 100%;
+}
+
+.licao-conteudo table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+}
+
+.licao-conteudo th,
+.licao-conteudo td {
+    border: 2px solid black;
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.licao-conteudo th {
+    background: rgba(251, 191, 36, 0.3);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.licao-conteudo tbody tr:nth-child(even) td {
+    background: rgba(0, 0, 0, 0.03);
 }

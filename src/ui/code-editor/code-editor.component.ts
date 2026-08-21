@@ -76,13 +76,12 @@ export class CodeEditorComponent implements OnDestroy {
                 readOnly: this.readOnly(),
                 automaticLayout: true,
                 minimap: { enabled: false },
-                fontSize: this.screenService.isMobile() ? 15 : 13,
+                fontSize: this.screenService.isMobile() ? 12 : 13,
                 lineNumbersMinChars: 3,
                 scrollBeyondLastLine: false,
-                wordWrap: 'on',
-                wrappingIndent: 'indent',
+                wordWrap: 'off',
                 padding: { top: 8, bottom: 8 },
-                scrollbar: { horizontal: 'hidden', alwaysConsumeMouseWheel: false },
+                scrollbar: { horizontal: 'auto', alwaysConsumeMouseWheel: false },
                 theme: 'vs-dark',
             });
             this.carregando.set(false);
@@ -109,7 +108,7 @@ export class CodeEditorComponent implements OnDestroy {
         });
 
         effect(() => {
-            this.editor?.updateOptions({ fontSize: this.screenService.isMobile() ? 15 : 13 });
+            this.editor?.updateOptions({ fontSize: this.screenService.isMobile() ? 12 : 13 });
         });
     }
 

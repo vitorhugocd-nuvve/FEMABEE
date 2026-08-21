@@ -8,12 +8,12 @@ import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
 import { NICK_USUARIO_MOCK, NOME_USUARIO_MOCK } from "./usuario-mock";
 import { ConquistasComponent } from "./conquistas.component";
+import { PerfilComponent } from "./perfil.component";
 import { AparenciaEquipadaService } from "../../core/progresso/aparencia-equipada.service";
 
 /** Itens do menu — só "Conquistas" tem ação ligada por enquanto, o resto é só visual. */
 const ITENS_MENU_JOGADOR = [
     { icon: 'human', label: 'Perfil', chave: 'perfil' as const },
-    { icon: 'sliders', label: 'Configurações', chave: 'configuracoes' as const },
     { icon: 'star', label: 'Conquistas', chave: 'conquistas' as const },
     { icon: 'logout', label: 'Sair', chave: 'sair' as const },
 ];
@@ -48,10 +48,11 @@ const ITENS_MENU_JOGADOR = [
     </bee-side-drawer>
 
     <app-conquistas [(open)]="conquistasAbertas" />
+    <app-perfil [(open)]="perfilAberto" />
     `,
     imports: [
         SideDrawerComponent, AbelhaComponent, LargeComponent, DescriptionComponent,
-        BeeDividerComponent, IconComponent, ButtonComponent, ConquistasComponent
+        BeeDividerComponent, IconComponent, ButtonComponent, ConquistasComponent, PerfilComponent
     ]
 })
 export class MenuJogadorComponent {
@@ -66,12 +67,17 @@ export class MenuJogadorComponent {
     protected readonly itensMenu = ITENS_MENU_JOGADOR;
 
     protected readonly conquistasAbertas = signal(false);
+    protected readonly perfilAberto = signal(false);
 
     protected selecionarItem(chave: typeof ITENS_MENU_JOGADOR[number]['chave']): void {
         if (chave === 'conquistas') {
             this.open.set(false);
             this.conquistasAbertas.set(true);
         }
-        // Perfil / Configurações / Sair: só visual por enquanto.
+        if (chave === 'perfil') {
+            this.open.set(false);
+            this.perfilAberto.set(true);
+        }
+        // Configurações / Sair: só visual por enquanto.
     }
 }

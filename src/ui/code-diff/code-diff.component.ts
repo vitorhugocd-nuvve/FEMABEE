@@ -82,13 +82,12 @@ export class CodeDiffComponent implements OnDestroy {
                 renderSideBySide: false,
                 automaticLayout: true,
                 minimap: { enabled: false },
-                fontSize: this.screenService.isMobile() ? 15 : 13,
+                fontSize: this.screenService.isMobile() ? 12 : 13,
                 lineNumbersMinChars: 3,
                 scrollBeyondLastLine: false,
-                wordWrap: 'on',
-                wrappingIndent: 'indent',
+                wordWrap: 'off',
                 padding: { top: 8, bottom: 8 },
-                scrollbar: { horizontal: 'hidden', alwaysConsumeMouseWheel: false },
+                scrollbar: { horizontal: 'auto', alwaysConsumeMouseWheel: false },
                 theme: 'vs-dark',
             });
             diffEditor.setModel({ original: originalModel, modified: modifiedModel });
@@ -117,7 +116,7 @@ export class CodeDiffComponent implements OnDestroy {
         });
 
         effect(() => {
-            const fontSize = this.screenService.isMobile() ? 15 : 13;
+            const fontSize = this.screenService.isMobile() ? 12 : 13;
             this.diffEditor?.updateOptions({ fontSize });
         });
     }

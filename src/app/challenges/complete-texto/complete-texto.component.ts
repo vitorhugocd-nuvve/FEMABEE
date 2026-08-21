@@ -47,7 +47,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
 
                 <!-- Texto com lacunas renderizado -->
                 <bee-card class="w-full! h-fit! p-4" direction="down">
-                    <p class="text-base leading-relaxed">
+                    <p class="text-base leading-[1.75] max-w-prose mx-auto">
                         @for (parte of partesTexto(); track $index) {
                             @if (parte.tipo === 'texto') {
                                 <span>{{ parte.conteudo }}</span>
