@@ -74,4 +74,12 @@ export class JogadorService {
         await this.buscarPerfil();
         return new Abelha(resposta.dados);
     }
+
+    /** O backend recusa remover a última abelha do jogador (400) — deixa o erro propagar pra quem chamou tratar. */
+    async removerAbelha(idAbelha: string): Promise<void> {
+        await firstValueFrom(
+            this.http.delete<RespostaApi<undefined>>(`${API_BASE_URL}/jogador/abelhas/${idAbelha}`),
+        );
+        await this.buscarPerfil();
+    }
 }
