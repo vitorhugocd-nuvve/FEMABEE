@@ -68,46 +68,102 @@ const OCULOS_QUADRADOS = Array.from({ length: 5 }, (_, i) => i + 1).map(n => new
     disponivelVenda: true
 }));
 
+// ── Cabelos (Cabelo) — ids 33-72, um estilo por loja ────────────────────────────────────────
+const CABELO_BAGUNCADO = Array.from({ length: 8 }, (_, i) => i + 1).map(n => new Aparencia({
+    id: 32 + n,
+    tipo: TipoAparencia.Cabelo,
+    urlImagem: `/wardrobe/hair/messy/messy${n}.gif`,
+    nome: `Cabelo Bagunçado ${n}`,
+    descricao: "Um estilo bagunçado, sem muita cerimônia.",
+    precoCompra: 90,
+    precoVenda: 45,
+    disponivelVenda: true
+}));
+
+const CABELO_ARREPIADO = Array.from({ length: 8 }, (_, i) => i + 1).map(n => new Aparencia({
+    id: 40 + n,
+    tipo: TipoAparencia.Cabelo,
+    urlImagem: `/wardrobe/hair/raised/raised-${n}.gif`,
+    nome: `Cabelo Arrepiado ${n}`,
+    descricao: "Arrepiado pra cima, chamando atenção.",
+    precoCompra: 90,
+    precoVenda: 45,
+    disponivelVenda: true
+}));
+
+const CABELO_TOPETE = Array.from({ length: 10 }, (_, i) => i + 1).map(n => new Aparencia({
+    id: 48 + n,
+    tipo: TipoAparencia.Cabelo,
+    urlImagem: `/wardrobe/hair/topped/topped-${n}.gif`,
+    nome: `Cabelo com Topete ${n}`,
+    descricao: "Um topete estiloso, bem cuidado.",
+    precoCompra: 90,
+    precoVenda: 45,
+    disponivelVenda: true
+}));
+
+const CABELO_LONGO_VOLUMOSO = Array.from({ length: 8 }, (_, i) => i + 1).map(n => new Aparencia({
+    id: 58 + n,
+    tipo: TipoAparencia.Cabelo,
+    urlImagem: `/wardrobe/hair/long_busty/long_busty${n}.gif`,
+    nome: `Cabelo Longo Volumoso ${n}`,
+    descricao: "Longo e cheio de volume.",
+    precoCompra: 110,
+    precoVenda: 55,
+    disponivelVenda: true
+}));
+
+const CABELO_CACHEADO = [2, 3, 4, 5, 6, 7].map(n => new Aparencia({
+    id: 66 + (n - 1),
+    tipo: TipoAparencia.Cabelo,
+    urlImagem: `/wardrobe/hair/long_curly/curly_${n}.gif`,
+    nome: `Cabelo Cacheado ${n - 1}`,
+    descricao: "Cacheado e cheio de personalidade.",
+    precoCompra: 110,
+    precoVenda: 55,
+    disponivelVenda: true
+}));
+
 export const LojasSeeds = [
-    // ── Singleton: 2 lojas bônus, cada uma com metade dos suéteres ──────────────────────────
+    // ── Singleton: 2 lojas bônus, cada uma com metade dos suéteres + um estilo de cabelo ────
     new Loja({
         id: "singleton-loja-classico",
         nome: "Guarda-Roupa Clássico",
-        descricao: "Suéteres de gola alta em cores mais discretas.",
-        aparenciasDisponiveis: [SUETER_PRETO, SUETER_AZUL, SUETER_VERDE, SUETER_LARANJA],
+        descricao: "Suéteres de gola alta em cores discretas e cabelos bagunçados.",
+        aparenciasDisponiveis: [SUETER_PRETO, SUETER_AZUL, SUETER_VERDE, SUETER_LARANJA, ...CABELO_BAGUNCADO],
     }),
     new Loja({
         id: "singleton-loja-vibrante",
         nome: "Guarda-Roupa Vibrante",
-        descricao: "Suéteres de gola alta em cores mais chamativas.",
-        aparenciasDisponiveis: [SUETER_ROSA, SUETER_ROXO, SUETER_VERMELHO, SUETER_BRANCO],
+        descricao: "Suéteres de gola alta chamativos e cabelos arrepiados.",
+        aparenciasDisponiveis: [SUETER_ROSA, SUETER_ROXO, SUETER_VERMELHO, SUETER_BRANCO, ...CABELO_ARREPIADO],
     }),
 
-    // ── Observer: 2 lojas bônus, listras + um mix com polos ─────────────────────────────────
+    // ── Observer: 2 lojas bônus, listras/polos + topetes ────────────────────────────────────
     new Loja({
         id: "observer-loja-listras",
         nome: "Listras & Cia",
-        descricao: "Camisas listradas pra quem gosta de observar com estilo.",
-        aparenciasDisponiveis: LISTRADAS.slice(0, 4),
+        descricao: "Camisas listradas e topetes bem cuidados.",
+        aparenciasDisponiveis: [...LISTRADAS.slice(0, 4), ...CABELO_TOPETE.slice(0, 5)],
     }),
     new Loja({
         id: "observer-loja-despojado",
         nome: "Estilo Despojado",
-        descricao: "Mais listras e umas polos bem casuais.",
-        aparenciasDisponiveis: [...LISTRADAS.slice(4, 8), ...POLOS],
+        descricao: "Mais listras, polos casuais e mais topetes.",
+        aparenciasDisponiveis: [...LISTRADAS.slice(4, 8), ...POLOS, ...CABELO_TOPETE.slice(5, 10)],
     }),
 
-    // ── Bridge: 2 lojas bônus, rostos + óculos ──────────────────────────────────────────────
+    // ── Bridge: 2 lojas bônus, rostos/óculos + cabelos longos ───────────────────────────────
     new Loja({
         id: "bridge-loja-rostos",
         nome: "Galeria de Rostos",
-        descricao: "Expressões novas pra sua abelha atravessar a ponte com estilo.",
-        aparenciasDisponiveis: ROSTOS,
+        descricao: "Expressões novas e cabelos longos e volumosos.",
+        aparenciasDisponiveis: [...ROSTOS, ...CABELO_LONGO_VOLUMOSO],
     }),
     new Loja({
         id: "bridge-loja-oculos",
         nome: "Ótica da Ponte",
-        descricao: "Óculos retrô e quadrados, direto da Bridge.",
-        aparenciasDisponiveis: [OCULOS_RETRO, ...OCULOS_QUADRADOS],
+        descricao: "Óculos retrô, quadrados e cabelos cacheados.",
+        aparenciasDisponiveis: [OCULOS_RETRO, ...OCULOS_QUADRADOS, ...CABELO_CACHEADO],
     }),
 ];

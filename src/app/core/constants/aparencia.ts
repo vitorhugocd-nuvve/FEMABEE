@@ -19,6 +19,7 @@ export const LOCALIZACAO_APARENCIA_NA_IMAGEM: Record<TamanhoAbelha, number> = {
 /** Ordem de empilhamento (de baixo pra cima) ao compor as camadas de aparência sobre a abelha. */
 export const ORDEM_RENDERIZACAO_APARENCIA: TipoAparencia[] = [
     TipoAparencia.Rosto,
+    TipoAparencia.Cabelo,
     TipoAparencia.Detalhes,
     TipoAparencia.Corpo,
     TipoAparencia.Jaqueta,
@@ -29,6 +30,7 @@ export const ORDEM_RENDERIZACAO_APARENCIA: TipoAparencia[] = [
 export const TITULO_TIPO_APARENCIA: Record<TipoAparencia, string> = {
     [TipoAparencia.Corpo]: "Roupas",
     [TipoAparencia.Rosto]: "Rostos",
+    [TipoAparencia.Cabelo]: "Cabelos",
     [TipoAparencia.Oculos]: "Óculos",
     [TipoAparencia.Chapeu]: "Chapéus",
     [TipoAparencia.Jaqueta]: "Jaquetas",
