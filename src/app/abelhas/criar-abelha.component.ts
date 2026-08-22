@@ -21,18 +21,14 @@ const TAMANHOS = Object.values(TamanhoAbelha);
     template: `
     <bee-dialog [(open)]="open" title="Nova Abelha">
         <form class="flex flex-col gap-4 p-4" [formGroup]="form" (ngSubmit)="onSubmit()">
-            @if (precisaCriarJogador()) {
-                <bee-field>
-                    <label bee-label for="input-comida-favorita">Sua comida favorita</label>
-                    <input type="text" bee-input id="input-comida-favorita" formControlName="comidaFavorita" />
-                </bee-field>
-
-                <hr>
-            }
-
             <bee-field>
                 <label bee-label for="input-nome-abelha">Nome da abelha</label>
                 <input type="text" bee-input id="input-nome-abelha" formControlName="nomeAbelha" />
+            </bee-field>
+
+            <bee-field>
+                <label bee-label for="input-comida-favorita">Comida favorita da abelha</label>
+                <input type="text" bee-input id="input-comida-favorita" formControlName="comidaFavorita" />
             </bee-field>
 
             <div class="grid grid-cols-2 gap-2">
@@ -74,17 +70,12 @@ export class CriarAbelhaComponent {
     private readonly indicator = viewChild<IndicatorComponent>('indicator');
 
     protected readonly form = this.formBuilder.nonNullable.group({
-        comidaFavorita: [''],
         nomeAbelha: ['', [Validators.required, Validators.maxLength(50)]],
+        comidaFavorita: ['', [Validators.required, Validators.maxLength(50)]],
         tamanho: [TamanhoAbelha.AltaGorda, Validators.required],
     });
 
     protected async onSubmit(): Promise<void> {
-        if (this.precisaCriarJogador()) {
-            this.form.controls.comidaFavorita.addValidators(Validators.required);
-            this.form.controls.comidaFavorita.updateValueAndValidity();
-        }
-
         if (this.form.invalid) return;
 
         const valores = this.form.getRawValue();
@@ -95,17 +86,17 @@ export class CriarAbelhaComponent {
                 const nome = this.authService.usuarioLogado()?.nomeDeUsuario ?? '';
                 await this.jogadorService.criarJogador({
                     nome,
-                    comidaFavorita: valores.comidaFavorita,
-                    abelha: { nome: valores.nomeAbelha, tamanho: valores.tamanho },
+                    abelha: { nome: valores.nomeAbelha, tamanho: valores.tamanho, comidaFavorita: valores.comidaFavorita },
                 });
             } else {
                 await this.jogadorService.criarAbelha({
                     nome: valores.nomeAbelha,
                     tamanho: valores.tamanho,
+                    comidaFavorita: valores.comidaFavorita,
                 });
             }
 
-            this.form.reset({ comidaFavorita: '', nomeAbelha: '', tamanho: TamanhoAbelha.AltaGorda });
+            this.form.reset({ nomeAbelha: '', comidaFavorita: '', tamanho: TamanhoAbelha.AltaGorda });
             this.criada.emit();
         } catch (erro) {
             const mensagem = erro instanceof HttpErrorResponse

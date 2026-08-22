@@ -42,8 +42,7 @@ describe('AbelhaProgressoService (integração real com o backend em ../new-back
 
         const jogador = await jogadorService.criarJogador({
             nome: 'Jogador Progresso',
-            comidaFavorita: 'Mel',
-            abelha: { nome: 'Abelha Progresso' },
+            abelha: { nome: 'Abelha Progresso', comidaFavorita: 'Mel' },
         });
 
         localizacaoAtualService.irPara(MAPA_TESTE);

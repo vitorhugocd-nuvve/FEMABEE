@@ -4,6 +4,7 @@ export type AbelhaProps = {
     id: string;
     nome: string;
     tamanho?: TamanhoAbelha;
+    comidaFavorita: string;
 }
 
 /**
@@ -16,4 +17,5 @@ export class Abelha {
     get id() { return this.props.id; }
     get nome() { return this.props.nome; }
     get tamanho() { return this.props.tamanho; }
+    get comidaFavorita() { return this.props.comidaFavorita; }
 }

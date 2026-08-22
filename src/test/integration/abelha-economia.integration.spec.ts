@@ -35,8 +35,7 @@ describe('AbelhaEconomiaService (integração real com o backend em ../new-back)
 
         const jogador = await jogadorService.criarJogador({
             nome: 'Jogador Economia',
-            comidaFavorita: 'Mel',
-            abelha: { nome: 'Abelha Economia' },
+            abelha: { nome: 'Abelha Economia', comidaFavorita: 'Mel' },
         });
         abelhaSelecionadaService.selecionar(jogador.abelhas[0]);
 

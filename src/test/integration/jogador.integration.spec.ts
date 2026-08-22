@@ -40,26 +40,24 @@ describe('JogadorService (integração real com o backend em ../new-back)', () =
     it('cria o jogador junto com a primeira abelha', async () => {
         const jogador = await jogadorService.criarJogador({
             nome: 'Jogador Teste',
-            comidaFavorita: 'Mel',
-            abelha: { nome: 'Abelha 1', tamanho: TamanhoAbelha.AltaGorda },
+            abelha: { nome: 'Abelha 1', tamanho: TamanhoAbelha.AltaGorda, comidaFavorita: 'Mel' },
         });
 
         expect(jogador.abelhas).toHaveLength(1);
         expect(jogador.abelhas[0].nome).toBe('Abelha 1');
+        expect(jogador.abelhas[0].comidaFavorita).toBe('Mel');
     });
 
     it('rejeita criar um segundo jogador pro mesmo usuário', async () => {
         await jogadorService.criarJogador({
             nome: 'Jogador Teste',
-            comidaFavorita: 'Mel',
-            abelha: { nome: 'Abelha 1' },
+            abelha: { nome: 'Abelha 1', comidaFavorita: 'Mel' },
         });
 
         await expect(
             jogadorService.criarJogador({
                 nome: 'Outro',
-                comidaFavorita: 'Pólen',
-                abelha: { nome: 'Abelha X' },
+                abelha: { nome: 'Abelha X', comidaFavorita: 'Pólen' },
             }),
         ).rejects.toMatchObject({ status: 409 });
     });
@@ -67,16 +65,26 @@ describe('JogadorService (integração real com o backend em ../new-back)', () =
     it('permite até 3 abelhas e rejeita a 4ª', async () => {
         await jogadorService.criarJogador({
             nome: 'Jogador Teste',
-            comidaFavorita: 'Mel',
-            abelha: { nome: 'Abelha 1' },
+            abelha: { nome: 'Abelha 1', comidaFavorita: 'Mel' },
         });
-        await jogadorService.criarAbelha({ nome: 'Abelha 2' });
-        await jogadorService.criarAbelha({ nome: 'Abelha 3' });
+        await jogadorService.criarAbelha({ nome: 'Abelha 2', comidaFavorita: 'Pólen' });
+        await jogadorService.criarAbelha({ nome: 'Abelha 3', comidaFavorita: 'Néctar' });
 
         expect(jogadorService.jogador()?.abelhas).toHaveLength(3);
 
-        await expect(jogadorService.criarAbelha({ nome: 'Abelha 4' })).rejects.toMatchObject({
+        await expect(jogadorService.criarAbelha({ nome: 'Abelha 4', comidaFavorita: 'Geleia real' })).rejects.toMatchObject({
             status: 400,
         });
+    });
+
+    it('permite excluir a última abelha do jogador', async () => {
+        const jogador = await jogadorService.criarJogador({
+            nome: 'Jogador Teste',
+            abelha: { nome: 'Abelha Única', comidaFavorita: 'Mel' },
+        });
+
+        await jogadorService.removerAbelha(jogador.abelhas[0].id);
+
+        expect(jogadorService.jogador()?.abelhas).toHaveLength(0);
     });
 });

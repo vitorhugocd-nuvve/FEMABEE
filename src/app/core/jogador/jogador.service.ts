@@ -9,13 +9,13 @@ import { TamanhoAbelha } from "../models/aparencia/tamanhos";
 
 export interface CriarJogadorPayload {
     nome: string;
-    comidaFavorita: string;
-    abelha: { nome: string; tamanho?: TamanhoAbelha };
+    abelha: { nome: string; tamanho?: TamanhoAbelha; comidaFavorita: string };
 }
 
 export interface CriarAbelhaPayload {
     nome: string;
     tamanho?: TamanhoAbelha;
+    comidaFavorita: string;
 }
 
 /** Perfil do jogador logado (nome, comida favorita, abelhas) contra o backend real. */
