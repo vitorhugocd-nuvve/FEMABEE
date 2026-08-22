@@ -3,6 +3,8 @@ import { Mapa } from "../../../../../models/map/mapa";
 import { TipoAcao } from "../../../../../models/map/tipo-acao";
 import { TipoDesafio } from "../../../../../models/desafios/tipo-desafio";
 import { TipoMapa } from "../../../../../models/map/tipo-mapa";
+import { Recompensa } from "../../../../../models/recompensa/recompensa";
+import { TipoRecompensa } from "../../../../../models/recompensa/tipo-recompensa";
 
 export const REGIAO_BRIDGE = new Mapa({
     id: "bridge",
@@ -30,7 +32,8 @@ export const REGIAO_BRIDGE = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.Licao,
             desafioId: "licao-bridge-001",
-            posicaoEmPx: { x: 32, y: 32 }
+            posicaoEmPx: { x: 32, y: 32 },
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 30 })]
         }),
 
         new AcaoDoMapa({
@@ -40,7 +43,8 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.PerguntasRespostas,
             desafioId: "quiz-bridge-001",
             posicaoEmPx: { x: 64, y: 32 },
-            niveisDependentes: ["rbr-licao-001"]
+            niveisDependentes: ["rbr-licao-001"],
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 50 })]
         }),
 
         new AcaoDoMapa({
@@ -50,7 +54,8 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.CompleteTexto,
             desafioId: "ct-bridge-001",
             posicaoEmPx: { x: 96, y: 32 },
-            niveisDependentes: ["rbr-quiz-001"]
+            niveisDependentes: ["rbr-quiz-001"],
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 })]
         }),
 
         new AcaoDoMapa({
@@ -60,7 +65,8 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.EncontreBug,
             desafioId: "eb-bridge-001",
             posicaoEmPx: { x: 160, y: 64 },
-            niveisDependentes: ["rbr-complete-texto-001"]
+            niveisDependentes: ["rbr-complete-texto-001"],
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 50 })]
         }),
 
         new AcaoDoMapa({
@@ -70,7 +76,8 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.EncontrePares,
             desafioId: "ep-bridge-001",
             posicaoEmPx: { x: 256, y: 64 },
-            niveisDependentes: ["rbr-encontre-bug-001"]
+            niveisDependentes: ["rbr-encontre-bug-001"],
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 })]
         }),
 
         new AcaoDoMapa({
@@ -80,7 +87,11 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.Licao,
             desafioId: "licao-bridge-002",
             posicaoEmPx: { x: 352, y: 96 },
-            niveisDependentes: ["rbr-encontre-pares-001"]
+            niveisDependentes: ["rbr-encontre-pares-001"],
+            recompensas: [
+                new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 30 }),
+                new Recompensa({ tipo: TipoRecompensa.Aparencia, aparenciaId: 5 }),
+            ]
         }),
 
         new AcaoDoMapa({
@@ -90,7 +101,8 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.CompleteCodigo,
             desafioId: "cc-bridge-001",
             posicaoEmPx: { x: 384, y: 160 },
-            niveisDependentes: ["rbr-licao-002"]
+            niveisDependentes: ["rbr-licao-002"],
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 60 })]
         }),
 
         new AcaoDoMapa({
@@ -100,7 +112,8 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.EncontreBug,
             desafioId: "eb-bridge-002",
             posicaoEmPx: { x: 320, y: 224 },
-            niveisDependentes: ["rbr-complete-codigo-001"]
+            niveisDependentes: ["rbr-complete-codigo-001"],
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 50 })]
         }),
 
         new AcaoDoMapa({
@@ -110,7 +123,8 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.Licao,
             desafioId: "licao-bridge-003",
             posicaoEmPx: { x: 224, y: 224 },
-            niveisDependentes: ["rbr-encontre-bug-002"]
+            niveisDependentes: ["rbr-encontre-bug-002"],
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 30 })]
         }),
 
         new AcaoDoMapa({
@@ -120,7 +134,11 @@ export const REGIAO_BRIDGE = new Mapa({
             tipoDesafio: TipoDesafio.PerguntasRespostas,
             desafioId: "quiz-bridge-002",
             posicaoEmPx: { x: 128, y: 224 },
-            niveisDependentes: ["rbr-licao-003"]
+            niveisDependentes: ["rbr-licao-003"],
+            recompensas: [
+                new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 100 }),
+                new Recompensa({ tipo: TipoRecompensa.PassagemRegional }),
+            ]
         }),
     ]
 });

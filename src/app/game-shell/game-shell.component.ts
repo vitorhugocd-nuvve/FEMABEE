@@ -1,4 +1,4 @@
-import { Component, inject } from "@angular/core";
+import { Component, effect, inject, viewChild } from "@angular/core";
 import { DesafioCompleteTextoComponent } from "../challenges/complete-texto/complete-texto.component";
 import { DesafioQuizComponent } from "../challenges/quiz/quiz.component";
 import { DesafioEncontreParesComponent } from "../challenges/encontre-pares/encontre-pares.component";
@@ -9,9 +9,11 @@ import { MapComponent } from "../map/map.component";
 import { DesafioAtualService } from "../core/services/desafio-atual.service";
 import { TipoDesafio } from "../core/models/desafios/tipo-desafio";
 import { ConquistaProgressoService } from "../core/services/conquista-progresso.service";
+import { RecompensaService } from "../core/services/recompensa.service";
 import { DialogoGatilhoService } from "../core/services/dialogo-gatilho.service";
 import { MusicaAmbienteService } from "../core/services/musica-ambiente.service";
 import { DialogoComponent } from "../dialogo/dialogo.component";
+import { IndicatorComponent } from "../../ui/indicator/indicator.component";
 
 @Component({
   selector: 'app-game-shell',
@@ -30,12 +32,16 @@ import { DialogoComponent } from "../dialogo/dialogo.component";
     </div>
   }
   <app-dialogo />
+  <bee-indicator #recompensaIndicator />
   `,
-  imports: [DesafioCompleteTextoComponent, DesafioQuizComponent, DesafioEncontreParesComponent, DesafioEncontreBugComponent, DesafioCompleteCodigoComponent, DesafioLicaoComponent, MapComponent, DialogoComponent],
+  imports: [DesafioCompleteTextoComponent, DesafioQuizComponent, DesafioEncontreParesComponent, DesafioEncontreBugComponent, DesafioCompleteCodigoComponent, DesafioLicaoComponent, MapComponent, DialogoComponent, IndicatorComponent],
 })
 export class GameShellComponent {
   protected readonly desafioAtualService = inject(DesafioAtualService);
   protected readonly tipoDesafio = TipoDesafio;
+
+  private readonly recompensaService = inject(RecompensaService);
+  private readonly recompensaIndicator = viewChild<IndicatorComponent>('recompensaIndicator');
 
   // Injetados só pra instanciar eagerly — os efeitos que observam conclusão de desafios,
   // reavaliam conquistas, disparam diálogos e tocam a trilha ambiente precisam começar
@@ -44,4 +50,10 @@ export class GameShellComponent {
   private readonly conquistaProgressoService = inject(ConquistaProgressoService);
   private readonly dialogoGatilhoService = inject(DialogoGatilhoService);
   private readonly musicaAmbienteService = inject(MusicaAmbienteService);
+
+  /** Um único bee-indicator, global, anuncia toda recompensa de fase — não faz sentido cada desafio ter o seu. */
+  private readonly _anunciarRecompensa = effect(() => {
+    const indicacao = this.recompensaService.pendente();
+    if (indicacao) this.recompensaIndicator()?.show(indicacao);
+  });
 }

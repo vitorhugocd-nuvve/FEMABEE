@@ -3,6 +3,9 @@ import { DesafioAtualService } from "./desafio-atual.service";
 import { NiveisConcluidosAbelhaService } from "../progresso/niveis-concluidos-abelha.service";
 import { SequenciaSemErrarService } from "../progresso/sequencia-sem-errar.service";
 import { ConquistaService } from "./conquista.service";
+import { RecompensaService } from "./recompensa.service";
+import { MapaRepositoryService } from "../seeds/repositories/mapa-repository.service";
+import { LocalizacaoAtualService } from "./localizacao-atual.service";
 import { QuizService } from "../../challenges/quiz/quiz.service";
 import { EncontreBugService } from "../../challenges/encontre-bug/encontre-bug.service";
 import { CompleteTextoService } from "../../challenges/complete-texto/complete-texto.service";
@@ -25,6 +28,9 @@ export class ConquistaProgressoService {
     private readonly niveisConcluidosAbelhaService = inject(NiveisConcluidosAbelhaService);
     private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
     private readonly conquistaService = inject(ConquistaService);
+    private readonly recompensaService = inject(RecompensaService);
+    private readonly mapaRepositoryService = inject(MapaRepositoryService);
+    private readonly localizacaoAtualService = inject(LocalizacaoAtualService);
 
     private readonly quizService = inject(QuizService);
     private readonly encontreBugService = inject(EncontreBugService);
@@ -59,6 +65,10 @@ export class ConquistaProgressoService {
             this.niveisConcluidosAbelhaService.marcarConcluido(acaoId);
             this.sequenciaSemErrarService.registrarFaseConcluida();
             this.conquistaService.verificar();
+
+            const idMapa = this.localizacaoAtualService.mapaAtualId();
+            const acao = this.mapaRepositoryService.findById(idMapa)?.acoes.find(a => a.id === acaoId);
+            if (acao?.recompensas.length) this.recompensaService.conceder(acao.recompensas);
         });
     }
 }

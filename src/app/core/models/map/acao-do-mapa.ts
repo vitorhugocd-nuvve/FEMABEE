@@ -1,6 +1,7 @@
 import { MapActionData } from "../../../../ui/map";
 import { TAMANHO_TILE } from "../../constants/tile";
 import { TipoDesafio } from "../desafios/tipo-desafio";
+import { Recompensa } from "../recompensa/recompensa";
 import { TipoAcao } from "./tipo-acao";
 
 export type AcaoDoMapaProps = {
@@ -20,6 +21,8 @@ export type AcaoDoMapaProps = {
     mostrarLabel?: boolean;
     /** Ids de outras ações do mesmo mapa que precisam estar concluídas antes desta. Desenha uma linha de conexão no mapa. */
     niveisDependentes?: string[];
+    /** Concedidas uma única vez, na primeira vez que esta fase (`TipoAcao.Desafio`) é concluída. */
+    recompensas?: Recompensa[];
 }
 
 export class AcaoDoMapa {
@@ -37,6 +40,7 @@ export class AcaoDoMapa {
     get desafioId() { return this.props.desafioId; }
     get mostrarLabel() { return this.props.mostrarLabel ?? false; }
     get niveisDependentes() { return this.props.niveisDependentes ?? []; }
+    get recompensas() { return this.props.recompensas ?? []; }
 
     public posicaoEmTiles() {
         return {

@@ -1,20 +1,38 @@
-import { computed, Injectable, signal } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { computed, effect, inject, Injectable, signal } from "@angular/core";
+import { firstValueFrom } from "rxjs";
+import { API_BASE_URL } from "../constants/api";
+import { RespostaApi } from "../http/resposta-api";
+import { AbelhaSelecionadaService } from "../jogador/abelha-selecionada.service";
+import { LocalizacaoAtualService } from "../services/localizacao-atual.service";
 import { Aparencia } from "../models/aparencia/aparencia";
 
-/** Ids de aparência já possuídos por padrão, só pra ter algo pra testar o guarda-roupa antes de comprar qualquer coisa. */
-const IDS_OBTIDOS_PARA_TESTE = [1, 3, 5, 9, 10, 12, 15];
+type RegistroAparencia = { identificador: string };
 
 /**
- * Mock: quais aparências (itens da loja) o jogador já possui.
- * O botão "Comprar" da loja marca o item obtido daqui pra frente.
+ * Quais aparências (itens da loja) a abelha selecionada já possui — real, persistido no backend
+ * (compra na loja ou recompensa de fase), no mesmo princípio otimista do `AbelhaProgressoService`:
+ * atualiza o Set local na hora e dispara a persistência em paralelo, sem aguardar.
  */
 @Injectable({
     providedIn: 'root'
 })
 export class AparenciaObtidaService {
-    private readonly _obtidas = signal<Set<number>>(new Set(IDS_OBTIDOS_PARA_TESTE));
+    private readonly http = inject(HttpClient);
+    private readonly abelhaSelecionadaService = inject(AbelhaSelecionadaService);
+    private readonly localizacaoAtualService = inject(LocalizacaoAtualService);
+
+    private readonly _obtidas = signal<Set<number>>(new Set());
 
     public readonly quantidadeObtida = computed(() => this._obtidas().size);
+
+    constructor() {
+        effect(() => {
+            const abelha = this.abelhaSelecionadaService.abelha();
+            this._obtidas.set(new Set());
+            if (abelha) this.carregar(abelha.id);
+        });
+    }
 
     public possui(aparenciaId: number): boolean {
         return this._obtidas().has(aparenciaId);
@@ -23,9 +41,23 @@ export class AparenciaObtidaService {
     public marcarObtida(aparenciaId: number): void {
         if (this._obtidas().has(aparenciaId)) return;
         this._obtidas.update(atual => new Set(atual).add(aparenciaId));
+
+        const idAbelha = this.abelhaSelecionadaService.abelha()?.id;
+        if (!idAbelha) return;
+        firstValueFrom(this.http.post(`${API_BASE_URL}/abelha/${idAbelha}/aparencias-desbloqueadas`, {
+            idAparencia: String(aparenciaId),
+            idMapa: this.localizacaoAtualService.mapaAtualId(),
+        })).catch(() => {});
     }
 
     public possuiTodas(itens: Aparencia[]): boolean {
         return itens.length > 0 && itens.every(item => this.possui(item.id));
+    }
+
+    private async carregar(idAbelha: string): Promise<void> {
+        const resposta = await firstValueFrom(
+            this.http.get<RespostaApi<RegistroAparencia[]>>(`${API_BASE_URL}/abelha/${idAbelha}/aparencias-desbloqueadas`),
+        );
+        this._obtidas.set(new Set(resposta.dados.map(registro => Number(registro.identificador))));
     }
 }

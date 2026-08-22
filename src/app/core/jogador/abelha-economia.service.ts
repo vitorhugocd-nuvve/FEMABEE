@@ -61,12 +61,36 @@ export class AbelhaEconomiaService {
         }
     }
 
+    /** Recompensa de fase/conquista — credita dinheiro na conta da abelha. */
+    async ganharDinheiro(valor: number): Promise<boolean> {
+        const idAbelha = this.abelhaSelecionadaService.abelha()?.id;
+        if (!idAbelha || valor <= 0) return false;
+
+        try {
+            const resposta = await firstValueFrom(
+                this.http.patch<RespostaApi<ValoresEconomia>>(`${API_BASE_URL}/abelha/${idAbelha}/dinheiro`, { valor }),
+            );
+            this.atualizarValores(resposta.dados);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     async gastarPassagemContinental(): Promise<boolean> {
         return this.gastarPassagem('continental');
     }
 
     async gastarPassagemRegional(): Promise<boolean> {
         return this.gastarPassagem('regional');
+    }
+
+    async ganharPassagemContinental(): Promise<boolean> {
+        return this.ganharPassagem('continental');
+    }
+
+    async ganharPassagemRegional(): Promise<boolean> {
+        return this.ganharPassagem('regional');
     }
 
     private async gastarPassagem(tipo: TipoPassaporte): Promise<boolean> {
@@ -77,6 +101,21 @@ export class AbelhaEconomiaService {
         try {
             const resposta = await firstValueFrom(
                 this.http.delete<RespostaApi<ValoresEconomia>>(`${API_BASE_URL}/abelha/${idAbelha}/passaporte-${tipo}`),
+            );
+            this.atualizarValores(resposta.dados);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    private async ganharPassagem(tipo: TipoPassaporte): Promise<boolean> {
+        const idAbelha = this.abelhaSelecionadaService.abelha()?.id;
+        if (!idAbelha) return false;
+
+        try {
+            const resposta = await firstValueFrom(
+                this.http.patch<RespostaApi<ValoresEconomia>>(`${API_BASE_URL}/abelha/${idAbelha}/passaporte-${tipo}`, {}),
             );
             this.atualizarValores(resposta.dados);
             return true;
