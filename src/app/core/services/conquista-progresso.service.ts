@@ -1,4 +1,4 @@
-import { Injectable, effect, inject } from "@angular/core";
+import { Injectable, effect, inject, untracked } from "@angular/core";
 import { DesafioAtualService } from "./desafio-atual.service";
 import { NiveisConcluidosAbelhaService } from "../progresso/niveis-concluidos-abelha.service";
 import { SequenciaSemErrarService } from "../progresso/sequencia-sem-errar.service";
@@ -45,12 +45,20 @@ export class ConquistaProgressoService {
         this.conquistaService.verificar();
     }
 
+    /**
+     * Roda inteiramente `untracked` porque é chamada de dentro do corpo de vários `effect()`s
+     * (um por tipo de desafio) — sem isso, qualquer signal lido aqui (ex.: `acaoIdAtiva`) vira
+     * dependência implícita DAQUELE efeito específico, e passa a redisparar sempre que essa
+     * signal mudar (ex.: ao abrir outro desafio), mesmo sem o `concluido()` do efeito ter mudado.
+     */
     private registrarFaseConcluida(): void {
-        const acaoId = this.desafioAtualService.acaoIdAtiva();
-        if (!acaoId || this.niveisConcluidosAbelhaService.estaConcluido(acaoId)) return;
+        untracked(() => {
+            const acaoId = this.desafioAtualService.acaoIdAtiva();
+            if (!acaoId || this.niveisConcluidosAbelhaService.estaConcluido(acaoId)) return;
 
-        this.niveisConcluidosAbelhaService.marcarConcluido(acaoId);
-        this.sequenciaSemErrarService.registrarFaseConcluida();
-        this.conquistaService.verificar();
+            this.niveisConcluidosAbelhaService.marcarConcluido(acaoId);
+            this.sequenciaSemErrarService.registrarFaseConcluida();
+            this.conquistaService.verificar();
+        });
     }
 }
