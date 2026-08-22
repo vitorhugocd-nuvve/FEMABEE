@@ -23,8 +23,14 @@ import { MobileAcaoSelecionadaService } from "../mobile-acao-selecionada.compone
     @if (mapaDestino(); as destino) {
         <bee-large>{{ destino.nome }}</bee-large>
         <bee-divider direction="horizontal" />
-        @if (ehVolta()) {
-            <bee-description>Viagem de volta gratuita.</bee-description>
+        @if (viagemGratuita()) {
+            <bee-description>
+                @if (ehVolta()) {
+                    Viagem de volta gratuita.
+                } @else {
+                    Você já desbloqueou esse destino — viagem gratuita.
+                }
+            </bee-description>
         } @else {
             <bee-description>
                 Custa 1 passagem de {{ rotuloTransporte() }}.
@@ -39,11 +45,11 @@ import { MobileAcaoSelecionadaService } from "../mobile-acao-selecionada.compone
                 bee-button
                 [fluid]="screenService.isMobile()"
                 [size]="screenService.isMobile() ? 'large' : 'small'"
-                [disabled]="!ehVolta() && !temSaldo()"
+                [disabled]="!viagemGratuita() && !temSaldo()"
                 (click)="viajar(destino.id)"
             >
                 <bee-icon [icon]="acao().tipo === tipoAcao.Aviao ? 'send' : 'map'" />
-                {{ ehVolta() ? 'Voltar' : 'Gastar passagem' }}
+                {{ viagemGratuita() ? 'Viajar' : 'Gastar passagem' }}
             </button>
         </footer>
     } @else {
@@ -84,6 +90,16 @@ export class ViagemActionComponent {
         return PROFUNDIDADE_TIPO_MAPA[destino.tipo] < PROFUNDIDADE_TIPO_MAPA[atual.tipo];
     });
 
+    /** Esse ponto de embarque específico já foi desbloqueado antes — revisitar não gasta passagem de novo. */
+    protected readonly jaDesbloqueado = computed(() => {
+        const acao = this.acao();
+        if (acao.tipo === TipoAcao.Aviao) return this.aviaoObtidoService.estaObtido(acao.id);
+        if (acao.tipo === TipoAcao.Onibus) return this.onibusObtidoService.estaObtido(acao.id);
+        return false;
+    });
+
+    protected readonly viagemGratuita = computed(() => this.ehVolta() || this.jaDesbloqueado());
+
     protected readonly rotuloTransporte = computed(() => this.acao().tipo === TipoAcao.Aviao ? 'avião' : 'ônibus');
 
     private readonly passagemService = computed(() =>
@@ -93,7 +109,7 @@ export class ViagemActionComponent {
     protected readonly temSaldo = computed(() => this.passagemService().possuiSaldo());
 
     protected async viajar(destinoId: string): Promise<void> {
-        if (!this.ehVolta() && !(await this.passagemService().gastar())) return;
+        if (!this.viagemGratuita() && !(await this.passagemService().gastar())) return;
 
         const acao = this.acao();
         if (acao.tipo === TipoAcao.Aviao) {
