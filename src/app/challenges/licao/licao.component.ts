@@ -4,6 +4,7 @@ import { marked, Token } from "marked";
 import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
+import { TextComponent } from "../../../ui/typography/text.component";
 import { CodeEditorComponent } from "../../../ui/code-editor/code-editor.component";
 import { MermaidComponent } from "../../../ui/mermaid/mermaid.component";
 import { LicaoService } from "./licao.service";
@@ -32,7 +33,7 @@ type BlocoLicao =
         </bee-card-header>
 
         <bee-card-content #conteudoScroll class="flex flex-col items-center h-full gap-4 overflow-auto!">
-            <div class="flex flex-col w-full gap-4 shrink-0">
+            <div class="licao-coluna shadow-border border-2 border-black flex flex-col gap-4 shrink-0">
                 @for (bloco of blocos(); track $index) {
                     @if (bloco.tipo === 'codigo' && bloco.linguagem === 'mermaid') {
                         <bee-mermaid class="shrink-0" [diagrama]="bloco.conteudo" />
@@ -46,8 +47,11 @@ type BlocoLicao =
 
                 <!-- Resultado final -->
                 @if (concluida()) {
-                    <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
-                        <p class="font-bold text-lg">Lição concluída! 🏆</p>
+                    <div class="shadow-border border-2 border-green-400 bg-green-100 p-0.5 flex flex-col gap-1 w-full">
+                        <div class="px-2 py-1 text-sm bg-gradient-to-r from-green-600 to-green-400 w-full flex flex-row gap-2 items-center">
+                            <bee-icon icon="check" [width]="16" />
+                            <bee-text class="font-bold text-white!">Lição concluída!</bee-text>
+                        </div>
                     </div>
                 }
             </div>
@@ -61,10 +65,10 @@ type BlocoLicao =
                     class="w-full text-center shrink-0"
                     [disabled]="solicitando()">
                     @if (solicitando()) {
-                        <bee-icon icon="loader-2" class="animate-spin" />
+                        <bee-icon icon="loader" class="animate-spin" />
                         Concluindo...
                     } @else if (concluida()) {
-                        <bee-icon icon="check-circle" />
+                        <bee-icon icon="map" />
                         Voltar ao mapa
                     } @else {
                         <bee-icon icon="check" />
@@ -82,7 +86,7 @@ type BlocoLicao =
     providers: [BuscarLicaoService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
-        IconComponent, ButtonComponent, CodeEditorComponent, MermaidComponent
+        IconComponent, ButtonComponent, TextComponent, CodeEditorComponent, MermaidComponent
     ]
 })
 export class DesafioLicaoComponent {
