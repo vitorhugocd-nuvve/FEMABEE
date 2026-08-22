@@ -40,43 +40,43 @@ import { GirarDispositivoComponent } from "../../../ui/girar-dispositivo/girar-d
             </div>
         </bee-card-header>
 
-        <!-- O código ocupa todo o espaço abaixo da barra de progresso -->
-        <bee-card-content class="flex flex-col h-full overflow-hidden!" [class]="gap()">
-            <div class="flex flex-col shrink-0 gap-1">
-                <bee-progressbar [value]="progresso()" />
-                <span class="text-xs font-semibold text-muted-foreground truncate w-full">{{ arquivo() }}</span>
-            </div>
+        <!-- Quase sem gap: o código ocupa o card inteiro, só a barra de arquivo em cima e a de ações embaixo -->
+        <bee-card-content class="flex flex-col h-full overflow-hidden! gap-1! p-1!">
+            <span class="text-xs font-semibold text-muted-foreground truncate w-full shrink-0 px-1">{{ arquivo() }}</span>
 
             <bee-code-diff
                 class="w-full flex-1 min-h-0"
                 [original]="codigoOriginal()"
                 [modified]="codigoModificado()"
                 [language]="linguagem()" />
+
+            <!-- Barra de progresso no canto inferior esquerdo, botão de selecionar logo ao lado -->
+            <div class="w-full flex flex-row items-center gap-2 shrink-0">
+                <bee-progressbar [value]="progresso()" class="flex-1 min-w-0 w-auto!" />
+
+                @if (!concluidoAtual()) {
+                    <button
+                        bee-button
+                        class="shrink-0"
+                        [ngClass]="classeBotaoSelecionar()"
+                        [disabled]="solicitando()"
+                        (click)="selecionarAberto.set(true)"
+                        [attr.aria-label]="selecaoAtual() ? 'Trocar o trecho selecionado' : 'Selecionar o trecho que completa o código'">
+                        <bee-icon [icon]="selecaoAtual() ? 'repeat' : 'list-box'" />
+                        @if (!selecaoAtual()) {
+                            Selecionar
+                        }
+                    </button>
+                }
+
+                @if (mostrarBotaoAcao()) {
+                    <ng-container [ngTemplateOutlet]="botaoAcao" />
+                }
+            </div>
         </bee-card-content>
     </bee-card>
 
     <bee-indicator #indicator />
-
-    <!-- Cluster de ações flutuante, fixo no canto inferior direito da tela -->
-    <div class="fixed bottom-4 right-4 flex flex-row items-center gap-2 z-20">
-        @if (mostrarBotaoAcao()) {
-            <ng-container [ngTemplateOutlet]="botaoAcao" />
-        }
-        @if (!concluidoAtual()) {
-            <button
-                bee-button
-                class="shrink-0"
-                [ngClass]="classeBotaoSelecionar()"
-                [disabled]="solicitando()"
-                (click)="selecionarAberto.set(true)"
-                [attr.aria-label]="selecaoAtual() ? 'Trocar o trecho selecionado' : 'Selecionar o trecho que completa o código'">
-                <bee-icon [icon]="selecaoAtual() ? 'repeat' : 'list-box'" />
-                @if (!selecaoAtual()) {
-                    Selecionar trecho
-                }
-            </button>
-        }
-    </div>
 
     <!-- Drawer: escolher o trecho -->
     <bee-bottom-drawer [(open)]="selecionarAberto" title="Selecione o trecho">
@@ -172,9 +172,8 @@ export class DesafioCompleteCodigoComponent {
     private readonly indicator = viewChild<IndicatorComponent>('indicator');
     readonly completeCodigoService = inject(CompleteCodigoService);
 
-    /** No mobile a tela tem menos espaço sobrando — padding e gap do card ficam mais compactos. */
+    /** No mobile a tela tem menos espaço sobrando — padding do card fica mais compacto. */
     protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
-    protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-3');
 
     /** Controla o drawer de seleção de trecho. */
     protected readonly selecionarAberto = signal(false);
