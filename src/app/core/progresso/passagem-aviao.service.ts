@@ -1,4 +1,5 @@
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
+import { AbelhaEconomiaService } from "../jogador/abelha-economia.service";
 import { PassagemBaseService } from "./passagem-base.service";
 
 @Injectable({
@@ -6,6 +7,7 @@ import { PassagemBaseService } from "./passagem-base.service";
 })
 export class PassagemAviaoService extends PassagemBaseService {
     constructor() {
-        super(2);
+        const abelhaEconomiaService = inject(AbelhaEconomiaService);
+        super(abelhaEconomiaService.ticketContinental, () => abelhaEconomiaService.gastarPassagemContinental());
     }
 }

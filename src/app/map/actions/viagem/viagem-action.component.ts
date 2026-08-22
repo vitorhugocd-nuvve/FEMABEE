@@ -86,8 +86,8 @@ export class ViagemActionComponent {
 
     protected readonly temSaldo = computed(() => this.passagemService().possuiSaldo());
 
-    protected viajar(destinoId: string) {
-        if (!this.ehVolta() && !this.passagemService().gastar()) return;
+    protected async viajar(destinoId: string): Promise<void> {
+        if (!this.ehVolta() && !(await this.passagemService().gastar())) return;
         this.localizacaoAtualService.irPara(destinoId);
         this.mobileAcaoSelecionadaService.isOpen.set(false);
     }

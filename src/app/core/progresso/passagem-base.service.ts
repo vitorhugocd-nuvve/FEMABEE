@@ -1,31 +1,24 @@
-import { signal } from "@angular/core";
+import { Signal } from "@angular/core";
 
 /**
- * Serviço base abstrato para uma "carteira" de passagens (ônibus/avião): saldo mockado + gastar/adicionar.
- * Substituir por chamada real quando o backend existir.
+ * Fachada de uma "carteira" de passagens (ônibus/avião) em cima do saldo real da
+ * abelha selecionada (AbelhaEconomiaService) — mantém a mesma API que já existia
+ * quando isso era um mock local, pra não mexer nos consumidores (dialogo-gatilho,
+ * tela de viagem, contadores do header).
  */
 export abstract class PassagemBaseService {
-    private readonly _quantidade;
-
-    public readonly quantidade;
-
-    constructor(quantidadeInicial: number) {
-        this._quantidade = signal(quantidadeInicial);
-        this.quantidade = this._quantidade.asReadonly();
-    }
+    constructor(
+        public readonly quantidade: Signal<number>,
+        private readonly gastarNoBackend: () => Promise<boolean>,
+    ) { }
 
     public possuiSaldo(): boolean {
-        return this._quantidade() > 0;
+        return this.quantidade() > 0;
     }
 
-    /** Gasta 1 passagem do saldo. Retorna `false` sem alterar o saldo se não houver passagens suficientes. */
-    public gastar(): boolean {
+    /** Gasta 1 passagem no backend. Resolve `false` sem alterar nada se não houver saldo. */
+    public async gastar(): Promise<boolean> {
         if (!this.possuiSaldo()) return false;
-        this._quantidade.update(quantidade => quantidade - 1);
-        return true;
-    }
-
-    public adicionar(quantidade = 1) {
-        this._quantidade.update(atual => atual + quantidade);
+        return this.gastarNoBackend();
     }
 }

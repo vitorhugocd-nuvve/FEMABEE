@@ -13,6 +13,7 @@ import { TamanhoAbelha } from "../../../core/models/aparencia/tamanhos";
 import { estiloIconeAparencia, TITULO_TAMANHO_ABELHA, TITULO_TIPO_APARENCIA } from "../../../core/constants/aparencia";
 import { AparenciaObtidaService } from "../../../core/progresso/aparencia-obtida.service";
 import { SomService } from "../../../../services/som/som.service";
+import { AbelhaEconomiaService } from "../../../core/jogador/abelha-economia.service";
 
 @Component({
     selector: 'app-loja-action',
@@ -52,8 +53,11 @@ import { SomService } from "../../../../services/som/som.service";
             </div>
 
             <bee-divider direction="horizontal" />
+            @if (!jaPossui(item) && !temSaldo(item)) {
+                <bee-description class="text-center!">Você não tem dinheiro suficiente.</bee-description>
+            }
             <footer class="w-full flex flex-row-reverse">
-                <button bee-button [disabled]="jaPossui(item)" (click)="comprar(item)">
+                <button bee-button [disabled]="jaPossui(item) || !temSaldo(item)" (click)="comprar(item)">
                     @if (jaPossui(item)) {
                         <bee-icon icon="check-circle" />
                         Já possui
@@ -112,6 +116,7 @@ export class LojaActionComponent {
     private readonly lojaRepositoryService = inject(LojaRepositoryService);
     private readonly aparenciaObtidaService = inject(AparenciaObtidaService);
     private readonly somService = inject(SomService);
+    private readonly abelhaEconomiaService = inject(AbelhaEconomiaService);
 
     protected readonly tituloTipoAparencia = TITULO_TIPO_APARENCIA;
     protected readonly tituloTamanhoAbelha = TITULO_TAMANHO_ABELHA;
@@ -134,8 +139,19 @@ export class LojaActionComponent {
         return this.aparenciaObtidaService.possui(aparencia.id);
     }
 
-    protected comprar(aparencia: Aparencia): void {
-        if (this.jaPossui(aparencia)) return;
+    protected temSaldo(aparencia: Aparencia): boolean {
+        return this.abelhaEconomiaService.dinheiro() >= aparencia.precoCompra;
+    }
+
+    protected async comprar(aparencia: Aparencia): Promise<void> {
+        if (this.jaPossui(aparencia) || !this.temSaldo(aparencia)) return;
+
+        const gastou = await this.abelhaEconomiaService.gastarDinheiro(aparencia.precoCompra);
+        if (!gastou) {
+            this.somService.erro();
+            return;
+        }
+
         this.aparenciaObtidaService.marcarObtida(aparencia.id);
         this.somService.sucesso();
     }
