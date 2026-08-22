@@ -82,14 +82,17 @@ import { ScreenService } from "../../../services/tela/screen.service";
                 <bee-indicator #indicator />
 
                 <!-- Resultado final -->
-                @if (concluido()) {
-                    <div class="shadow-border border-2 border-green-400 bg-green-100 p-0.5 flex flex-col gap-1 w-full">
-                        <div class="px-2 py-1 text-sm bg-gradient-to-r from-green-600 to-green-400 w-full flex flex-row gap-2 items-center">
-                            <bee-icon icon="check" [width]="16" />
-                            <bee-text class="font-bold text-white!">Desafio concluído!</bee-text>
+                @if (jaRespondeu() && !podeAvancar()) {
+                    <div class="shadow-border border-2 p-0.5 flex flex-col gap-1 w-full" [class]="corResultadoFinal()">
+                        <div class="px-2 py-1 text-sm bg-gradient-to-r w-full flex flex-row gap-2 items-center" [class]="corCabecalhoResultadoFinal()">
+                            <bee-icon [icon]="completeTextoAprovado() ? 'check' : 'close'" [width]="16" />
+                            <bee-text class="font-bold text-white!">{{ completeTextoAprovado() ? 'Desafio concluído!' : 'Desafio não concluído' }}</bee-text>
                         </div>
                         <bee-text class="px-2 py-1">
                             Você completou {{ totalCorretas() }} de {{ totalTextos() }} textos corretamente.
+                            @if (!completeTextoAprovado()) {
+                                Acerte todos pra concluir a fase.
+                            }
                         </bee-text>
                     </div>
                 }
@@ -109,9 +112,12 @@ import { ScreenService } from "../../../services/tela/screen.service";
                     } @else if (jaRespondeu() && podeAvancar()) {
                         Próximo
                         <bee-icon icon="arrow-right" />
-                    } @else if (jaRespondeu()) {
+                    } @else if (jaRespondeu() && completeTextoAprovado()) {
                         <bee-icon icon="map" />
                         Voltar ao mapa
+                    } @else if (jaRespondeu()) {
+                        <bee-icon icon="refresh" />
+                        Tentar de novo
                     } @else {
                         <bee-icon icon="send" />
                         Verificar
@@ -153,6 +159,11 @@ export class DesafioCompleteTextoComponent {
     readonly totalTextos  = computed(() => this.completeTextoService.totalTextos());
     readonly padrao       = computed(() => this.completeTextoService.desafio()?.padrao);
     readonly numeroTexto  = computed(() => (this.completeTextoService.desafio()?.indice ?? 0) + 1);
+
+    /** Só conta como aprovado (e libera "Voltar ao mapa") se acertou todos os textos do desafio. */
+    readonly completeTextoAprovado = computed(() => this.totalCorretas() === this.totalTextos());
+    readonly corResultadoFinal = computed(() => this.completeTextoAprovado() ? 'border-green-400 bg-green-100' : 'border-red-400 bg-red-100');
+    readonly corCabecalhoResultadoFinal = computed(() => this.completeTextoAprovado() ? 'from-green-600 to-green-400' : 'from-red-600 to-red-400');
 
     /** O botão só aparece quando há algo a fazer (verificar, avançar ou voltar ao mapa) — senão fica omitido em vez de desabilitado. */
     readonly mostrarBotaoAcao = computed(() => {
@@ -241,8 +252,11 @@ export class DesafioCompleteTextoComponent {
             if (this.podeAvancar()) {
                 this.completeTextoService.avancar();
                 this._selecionadas.set(new Map());
-            } else {
+            } else if (this.completeTextoAprovado()) {
                 this.fechar();
+            } else {
+                this.completeTextoService.reiniciar();
+                this._selecionadas.set(new Map());
             }
             return;
         }

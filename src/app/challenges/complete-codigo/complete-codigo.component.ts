@@ -37,70 +37,63 @@ import { ScreenService } from "../../../services/tela/screen.service";
             </div>
         </bee-card-header>
 
-        <bee-card-content class="flex flex-col h-full overflow-auto!" [class]="gap()">
-            <bee-progressbar [value]="progresso()" />
+        <!-- O código ocupa todo o espaço abaixo da barra de progresso -->
+        <bee-card-content class="flex flex-col h-full overflow-hidden!" [class]="gap()">
+            <div class="flex flex-col shrink-0 gap-1">
+                <bee-progressbar [value]="progresso()" />
+                <span class="text-xs font-semibold text-muted-foreground truncate w-full">{{ arquivo() }}</span>
+            </div>
 
-            @if (isDesktop()) {
-                <!-- Desktop: opções à esquerda (1/3), código à direita (2/3) -->
-                <div class="flex flex-row w-full flex-1 min-h-0 gap-3">
-                    <div class="flex flex-col w-1/3 shrink-0 h-full gap-3 overflow-auto">
-                        <ng-container [ngTemplateOutlet]="listaOpcoes" />
-                        <ng-container [ngTemplateOutlet]="estadoDesafio" />
-                        @if (mostrarBotaoAcao()) {
-                            <div class="w-full mt-auto">
-                                <ng-container [ngTemplateOutlet]="botaoAcao" />
-                            </div>
-                        }
-                    </div>
-
-                    <div class="flex flex-col w-2/3 min-w-0 h-full gap-2">
-                        <span class="text-xs font-semibold text-muted-foreground truncate w-full">{{ arquivo() }}</span>
-                        <bee-code-diff
-                            class="w-full flex-1 min-h-0"
-                            [original]="codigoOriginal()"
-                            [modified]="codigoModificado()"
-                            [language]="linguagem()" />
-                    </div>
-                </div>
-            } @else {
-                <!-- Mobile: código ocupa a tela, opções ficam num drawer -->
-                <div class="flex flex-col w-full flex-1 min-h-0 gap-3">
-                    <span class="text-xs font-semibold text-muted-foreground truncate w-full">{{ arquivo() }}</span>
-                    <bee-code-diff
-                        class="w-full flex-1 min-h-0"
-                        [original]="codigoOriginal()"
-                        [modified]="codigoModificado()"
-                        [language]="linguagem()" />
-
-                    <ng-container [ngTemplateOutlet]="estadoDesafio" />
-
-                    <div class="flex flex-row gap-2 shrink-0">
-                        <button
-                            bee-button
-                            size="large"
-                            class="flex-1 justify-center"
-                            [ngClass]="classeBotaoSelecionar()"
-                            [disabled]="concluidoAtual() || solicitando()"
-                            (click)="selecionarAberto.set(true)">
-                            <bee-icon [icon]="selecaoAtual() ? 'check' : 'list'" />
-                            Selecionar
-                        </button>
-                        @if (mostrarBotaoAcao()) {
-                            <div class="flex-1">
-                                <ng-container [ngTemplateOutlet]="botaoAcao" />
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <bee-bottom-drawer [(open)]="selecionarAberto" title="Selecione o trecho">
-                    <div class="flex flex-col gap-2">
-                        <ng-container [ngTemplateOutlet]="listaOpcoes" />
-                    </div>
-                </bee-bottom-drawer>
-            }
+            <bee-code-diff
+                class="w-full flex-1 min-h-0"
+                [original]="codigoOriginal()"
+                [modified]="codigoModificado()"
+                [language]="linguagem()" />
         </bee-card-content>
     </bee-card>
+
+    <bee-indicator #indicator />
+
+    <!-- Cluster de ações flutuante, fixo no canto inferior direito da tela -->
+    <div class="fixed bottom-4 right-4 flex flex-row items-center gap-2 z-20">
+        @if (mostrarBotaoAcao()) {
+            <ng-container [ngTemplateOutlet]="botaoAcao" />
+        }
+        @if (!concluidoAtual()) {
+            <button
+                bee-button
+                class="rounded-full! p-3! aspect-square"
+                [ngClass]="classeBotaoSelecionar()"
+                [disabled]="solicitando()"
+                (click)="selecionarAberto.set(true)"
+                [attr.aria-label]="selecaoAtual() ? 'Trocar trecho selecionado' : 'Selecionar trecho'">
+                <bee-icon [icon]="selecaoAtual() ? 'repeat' : 'list-box'" />
+            </button>
+        }
+    </div>
+
+    <!-- Drawer: escolher o trecho -->
+    <bee-bottom-drawer [(open)]="selecionarAberto" title="Selecione o trecho">
+        <ng-container [ngTemplateOutlet]="listaOpcoes" />
+    </bee-bottom-drawer>
+
+    <!-- Drawer: feedback da validação (evita ocupar espaço em cima do código) -->
+    <bee-bottom-drawer [(open)]="feedbackAberto" [title]="tituloFeedback()">
+        <div class="flex flex-col gap-3">
+            <bee-text>{{ codigoAtualModel()?.explicacao }}</bee-text>
+            @if (concluidoDesafio()) {
+                <div class="shadow-border border-2 border-green-400 bg-green-100 p-0.5 flex flex-col gap-1 w-full">
+                    <div class="px-2 py-1 text-sm bg-gradient-to-r from-green-600 to-green-400 w-full flex flex-row gap-2 items-center">
+                        <bee-icon icon="check" [width]="16" />
+                        <bee-text class="font-bold text-white!">Desafio concluído!</bee-text>
+                    </div>
+                    <bee-text class="px-2 py-1">
+                        Você completou {{ totalCorretos() }} de {{ totalCodigos() }} códigos corretamente.
+                    </bee-text>
+                </div>
+            }
+        </div>
+    </bee-bottom-drawer>
 
     <!-- Cards de opções -->
     <ng-template #listaOpcoes>
@@ -124,36 +117,12 @@ import { ScreenService } from "../../../services/tela/screen.service";
         </div>
     </ng-template>
 
-    <!-- Indicador de feedback + resultado final -->
-    <ng-template #estadoDesafio>
-        <bee-indicator #indicator />
-
-        @if (feedback()) {
-            <div class="w-full bg-white shadow-border border-2 border-black p-2">
-                <span class="text-xs">{{ codigoAtualModel()?.explicacao }}</span>
-            </div>
-        }
-
-        @if (concluidoDesafio()) {
-            <div class="shadow-border border-2 border-green-400 bg-green-100 p-0.5 flex flex-col gap-1 w-full">
-                <div class="px-2 py-1 text-sm bg-gradient-to-r from-green-600 to-green-400 w-full flex flex-row gap-2 items-center">
-                    <bee-icon icon="check" [width]="16" />
-                    <bee-text class="font-bold text-white!">Desafio concluído!</bee-text>
-                </div>
-                <bee-text class="px-2 py-1">
-                    Você completou {{ totalCorretos() }} de {{ totalCodigos() }} códigos corretamente.
-                </bee-text>
-            </div>
-        }
-    </ng-template>
-
     <!-- Botão de ação principal — só aparece quando dá pra fazer algo -->
     <ng-template #botaoAcao>
         <button
             (click)="acao()"
             bee-button
-            size="large"
-            class="w-full text-center"
+            class="text-center shrink-0"
             [disabled]="solicitando()">
             @if (solicitando()) {
                 <bee-icon icon="loader" class="animate-spin" />
@@ -166,7 +135,7 @@ import { ScreenService } from "../../../services/tela/screen.service";
                 <bee-icon icon="arrow-right" />
             } @else if (feedback() === 'incorreto') {
                 Tentar novamente
-                <bee-icon icon="refresh-cw" />
+                <bee-icon icon="refresh" />
             } @else {
                 <bee-icon icon="send" />
                 Verificar
@@ -191,14 +160,14 @@ export class DesafioCompleteCodigoComponent {
     private readonly indicator = viewChild<IndicatorComponent>('indicator');
     readonly completeCodigoService = inject(CompleteCodigoService);
 
-    protected readonly isDesktop = this.screenService.isDesktop;
-
     /** No mobile a tela tem menos espaço sobrando — padding e gap do card ficam mais compactos. */
     protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
     protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-3');
 
-    /** Controla o drawer de seleção de trecho no mobile. */
+    /** Controla o drawer de seleção de trecho. */
     protected readonly selecionarAberto = signal(false);
+    /** Controla o drawer com a explicação do resultado (aberto automaticamente ao validar). */
+    protected readonly feedbackAberto = signal(false);
 
     readonly padrao        = computed(() => this.completeCodigoService.desafio()?.padrao);
     readonly numeroCodigo  = computed(() => (this.completeCodigoService.desafio()?.indice ?? 0) + 1);
@@ -209,6 +178,8 @@ export class DesafioCompleteCodigoComponent {
     readonly feedback      = computed(() => this.completeCodigoService.feedback());
     readonly concluidoAtual   = computed(() => this.completeCodigoService.stateAtual()?.concluido ?? false);
     readonly concluidoDesafio = computed(() => this.completeCodigoService.concluido());
+
+    readonly tituloFeedback = computed(() => this.feedback() === 'correto' ? 'Boa! 🎉' : 'Não foi dessa vez');
 
     readonly codigoAtualModel = computed(() => this.completeCodigoService.stateAtual()?.codigo);
     readonly arquivo    = computed(() => this.codigoAtualModel()?.arquivo);
@@ -236,6 +207,11 @@ export class DesafioCompleteCodigoComponent {
         this.completeCodigoService.iniciar(desafio);
     });
 
+    /** Abre o drawer de feedback assim que há um resultado, e fecha quando ele é limpo (próximo código). */
+    private readonly _sincronizarFeedbackDrawer = effect(() => {
+        this.feedbackAberto.set(!!this.feedback());
+    });
+
     classeOpcao(id: string): Record<string, boolean> {
         const selecionado = this.selecaoAtual() === id;
         const concluido = this.concluidoAtual();
@@ -246,7 +222,7 @@ export class DesafioCompleteCodigoComponent {
         };
     }
 
-    /** Destaca o botão "Selecionar" quando já há um trecho escolhido, sem precisar reabrir o drawer pra saber. */
+    /** Destaca o botão flutuante de seleção quando já há um trecho escolhido. */
     classeBotaoSelecionar(): Record<string, boolean> {
         return { 'bg-primary/20! border-primary!': !!this.selecaoAtual() };
     }

@@ -11,6 +11,9 @@ export class CompleteTextoService extends DesafioBaseService {
     private readonly _states  = signal<TextoState[]>([]);
     private readonly _feedback = signal<FeedbackCompleteTexto>(undefined);
 
+    /** Referência ao desafio no índice inicial — permite `reiniciar()` voltar do zero. */
+    private desafioOriginal: CompleteTexto | undefined;
+
     public readonly desafio    = this._desafio.asReadonly();
     public readonly feedback   = this._feedback.asReadonly();
 
@@ -23,10 +26,13 @@ export class CompleteTextoService extends DesafioBaseService {
     public readonly podeAvancar = computed(() => this._desafio()?.podeAvancar ?? false);
     public readonly podeVoltar  = computed(() => this._desafio()?.podeVoltar  ?? false);
 
-    /** Concluído = não há mais textos à frente e o texto atual já foi respondido */
+    /** Concluído = todos os textos foram respondidos E todos corretos. */
     public readonly concluido = computed(() => {
-        if (!this._desafio()) return false;
-        return !this.podeAvancar() && (this.stateAtual()?.concluido ?? false);
+        const states = this._states();
+        return states.length > 0
+            && !this.podeAvancar()
+            && states.every(s => s.concluido)
+            && states.every(s => s.resultado === 'correto');
     });
 
     public readonly progressoReal = computed(() => {
@@ -43,10 +49,17 @@ export class CompleteTextoService extends DesafioBaseService {
     public readonly totalTextos = computed(() => this._states().length);
 
     public iniciar(desafio: CompleteTexto): void {
+        this.desafioOriginal = desafio;
         this._states.set(desafio.textos.map(t => new TextoState(t)));
         this._desafio.set(desafio);
         this._feedback.set(undefined);
         this._progresso.set(0);
+    }
+
+    /** Reinicia as respostas do mesmo desafio do zero — usado quando o jogador não acerta todos os textos. */
+    public reiniciar(): void {
+        if (!this.desafioOriginal) return;
+        this.iniciar(this.desafioOriginal);
     }
 
     public encerrar(): void {

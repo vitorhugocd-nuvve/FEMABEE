@@ -122,17 +122,31 @@ import { ScreenService } from "../../../services/tela/screen.service";
         } @else {
             <div class="flex flex-col gap-4">
                 <bee-text>{{ pergunta()?.explicacao }}</bee-text>
+                @if (ultimaPergunta() && !encontreBugAprovado()) {
+                    <div class="shadow-border border-2 border-red-400 bg-red-100 p-0.5 flex flex-col gap-1 w-full">
+                        <div class="px-2 py-1 text-sm bg-gradient-to-r from-red-600 to-red-400 w-full flex flex-row gap-2 items-center">
+                            <bee-icon icon="close" [width]="16" />
+                            <bee-text class="font-bold text-white!">Não foi dessa vez</bee-text>
+                        </div>
+                        <bee-text class="px-2 py-1">
+                            Você acertou {{ encontreBugService.totalCorretas() }} de {{ totalPerguntas() }} perguntas. Acerte todas pra concluir a fase.
+                        </bee-text>
+                    </div>
+                }
                 <button
                     bee-button
                     size="large"
                     class="w-full text-center"
                     (click)="fecharDrawerResposta()">
-                    @if (concluidoDesafio()) {
+                    @if (!ultimaPergunta()) {
+                        Próxima pergunta
+                        <bee-icon icon="arrow-right" />
+                    } @else if (encontreBugAprovado()) {
                         <bee-icon icon="map" />
                         Voltar ao mapa
                     } @else {
-                        Próxima pergunta
-                        <bee-icon icon="arrow-right" />
+                        <bee-icon icon="refresh" />
+                        Tentar de novo
                     }
                 </button>
             </div>
@@ -172,6 +186,8 @@ export class DesafioEncontreBugComponent {
     readonly solicitando    = computed(() => this.encontreBugService.solicitando());
     readonly jaRespondeu    = computed(() => this.encontreBugService.stateAtual()?.concluido ?? false);
     readonly concluidoDesafio = computed(() => this.encontreBugService.concluido());
+    readonly ultimaPergunta = computed(() => !this.encontreBugService.podeAvancar());
+    readonly encontreBugAprovado = computed(() => this.encontreBugService.totalCorretas() === this.totalPerguntas());
 
     readonly pergunta      = computed(() => this.encontreBugService.stateAtual()?.pergunta);
     readonly arquivos      = computed<Arquivo[]>(() => this.pergunta()?.arquivos ?? []);
@@ -217,10 +233,12 @@ export class DesafioEncontreBugComponent {
 
     fecharDrawerResposta(): void {
         this.respostaDrawerAberto.set(false);
-        if (this.concluidoDesafio()) {
+        if (!this.ultimaPergunta()) {
+            this.encontreBugService.avancar();
+        } else if (this.encontreBugAprovado()) {
             this.fechar();
         } else {
-            this.encontreBugService.avancar();
+            this.encontreBugService.reiniciar();
         }
     }
 
