@@ -37,7 +37,7 @@ export class MobileAcaoSelecionadaService {
             <div class="w-full flex flex-col items-center gap-2 py-2 text-center">
                 <bee-icon icon="stop" [width]="32" />
                 <bee-large>Espera aí chefe!</bee-large>
-                <bee-description>Durante a essa fase só as 3 fases.</bee-description>
+                <bee-description>Essa fase ainda está bloqueada. Conclua as fases anteriores primeiro.</bee-description>
             </div>
         } @else if (acaoSelecionada(); as acao) {
             @switch (acao.tipo) {

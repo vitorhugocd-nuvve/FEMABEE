@@ -17,6 +17,7 @@ import { RespostaBug } from "../../core/models/desafios/encontre-bug/resposta-bu
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 import { SomService } from "../../../services/som/som.service";
 import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
+import { ScreenService } from "../../../services/tela/screen.service";
 
 @Component({
     selector: 'app-desafio-encontre-bug',
@@ -26,7 +27,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
         <!-- Cabeçalho -->
         <bee-card-header>
             <div class="flex flex-row gap-2 items-center">
-                <button bee-button size="small" [disabled]="!podeVoltar()" (click)="voltarPergunta()">
+                <button bee-button size="small" (click)="fechar()" aria-label="Voltar ao mapa">
                     <bee-icon icon="arrow-left" />
                 </button>
                 <span class="font-semibold">Encontre o Bug · {{ padrao() }}</span>
@@ -35,20 +36,13 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                 <span class="text-xs text-muted-foreground">
                     {{ numeroPergunta() }}/{{ totalPerguntas() }}
                 </span>
-                <button bee-button size="small">
-                    <bee-icon icon="heart" />
-                    10
-                </button>
-                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
-                    <bee-icon icon="x" />
-                </button>
             </div>
         </bee-card-header>
 
-        <bee-card-content class="flex flex-col items-center h-full gap-3 overflow-auto!">
+        <bee-card-content class="flex flex-col items-center h-full overflow-auto!" [class]="gap()">
             <bee-progressbar [value]="progresso()" />
 
-            <div class="flex flex-col w-full h-full gap-3 overflow-auto">
+            <div class="flex flex-col w-full h-full overflow-auto" [class]="gap()">
                 <!-- Cartão de arquivo: abre o drawer de seleção -->
                 <button
                     bee-button
@@ -69,9 +63,9 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                     [readOnly]="true" />
 
                 <!-- Pergunta -->
-                <bee-card class="w-full! h-fit! p-2" direction="down">
+                <div class="w-full bg-white shadow-border border-2 border-black p-2">
                     <bee-large>{{ pergunta()?.enunciado }}</bee-large>
-                </bee-card>
+                </div>
 
                 <!-- Abre o drawer de resposta -->
                 <button
@@ -81,7 +75,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                     [disabled]="solicitando()"
                     (click)="respostaDrawerAberto.set(true)">
                     @if (jaRespondeu()) {
-                        <bee-icon icon="check-circle" />
+                        <bee-icon icon="check" />
                         Ver resposta
                     } @else {
                         <bee-icon icon="send" />
@@ -112,7 +106,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
 
     <!-- Drawer: escolher resposta / ver feedback -->
     <bee-bottom-drawer [(open)]="respostaDrawerAberto" [title]="tituloRespostaDrawer()">
-        <bee-indicator #resultadoIndicator class="w-full!" />
+        <bee-indicator #resultadoIndicator />
         @if (!jaRespondeu()) {
             <div class="flex flex-col gap-2">
                 @for (resposta of respostas(); track resposta.id) {
@@ -134,8 +128,8 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                     class="w-full text-center"
                     (click)="fecharDrawerResposta()">
                     @if (concluidoDesafio()) {
-                        <bee-icon icon="check-circle" />
-                        Concluir
+                        <bee-icon icon="map" />
+                        Voltar ao mapa
                     } @else {
                         Próxima pergunta
                         <bee-icon icon="arrow-right" />
@@ -145,7 +139,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
         }
     </bee-bottom-drawer>
     `,
-    host: { class: 'p-4 pattern-background h-screen w-screen flex' },
+    host: { class: 'pattern-background h-screen w-screen flex', '[class]': 'hostPadding()' },
     providers: [BuscarEncontreBugService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent, IndicatorComponent,
@@ -159,7 +153,12 @@ export class DesafioEncontreBugComponent {
     private readonly somService = inject(SomService);
     private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
     private readonly resultadoIndicator = viewChild<IndicatorComponent>('resultadoIndicator');
+    private readonly screenService = inject(ScreenService);
     readonly encontreBugService = inject(EncontreBugService);
+
+    /** No mobile a tela tem menos espaço sobrando — padding e gap do card ficam mais compactos. */
+    protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
+    protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-3');
 
     /** Índice do arquivo em exibição, dentro da pergunta atual */
     readonly indiceArquivo = signal(0);
@@ -171,7 +170,6 @@ export class DesafioEncontreBugComponent {
     readonly totalPerguntas = computed(() => this.encontreBugService.totalPerguntas());
     readonly progresso      = computed(() => this.encontreBugService.progresso());
     readonly solicitando    = computed(() => this.encontreBugService.solicitando());
-    readonly podeVoltar     = computed(() => this.encontreBugService.podeVoltar());
     readonly jaRespondeu    = computed(() => this.encontreBugService.stateAtual()?.concluido ?? false);
     readonly concluidoDesafio = computed(() => this.encontreBugService.concluido());
 
@@ -209,11 +207,11 @@ export class DesafioEncontreBugComponent {
 
         if (resultado === 'correto') {
             this.somService.sucesso();
-            this.resultadoIndicator()?.show(new Indication({ message: 'Boa! Você encontrou o problema.', severity: 'success', ttlInMs: 2000 }));
+            this.resultadoIndicator()?.show(new Indication({ message: 'Boa! Você encontrou o problema.', severity: 'success', ttlInMs: 2000, toast: true, toastPosition: 'bottom' }));
         } else if (resultado === 'incorreto') {
             this.somService.erro();
             this.sequenciaSemErrarService.registrarErro();
-            this.resultadoIndicator()?.show(new Indication({ message: 'Não foi dessa vez.', severity: 'danger', ttlInMs: 2000 }));
+            this.resultadoIndicator()?.show(new Indication({ message: 'Não foi dessa vez.', severity: 'danger', ttlInMs: 2000, toast: true, toastPosition: 'bottom' }));
         }
     }
 
@@ -224,10 +222,6 @@ export class DesafioEncontreBugComponent {
         } else {
             this.encontreBugService.avancar();
         }
-    }
-
-    voltarPergunta(): void {
-        this.encontreBugService.voltar();
     }
 
     fechar(): void {

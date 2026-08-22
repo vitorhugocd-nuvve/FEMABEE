@@ -3,6 +3,7 @@ import { NgClass } from "@angular/common";
 import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
+import { TextComponent } from "../../../ui/typography/text.component";
 import { ProgressbarComponent } from "../../../ui/progressbar/progressbar.component";
 import { IndicatorComponent } from "../../../ui/indicator/indicator.component";
 import { Indication } from "../../../ui/indicator/indication";
@@ -13,6 +14,7 @@ import { Par } from "../../core/models/desafios/encontre-pares/par";
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 import { SomService } from "../../../services/som/som.service";
 import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
+import { ScreenService } from "../../../services/tela/screen.service";
 
 @Component({
     selector: 'app-desafio-encontre-pares',
@@ -22,7 +24,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
         <!-- Cabeçalho -->
         <bee-card-header>
             <div class="flex flex-row gap-2 items-center">
-                <button bee-button size="small" [disabled]="!podeVoltar()" (click)="voltarRodada()">
+                <button bee-button size="small" (click)="fechar()" aria-label="Voltar ao mapa">
                     <bee-icon icon="arrow-left" />
                 </button>
                 <span class="font-semibold">Encontre os Pares · {{ padrao() }}</span>
@@ -31,20 +33,13 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                 <span class="text-xs text-muted-foreground">
                     {{ numeroRodada() }}/{{ totalRodadas() }}
                 </span>
-                <button bee-button size="small">
-                    <bee-icon icon="heart" />
-                    10
-                </button>
-                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
-                    <bee-icon icon="x" />
-                </button>
             </div>
         </bee-card-header>
 
-        <bee-card-content class="flex flex-col items-center h-full gap-4 overflow-auto!">
+        <bee-card-content class="flex flex-col items-center h-full overflow-auto!" [class]="gap()">
             <bee-progressbar [value]="progresso()" />
 
-            <div class="flex flex-col w-full h-full gap-3 overflow-auto">
+            <div class="flex flex-col w-full h-full overflow-auto" [class]="gap()">
                 <p class="text-xs text-muted-foreground text-center">
                     Toque em um termo e depois na descrição que combina com ele.
                 </p>
@@ -87,16 +82,19 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
 
                 <!-- Resultado final -->
                 @if (concluidoDesafio()) {
-                    <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
-                        <p class="font-bold text-lg">Desafio concluído! 🏆</p>
-                        <p class="text-sm text-muted-foreground">
-                            Você formou todos os pares de <strong>{{ totalRodadas() }}</strong> rodadas.
-                        </p>
+                    <div class="shadow-border border-2 border-green-400 bg-green-100 p-0.5 flex flex-col gap-1 w-full">
+                        <div class="px-2 py-1 text-sm bg-gradient-to-r from-green-600 to-green-400 w-full flex flex-row gap-2 items-center">
+                            <bee-icon icon="check" [width]="16" />
+                            <bee-text class="font-bold text-white!">Desafio concluído!</bee-text>
+                        </div>
+                        <bee-text class="px-2 py-1">
+                            Você formou todos os pares de {{ totalRodadas() }} rodadas.
+                        </bee-text>
                     </div>
                 }
             </div>
 
-            <bee-indicator class="w-full!" #indicator />
+            <bee-indicator #indicator />
 
             <!-- Botão de ação principal — só aparece quando dá pra fazer algo -->
             @if (mostrarBotaoAcao()) {
@@ -107,10 +105,10 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                     class="w-full text-center"
                     [disabled]="solicitando()">
                     @if (solicitando()) {
-                        <bee-icon icon="loader-2" class="animate-spin" />
+                        <bee-icon icon="loader" class="animate-spin" />
                         Conferindo...
                     } @else if (concluidoDesafio()) {
-                        <bee-icon icon="check-circle" />
+                        <bee-icon icon="map" />
                         Voltar ao mapa
                     } @else {
                         Próxima rodada
@@ -121,11 +119,11 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
         </bee-card-content>
     </bee-card>
     `,
-    host: { class: 'p-4 pattern-background h-screen w-screen flex' },
+    host: { class: 'pattern-background h-screen w-screen flex', '[class]': 'hostPadding()' },
     providers: [BuscarEncontreParesService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
-        IconComponent, ButtonComponent, ProgressbarComponent, IndicatorComponent, BeeDividerComponent, NgClass
+        IconComponent, ButtonComponent, TextComponent, ProgressbarComponent, IndicatorComponent, BeeDividerComponent, NgClass
     ]
 })
 export class DesafioEncontreParesComponent {
@@ -134,7 +132,12 @@ export class DesafioEncontreParesComponent {
     private readonly desafioAtualService = inject(DesafioAtualService);
     private readonly somService = inject(SomService);
     private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
+    private readonly screenService = inject(ScreenService);
     readonly encontreParesService = inject(EncontreParesService);
+
+    /** No mobile a tela tem menos espaço sobrando — padding e gap do card ficam mais compactos. */
+    protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
+    protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-4');
 
     /** Id do `Par` selecionado do lado das afirmações / correspondências */
     readonly selecaoAfirmacao = signal<string | undefined>(undefined);
@@ -147,7 +150,6 @@ export class DesafioEncontreParesComponent {
     readonly solicitando     = computed(() => this.encontreParesService.solicitando());
     readonly concluidoRodada = computed(() => this.encontreParesService.stateAtual()?.concluido ?? false);
     readonly concluidoDesafio = computed(() => this.encontreParesService.concluido());
-    readonly podeVoltar      = computed(() => this.encontreParesService.podeVoltar());
 
     /** O botão só aparece quando dá pra fazer algo (avançar de rodada ou voltar ao mapa) — senão fica omitido em vez de desabilitado. */
     readonly mostrarBotaoAcao = computed(() => {
@@ -214,6 +216,8 @@ export class DesafioEncontreParesComponent {
                 message: 'Essas cartas não formam um par.',
                 severity: 'danger',
                 ttlInMs: 1500,
+                toast: true,
+                toastPosition: 'bottom',
             }));
         } else if (resultado === 'correto') {
             this.somService.sucesso();
@@ -237,11 +241,6 @@ export class DesafioEncontreParesComponent {
 
     proximaRodada(): void {
         this.encontreParesService.avancar();
-        this.limparSelecao();
-    }
-
-    voltarRodada(): void {
-        this.encontreParesService.voltar();
         this.limparSelecao();
     }
 

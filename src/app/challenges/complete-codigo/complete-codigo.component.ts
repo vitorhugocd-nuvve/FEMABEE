@@ -3,6 +3,7 @@ import { NgClass, NgTemplateOutlet } from "@angular/common";
 import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
+import { TextComponent } from "../../../ui/typography/text.component";
 import { ProgressbarComponent } from "../../../ui/progressbar/progressbar.component";
 import { CodeDiffComponent } from "../../../ui/code-diff/code-diff.component";
 import { IndicatorComponent } from "../../../ui/indicator/indicator.component";
@@ -24,7 +25,7 @@ import { ScreenService } from "../../../services/tela/screen.service";
         <!-- Cabeçalho -->
         <bee-card-header>
             <div class="flex flex-row gap-2 items-center">
-                <button bee-button size="small" [disabled]="!podeVoltar()" (click)="voltar()">
+                <button bee-button size="small" (click)="fechar()" aria-label="Voltar ao mapa">
                     <bee-icon icon="arrow-left" />
                 </button>
                 <span class="font-semibold">Complete o Código · {{ padrao() }}</span>
@@ -33,17 +34,10 @@ import { ScreenService } from "../../../services/tela/screen.service";
                 <span class="text-xs text-muted-foreground">
                     {{ numeroCodigo() }}/{{ totalCodigos() }}
                 </span>
-                <button bee-button size="small">
-                    <bee-icon icon="heart" />
-                    10
-                </button>
-                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
-                    <bee-icon icon="x" />
-                </button>
             </div>
         </bee-card-header>
 
-        <bee-card-content class="flex flex-col h-full gap-3 overflow-auto!">
+        <bee-card-content class="flex flex-col h-full overflow-auto!" [class]="gap()">
             <bee-progressbar [value]="progresso()" />
 
             @if (isDesktop()) {
@@ -132,20 +126,23 @@ import { ScreenService } from "../../../services/tela/screen.service";
 
     <!-- Indicador de feedback + resultado final -->
     <ng-template #estadoDesafio>
-        <bee-indicator #indicator class="w-full!" />
+        <bee-indicator #indicator />
 
         @if (feedback()) {
-            <bee-card class="w-full! h-fit! p-2" direction="down">
+            <div class="w-full bg-white shadow-border border-2 border-black p-2">
                 <span class="text-xs">{{ codigoAtualModel()?.explicacao }}</span>
-            </bee-card>
+            </div>
         }
 
         @if (concluidoDesafio()) {
-            <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
-                <p class="font-bold text-lg">Desafio concluído! 🏆</p>
-                <p class="text-sm text-muted-foreground">
-                    Você completou <strong>{{ totalCorretos() }}</strong> de <strong>{{ totalCodigos() }}</strong> códigos corretamente.
-                </p>
+            <div class="shadow-border border-2 border-green-400 bg-green-100 p-0.5 flex flex-col gap-1 w-full">
+                <div class="px-2 py-1 text-sm bg-gradient-to-r from-green-600 to-green-400 w-full flex flex-row gap-2 items-center">
+                    <bee-icon icon="check" [width]="16" />
+                    <bee-text class="font-bold text-white!">Desafio concluído!</bee-text>
+                </div>
+                <bee-text class="px-2 py-1">
+                    Você completou {{ totalCorretos() }} de {{ totalCodigos() }} códigos corretamente.
+                </bee-text>
             </div>
         }
     </ng-template>
@@ -159,10 +156,10 @@ import { ScreenService } from "../../../services/tela/screen.service";
             class="w-full text-center"
             [disabled]="solicitando()">
             @if (solicitando()) {
-                <bee-icon icon="loader-2" class="animate-spin" />
+                <bee-icon icon="loader" class="animate-spin" />
                 Verificando...
             } @else if (concluidoAtual() && concluidoDesafio()) {
-                <bee-icon icon="check-circle" />
+                <bee-icon icon="map" />
                 Voltar ao mapa
             } @else if (concluidoAtual()) {
                 Próximo
@@ -177,11 +174,11 @@ import { ScreenService } from "../../../services/tela/screen.service";
         </button>
     </ng-template>
     `,
-    host: { class: 'p-4 pattern-background h-screen w-screen flex' },
+    host: { class: 'pattern-background h-screen w-screen flex', '[class]': 'hostPadding()' },
     providers: [BuscarCompleteCodigoService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
-        IconComponent, ButtonComponent, ProgressbarComponent, CodeDiffComponent, NgClass, NgTemplateOutlet,
+        IconComponent, ButtonComponent, TextComponent, ProgressbarComponent, CodeDiffComponent, NgClass, NgTemplateOutlet,
         IndicatorComponent, BottomDrawerComponent
     ]
 })
@@ -196,6 +193,10 @@ export class DesafioCompleteCodigoComponent {
 
     protected readonly isDesktop = this.screenService.isDesktop;
 
+    /** No mobile a tela tem menos espaço sobrando — padding e gap do card ficam mais compactos. */
+    protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
+    protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-3');
+
     /** Controla o drawer de seleção de trecho no mobile. */
     protected readonly selecionarAberto = signal(false);
 
@@ -205,7 +206,6 @@ export class DesafioCompleteCodigoComponent {
     readonly totalCorretos = computed(() => this.completeCodigoService.totalCorretos());
     readonly progresso     = computed(() => this.completeCodigoService.progresso());
     readonly solicitando   = computed(() => this.completeCodigoService.solicitando());
-    readonly podeVoltar    = computed(() => this.completeCodigoService.podeVoltar());
     readonly feedback      = computed(() => this.completeCodigoService.feedback());
     readonly concluidoAtual   = computed(() => this.completeCodigoService.stateAtual()?.concluido ?? false);
     readonly concluidoDesafio = computed(() => this.completeCodigoService.concluido());
@@ -281,16 +281,12 @@ export class DesafioCompleteCodigoComponent {
 
         if (resultado === 'correto') {
             this.somService.sucesso();
-            this.indicator()?.show(new Indication({ message: 'Perfeito! Esse é o trecho correto.', severity: 'success', ttlInMs: 2000 }));
+            this.indicator()?.show(new Indication({ message: 'Perfeito! Esse é o trecho correto.', severity: 'success', ttlInMs: 2000, toast: true, toastPosition: 'bottom' }));
         } else if (resultado === 'incorreto') {
             this.somService.erro();
             this.sequenciaSemErrarService.registrarErro();
-            this.indicator()?.show(new Indication({ message: 'Esse trecho não resolve o problema. Tente novamente!', severity: 'danger', ttlInMs: 2000 }));
+            this.indicator()?.show(new Indication({ message: 'Esse trecho não resolve o problema. Tente novamente!', severity: 'danger', ttlInMs: 2000, toast: true, toastPosition: 'bottom' }));
         }
-    }
-
-    voltar(): void {
-        this.completeCodigoService.voltar();
     }
 
     fechar(): void {

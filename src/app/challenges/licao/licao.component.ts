@@ -23,16 +23,14 @@ type BlocoLicao =
         <!-- Cabeçalho -->
         <bee-card-header>
             <div class="flex flex-row gap-2 items-center">
-                <span class="font-semibold">Lição · {{ padrao() }}</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
-                    <bee-icon icon="x" />
+                <button bee-button size="small" (click)="fechar()" aria-label="Voltar ao mapa">
+                    <bee-icon icon="arrow-left" />
                 </button>
+                <span class="font-semibold">Lição · {{ padrao() }}</span>
             </div>
         </bee-card-header>
 
-        <bee-card-content #conteudoScroll class="flex flex-col items-center h-full gap-4 overflow-auto!">
+        <bee-card-content #conteudoScroll class="flex flex-col items-center h-full overflow-auto!" [class]="gap()">
             <div class="licao-coluna shadow-border border-2 border-black flex flex-col gap-4 shrink-0">
                 @for (bloco of blocos(); track $index) {
                     @if (bloco.tipo === 'codigo' && bloco.linguagem === 'mermaid') {
@@ -115,6 +113,7 @@ export class DesafioLicaoComponent {
     /** No mobile a tela tem menos espaço sobrando; menos padding e blocos de código mais altos (o wrap de linha ocupa mais altura). */
     protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
     protected readonly alturaCodigo = computed(() => this.screenService.isMobile() ? 'h-72' : 'h-56');
+    protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-4');
 
     readonly blocos = computed<BlocoLicao[]>(() => {
         const markdown = this.licaoService.licao()?.conteudoMarkdown;

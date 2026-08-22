@@ -6,6 +6,7 @@ import { ProgressbarComponent } from "../../../ui/progressbar/progressbar.compon
 import { QuizService } from "./quiz.service";
 import { BuscarQuizService } from "./buscar-quiz.service";
 import { LargeComponent } from "../../../ui/typography/large.component";
+import { TextComponent } from "../../../ui/typography/text.component";
 import { CheckboxDirective } from "../../../ui/checkbox/checkbox.component";
 import { Resposta } from "../../core/models/desafios/quiz/resposta";
 import { NgClass } from "@angular/common";
@@ -14,6 +15,7 @@ import { Indication } from "../../../ui/indicator/indication";
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 import { SomService } from "../../../services/som/som.service";
 import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
+import { ScreenService } from "../../../services/tela/screen.service";
 
 @Component({
     selector: 'app-desafio-quiz',
@@ -22,7 +24,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
         <!-- Cabeçalho -->
         <bee-card-header>
             <div class="flex flex-row gap-2 items-center">
-                <button bee-button size="small">
+                <button bee-button size="small" (click)="fechar()" aria-label="Voltar ao mapa">
                     <bee-icon icon="arrow-left" />
                 </button>
                 <span class="font-semibold">Quiz · {{ quiz()?.padrao }}</span>
@@ -31,26 +33,19 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                 <span class="text-xs text-muted-foreground">
                     {{ numeroPergunta() }}/{{ totalPerguntas() }}
                 </span>
-                <button bee-button size="small">
-                    <bee-icon icon="heart" />
-                    10
-                </button>
-                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
-                    <bee-icon icon="x" />
-                </button>
             </div>
         </bee-card-header>
 
-        <bee-card-content class="flex flex-col items-center h-full gap-4 overflow-auto!">
+        <bee-card-content class="flex flex-col items-center h-full overflow-auto!" [class]="gap()">
             <bee-progressbar />
 
             <!-- Bloco principal -->
-            <div class="flex flex-col w-full h-full overflow-auto gap-4">
+            <div class="flex flex-col w-full h-full overflow-auto" [class]="gap()">
 
                 <!-- Pergunta -->
-                <bee-card class="w-full! h-fit! p-2" direction="down">
+                <div class="bg-white shadow-border border-2 border-black p-3">
                     <bee-large>{{ pergunta()?.texto }}</bee-large>
-                </bee-card>
+                </div>
 
                 <!-- Respostas -->
                 <div class="flex flex-col gap-2 overflow-auto">
@@ -71,22 +66,28 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                             @if (jaRespondeu() && resposta.correta) {
                                 <bee-icon icon="check" />
                             } @else if (jaRespondeu() && selecao() === resposta) {
-                                <bee-icon icon="x" />
+                                <bee-icon icon="close" />
                             }
                         </button>
                     }
                 </div>
             </div>
 
-            <bee-indicator class="w-full!" #indicator />
+            <bee-indicator #indicator />
 
             <!-- Resultado final -->
             @if (jaRespondeu() && !podeAvancar()) {
-                <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
-                    <p class="font-bold text-lg">Quiz concluído! 🏆</p>
-                    <p class="text-sm text-muted-foreground">
-                        Você acertou <strong>{{ quizService.totalCorretas() }}</strong> de <strong>{{ totalPerguntas() }}</strong> perguntas.
-                    </p>
+                <div class="shadow-border border-2 p-0.5 flex flex-col gap-1 w-full" [class]="corResultadoFinal()">
+                    <div class="px-2 py-1 text-sm bg-gradient-to-r w-full flex flex-row gap-2 items-center" [class]="corCabecalhoResultadoFinal()">
+                        <bee-icon [icon]="quizAprovado() ? 'check' : 'close'" [width]="16" />
+                        <bee-text class="font-bold text-white!">{{ quizAprovado() ? 'Quiz concluído!' : 'Quiz não aprovado' }}</bee-text>
+                    </div>
+                    <bee-text class="px-2 py-1">
+                        Você acertou {{ quizService.totalCorretas() }} de {{ totalPerguntas() }} perguntas.
+                        @if (!quizAprovado()) {
+                            Acerte todas pra concluir a fase.
+                        }
+                    </bee-text>
                 </div>
             }
 
@@ -99,14 +100,17 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                     class="w-full text-center"
                     [disabled]="solicitando()">
                     @if (solicitando()) {
-                        <bee-icon icon="loader-2" class="animate-spin" />
+                        <bee-icon icon="loader" class="animate-spin" />
                         Verificando...
                     } @else if (jaRespondeu() && podeAvancar()) {
                         Próxima
                         <bee-icon icon="arrow-right" />
-                    } @else if (jaRespondeu()) {
-                        <bee-icon icon="check-circle" />
+                    } @else if (jaRespondeu() && quizAprovado()) {
+                        <bee-icon icon="map" />
                         Voltar ao mapa
+                    } @else if (jaRespondeu()) {
+                        <bee-icon icon="refresh" />
+                        Tentar de novo
                     } @else {
                         <bee-icon icon="send" />
                         Verificar
@@ -117,12 +121,12 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
         </bee-card-content>
     </bee-card>
     `,
-    host: { class: 'p-4 pattern-background h-screen w-screen flex' },
+    host: { class: 'pattern-background h-screen w-screen flex', '[class]': 'hostPadding()' },
     providers: [BuscarQuizService],
     imports: [
     BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
     IconComponent, ButtonComponent, ProgressbarComponent,
-    LargeComponent, CheckboxDirective, NgClass,
+    LargeComponent, TextComponent, CheckboxDirective, NgClass,
     IndicatorComponent
 ]
 })
@@ -132,13 +136,17 @@ export class DesafioQuizComponent {
     private readonly desafioAtualService = inject(DesafioAtualService);
     private readonly somService = inject(SomService);
     private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
+    private readonly screenService = inject(ScreenService);
     readonly quizService = inject(QuizService);
+
+    /** No mobile a tela tem menos espaço sobrando — padding e gap do card ficam mais compactos. */
+    protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
+    protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-4');
 
     readonly selecao = signal<Resposta | undefined>(undefined);
     readonly quiz = computed(() => this.quizService.quiz());
     readonly pergunta = computed(() => this.quizService.perguntaAtual());
     readonly respostas = computed(() => this.quizService.respostasDisponiveis());
-    readonly concluido = computed(() => this.quizService.concluido());
     readonly solicitando = computed(() => this.quizService.solicitando());
     readonly totalPerguntas = computed(() => this.quizService.totalPerguntas());
     readonly numeroPergunta = computed(() => this.quizService.indice() + 1);
@@ -147,7 +155,13 @@ export class DesafioQuizComponent {
     readonly jaRespondeu = computed(() => this.quizService.stateAtual()?.concluido ?? false);
     readonly podeAvancar = computed(() => this.quizService.indice() < this.totalPerguntas() - 1);
 
-    /** O botão só aparece quando há algo a fazer (verificar, avançar ou voltar ao mapa) — senão fica omitido em vez de desabilitado. */
+    /** Só conta como aprovado (e libera "Voltar ao mapa") se acertou todas as perguntas do quiz. */
+    readonly quizAprovado = computed(() => this.quizService.totalCorretas() === this.totalPerguntas());
+
+    readonly corResultadoFinal = computed(() => this.quizAprovado() ? 'border-green-400 bg-green-100' : 'border-red-400 bg-red-100');
+    readonly corCabecalhoResultadoFinal = computed(() => this.quizAprovado() ? 'from-green-600 to-green-400' : 'from-red-600 to-red-400');
+
+    /** O botão só aparece quando há algo a fazer (verificar, avançar, tentar de novo ou voltar ao mapa) — senão fica omitido em vez de desabilitado. */
     readonly mostrarBotaoAcao = computed(() => {
         if (this.solicitando() || this.jaRespondeu()) return true;
         return !!this.selecao();
@@ -183,8 +197,11 @@ export class DesafioQuizComponent {
             if (this.podeAvancar()) {
                 this.quizService.proxima();
                 this.selecao.set(undefined);
-            } else {
+            } else if (this.quizAprovado()) {
                 this.fechar();
+            } else {
+                this.quizService.reiniciar();
+                this.selecao.set(undefined);
             }
             return;
         }
@@ -196,11 +213,11 @@ export class DesafioQuizComponent {
 
         if (resultado === 'correto') {
             this.somService.sucesso();
-            this.indicator()?.show(new Indication({ title: 'Acertou!', message: 'Resposta certa. 🎉', severity: 'success', ttlInMs: 1800 }));
+            this.indicator()?.show(new Indication({ title: 'Acertou!', message: 'Resposta certa. 🎉', severity: 'success', ttlInMs: 1800, toast: true, toastPosition: 'bottom' }));
         } else {
             this.somService.erro();
             this.sequenciaSemErrarService.registrarErro();
-            this.indicator()?.show(new Indication({ title: 'Errou!', message: 'A resposta escolhida foi incorreta.', severity: 'danger', ttlInMs: 1800 }));
+            this.indicator()?.show(new Indication({ title: 'Errou!', message: 'A resposta escolhida foi incorreta.', severity: 'danger', ttlInMs: 1800, toast: true, toastPosition: 'bottom' }));
         }
     }
 

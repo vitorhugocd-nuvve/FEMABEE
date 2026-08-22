@@ -31,9 +31,9 @@ const ANIMATION_FRAME_MS = 50;
                 </div>
                 @if (ind.ttlInMs) {
                     <div class="px-2 py-1">
-                        <progress 
-                            [value]="progressPercentage()" 
-                            max="100" 
+                        <progress
+                            [value]="progressPercentage()"
+                            max="100"
                             class="w-full!"
                             [class]="progressClasses()">
                         </progress>
@@ -49,12 +49,14 @@ const ANIMATION_FRAME_MS = 50;
 export class IndicatorComponent {
     readonly indication = signal<Indication | null>(null);
     readonly timeElapsed = signal(0);
+    /** Controla a transição de entrada do bottom sheet (toast) — começa fora da tela, anima até a posição final. */
+    readonly visivel = signal(false);
     private hideTimeoutId: number | null = null;
 
     readonly progressPercentage = computed(() => {
         const ind = this.indication();
         if (!ind || !ind.ttlInMs) return 0;
-        
+
         const elapsed = this.timeElapsed();
         const total = ind.ttlInMs;
         return Math.max(0, 100 - (elapsed / total) * 100); // invertido
@@ -66,10 +68,12 @@ export class IndicatorComponent {
     });
 
     readonly indicatorClasses = computed(() => {
+        const ind = this.indication();
         const severity = this.severity();
         const variants = SeverityVariants[severity];
         return [
             'shadow-border border-2 p-0.5 flex flex-col gap-1',
+            ind?.toast ? 'w-full max-w-md pointer-events-auto' : '',
             variants.bg,
             variants.border
         ].join(' ');
@@ -93,27 +97,37 @@ export class IndicatorComponent {
         ].join(' ');
     });
 
+    /** Toast = bottom sheet fixo que sobe do rodapé (ou desce do topo), com transição real via translate-y. */
     readonly toastClasses = computed(() => {
         const ind = this.indication();
         if (!ind || !ind.toast) return '';
 
         const position = ind.toastPosition || 'bottom';
-        const positionClass = position === 'top' ? 'top-4' : 'bottom-4';
+        const escondido = position === 'top' ? '-translate-y-full' : 'translate-y-full';
 
         return [
-            'fixed right-4',
-            positionClass,
-            'z-50 max-w-sm animate-in slide-in-from-right'
+            'fixed inset-x-0 z-50 flex justify-center px-4 pointer-events-none',
+            position === 'top' ? 'top-0 pt-4' : 'bottom-0 pb-4',
+            'transition-transform duration-300 ease-out',
+            this.visivel() ? 'translate-y-0' : escondido,
         ].join(' ');
     });
 
     show(indication: Indication): void {
         this.indication.set(indication);
         this.timeElapsed.set(0);
+        this.visivel.set(false);
 
         if (this.hideTimeoutId !== null) {
             clearTimeout(this.hideTimeoutId);
             this.hideTimeoutId = null;
+        }
+
+        if (indication.toast) {
+            // Duplo rAF: garante que o navegador pinte o estado "escondido" antes de animar pra "visível".
+            requestAnimationFrame(() => requestAnimationFrame(() => this.visivel.set(true)));
+        } else {
+            this.visivel.set(true);
         }
 
         if (indication.ttlInMs) {
@@ -125,6 +139,7 @@ export class IndicatorComponent {
 
     hide(): void {
         this.indication.set(null);
+        this.visivel.set(false);
         this.timeElapsed.set(0);
         if (this.hideTimeoutId !== null) {
             clearTimeout(this.hideTimeoutId);

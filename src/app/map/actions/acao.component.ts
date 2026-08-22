@@ -10,7 +10,9 @@ import { TipoDesafio } from "../../core/models/desafios/tipo-desafio";
 import { NiveisConcluidosAbelhaService } from "../../core/progresso/niveis-concluidos-abelha.service";
 import { OnibusObtidoService } from "../../core/progresso/onibus-obtido.service";
 import { AviaoObtidoService } from "../../core/progresso/aviao-obtido.service";
+import { ProgressoMapaService } from "../../core/progresso/progresso-mapa.service";
 import { MapaRepositoryService } from "../../core/seeds/repositories/mapa-repository.service";
+import { MapaAtualService } from "../services/mapa-atual.service";
 import { TAMANHO_TILE } from "../../core/constants/tile";
 import { SomService } from "../../../services/som/som.service";
 import {
@@ -49,7 +51,9 @@ export class AcaoComponent {
     private readonly niveisConcluidosAbelhaService = inject(NiveisConcluidosAbelhaService);
     private readonly onibusObtidoService = inject(OnibusObtidoService);
     private readonly aviaoObtidoService = inject(AviaoObtidoService);
+    private readonly progressoMapaService = inject(ProgressoMapaService);
     private readonly mapaRepositoryService = inject(MapaRepositoryService);
+    private readonly mapaAtualService = inject(MapaAtualService);
     private readonly somService = inject(SomService);
 
     readonly isOpen = signal(false);
@@ -57,12 +61,28 @@ export class AcaoComponent {
 
     protected readonly mapActionData = computed(() => this.acao().toMapActionData());
 
+    /** Ids em `niveisDependentes` que ainda não estão concluídos — vazio quando não há dependência pendente. */
+    protected readonly dependenciasPendentes = computed(() => {
+        const acao = this.acao();
+        if (!acao.niveisDependentes.length) return false;
+
+        const mapa = this.mapaAtualService.mapa();
+        if (!mapa) return false;
+
+        return acao.niveisDependentes.some(depId => {
+            const dependencia = mapa.acoes.find(a => a.id === depId);
+            return dependencia ? !this.progressoMapaService.estaConcluida(dependencia) : false;
+        });
+    });
+
     /**
-     * Só nesta fase do jogo: viagens (ônibus/avião) pra uma região cujo mapa foi comentado
-     * (padrão ainda sem fases liberadas) ficam com estilo desabilitado em vez de sumir —
-     * clicar mostra o aviso em vez de navegar.
+     * Bloqueada por dependência não concluída, ou (só nesta fase do jogo) uma viagem (ônibus/avião)
+     * pra uma região cujo mapa foi comentado (padrão ainda sem fases liberadas) — em ambos os casos
+     * fica com estilo desabilitado em vez de sumir, e clicar mostra o aviso em vez de navegar/abrir.
      */
     protected readonly bloqueado = computed(() => {
+        if (this.dependenciasPendentes()) return true;
+
         const acao = this.acao();
         if (acao.tipo !== TipoAcao.Onibus && acao.tipo !== TipoAcao.Aviao) return false;
         const destinoId = acao.mapaDestinoId;

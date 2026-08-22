@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal, viewChild } from "@angular
 import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
+import { TextComponent } from "../../../ui/typography/text.component";
 import { BuscarCompleteTextoService } from "./buscar-complete-texto.service";
 import { ProgressbarComponent } from "../../../ui/progressbar/progressbar.component";
 import { CompleteTextoService } from "./complete-texto.service";
@@ -11,6 +12,7 @@ import { SomService } from "../../../services/som/som.service";
 import { IndicatorComponent } from "../../../ui/indicator/indicator.component";
 import { Indication } from "../../../ui/indicator/indication";
 import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
+import { ScreenService } from "../../../services/tela/screen.service";
 
 @Component({
     selector: 'app-desafio-complete-texto',
@@ -19,7 +21,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
         <!-- Cabeçalho -->
         <bee-card-header>
             <div class="flex flex-row gap-2 items-center">
-                <button bee-button size="small" [disabled]="!podeVoltar()" (click)="voltar()">
+                <button bee-button size="small" (click)="fechar()" aria-label="Voltar ao mapa">
                     <bee-icon icon="arrow-left" />
                 </button>
                 <span class="font-semibold">Complete o Texto · {{ padrao() }}</span>
@@ -28,25 +30,18 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                 <span class="text-xs text-muted-foreground">
                     {{ numeroTexto() }}/{{ totalTextos() }}
                 </span>
-                <button bee-button size="small">
-                    <bee-icon icon="heart" />
-                    10
-                </button>
-                <button bee-button size="small" (click)="fechar()" aria-label="Fechar desafio">
-                    <bee-icon icon="x" />
-                </button>
             </div>
         </bee-card-header>
 
-        <bee-card-content class="flex flex-col items-center h-full gap-4">
+        <bee-card-content class="flex flex-col items-center h-full" [class]="gap()">
             <!-- Progresso -->
             <bee-progressbar [value]="progresso()" />
 
             <!-- Corpo do desafio -->
-            <div class="flex flex-col w-full h-full gap-4 overflow-auto">
+            <div class="flex flex-col w-full h-full overflow-auto" [class]="gap()">
 
                 <!-- Texto com lacunas renderizado -->
-                <bee-card class="w-full! h-fit! p-4" direction="down">
+                <div class="w-full bg-white shadow-border border-2 border-black p-4">
                     <p class="text-base leading-[1.75] max-w-prose mx-auto">
                         @for (parte of partesTexto(); track $index) {
                             @if (parte.tipo === 'texto') {
@@ -59,13 +54,13 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                                     (click)="removerSelecao(parte.indice)">
                                     {{ opcaoSelecionada(parte.indice) ?? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' }}
                                     @if (opcaoSelecionada(parte.indice)) {
-                                        <bee-icon icon="x" class="ml-1 h-3 w-3 opacity-60" />
+                                        <bee-icon icon="close" class="ml-1 h-3 w-3 opacity-60" />
                                     }
                                 </span>
                             }
                         }
                     </p>
-                </bee-card>
+                </div>
 
                 <!-- Banco de opções -->
                 <div class="flex flex-wrap gap-2">
@@ -84,15 +79,18 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                     }
                 </div>
 
-                <bee-indicator #indicator class="w-full!" />
+                <bee-indicator #indicator />
 
                 <!-- Resultado final -->
                 @if (concluido()) {
-                    <div class="px-4 py-4 bg-primary/10 border border-primary/30 text-center w-full">
-                        <p class="font-bold text-lg">Desafio concluído! 🏆</p>
-                        <p class="text-sm text-muted-foreground">
-                            Você completou <strong>{{ totalCorretas() }}</strong> de <strong>{{ totalTextos() }}</strong> textos corretamente.
-                        </p>
+                    <div class="shadow-border border-2 border-green-400 bg-green-100 p-0.5 flex flex-col gap-1 w-full">
+                        <div class="px-2 py-1 text-sm bg-gradient-to-r from-green-600 to-green-400 w-full flex flex-row gap-2 items-center">
+                            <bee-icon icon="check" [width]="16" />
+                            <bee-text class="font-bold text-white!">Desafio concluído!</bee-text>
+                        </div>
+                        <bee-text class="px-2 py-1">
+                            Você completou {{ totalCorretas() }} de {{ totalTextos() }} textos corretamente.
+                        </bee-text>
                     </div>
                 }
             </div>
@@ -106,13 +104,13 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
                     class="w-full text-center"
                     [disabled]="solicitando()">
                     @if (solicitando()) {
-                        <bee-icon icon="loader-2" class="animate-spin" />
+                        <bee-icon icon="loader" class="animate-spin" />
                         Verificando...
                     } @else if (jaRespondeu() && podeAvancar()) {
                         Próximo
                         <bee-icon icon="arrow-right" />
                     } @else if (jaRespondeu()) {
-                        <bee-icon icon="check-circle" />
+                        <bee-icon icon="map" />
                         Voltar ao mapa
                     } @else {
                         <bee-icon icon="send" />
@@ -123,11 +121,11 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
         </bee-card-content>
     </bee-card>
     `,
-    host: { class: 'p-4 pattern-background h-screen w-screen flex' },
+    host: { class: 'pattern-background h-screen w-screen flex', '[class]': 'hostPadding()' },
     providers: [BuscarCompleteTextoService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
-        IconComponent, ButtonComponent, ProgressbarComponent, NgClass, IndicatorComponent
+        IconComponent, ButtonComponent, TextComponent, ProgressbarComponent, NgClass, IndicatorComponent
     ]
 })
 export class DesafioCompleteTextoComponent {
@@ -136,14 +134,18 @@ export class DesafioCompleteTextoComponent {
     private readonly somService = inject(SomService);
     private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
     private readonly indicator = viewChild<IndicatorComponent>('indicator');
+    private readonly screenService = inject(ScreenService);
     readonly completeTextoService  = inject(CompleteTextoService);
+
+    /** No mobile a tela tem menos espaço sobrando — padding e gap do card ficam mais compactos. */
+    protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
+    protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-4');
 
     /** Opções selecionadas para cada lacuna: índice (1-based) → string | undefined */
     private readonly _selecionadas = signal<Map<number, string>>(new Map());
 
     readonly jaRespondeu  = computed(() => this.completeTextoService.stateAtual()?.concluido ?? false);
     readonly podeAvancar  = computed(() => this.completeTextoService.podeAvancar());
-    readonly podeVoltar   = computed(() => this.completeTextoService.podeVoltar());
     readonly concluido    = computed(() => this.completeTextoService.concluido());
     readonly progresso    = computed(() => this.completeTextoService.progressoReal());
     readonly solicitando  = computed(() => this.completeTextoService.solicitando());
@@ -256,17 +258,12 @@ export class DesafioCompleteTextoComponent {
 
         if (resultado === 'correto') {
             this.somService.sucesso();
-            this.indicator()?.show(new Indication({ message: 'Perfeito! Todas as lacunas estão corretas.', severity: 'success', ttlInMs: 2000 }));
+            this.indicator()?.show(new Indication({ message: 'Perfeito! Todas as lacunas estão corretas.', severity: 'success', ttlInMs: 2000, toast: true, toastPosition: 'bottom' }));
         } else if (resultado === 'incorreto') {
             this.somService.erro();
             this.sequenciaSemErrarService.registrarErro();
-            this.indicator()?.show(new Indication({ message: 'Algumas respostas estão incorretas. Tente novamente!', severity: 'danger', ttlInMs: 2000 }));
+            this.indicator()?.show(new Indication({ message: 'Algumas respostas estão incorretas. Tente novamente!', severity: 'danger', ttlInMs: 2000, toast: true, toastPosition: 'bottom' }));
         }
-    }
-
-    voltar(): void {
-        this.completeTextoService.voltar();
-        this._selecionadas.set(new Map());
     }
 
     fechar(): void {

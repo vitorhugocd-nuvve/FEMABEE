@@ -40,6 +40,15 @@ export class AbelhaProgressoService {
         effect(() => {
             const abelha = this.abelhaSelecionadaService.abelha();
             const idMapa = this.localizacaoAtualService.mapaAtualId();
+
+            // Zera na hora, antes do fetch resolver: sem isso, ao trocar de mapa o Set do mapa
+            // anterior continua valendo por um instante — se o novo mapa reusa o mesmo id de ação
+            // (os ids de seed são simples, tipo "1"/"2", não únicos entre mapas), uma fase daquele
+            // outro mapa aparece como concluída aqui por engano.
+            this._fasesConcluidasNoMapa.set(new Set());
+            this._aeroportosDesbloqueadosNoMapa.set(new Set());
+            this._onibusDesbloqueadosNoMapa.set(new Set());
+
             if (abelha) this.carregarProgressoDoMapa(abelha.id, idMapa);
         });
 
