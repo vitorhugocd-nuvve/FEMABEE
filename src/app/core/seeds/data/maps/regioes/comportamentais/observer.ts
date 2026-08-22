@@ -157,7 +157,7 @@ export const REGIAO_OBSERVER = new Mapa({
             niveisDependentes: ["rob-licao-003"],
             recompensas: [
                 new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 100 }),
-                new Recompensa({ tipo: TipoRecompensa.PassagemContinental }),
+                new Recompensa({ tipo: TipoRecompensa.PassagemRegional }),
             ]
         }),
     ]

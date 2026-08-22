@@ -25,9 +25,16 @@ type ItemRecompensa = { icone: string; label: string; aparencia?: Aparencia };
     template: `
     <bee-text>{{ acao().titulo }}</bee-text>
     <bee-divider direction="horizontal" />
-    <bee-description>
-        Teste de descrição do desafio, com um texto maior para testar a quebra de linha e o tamanho do componente.
-    </bee-description>
+    @if (bloqueado()) {
+        <div class="w-full flex flex-col items-center gap-1 py-1 text-center">
+            <bee-icon icon="stop" [width]="24" />
+            <bee-description>Essa fase ainda está bloqueada. Conclua as fases anteriores primeiro.</bee-description>
+        </div>
+    } @else {
+        <bee-description>
+            Teste de descrição do desafio, com um texto maior para testar a quebra de linha e o tamanho do componente.
+        </bee-description>
+    }
     <bee-divider direction="horizontal" />
     @if (itensRecompensa().length) {
         <section class="w-full flex flex-col gap-1">
@@ -53,7 +60,9 @@ type ItemRecompensa = { icone: string; label: string; aparencia?: Aparencia };
         <bee-divider direction="horizontal" />
     }
     <footer class="w-full flex flex-row-reverse">
-        @if (acao().desafioId) {
+        @if (bloqueado()) {
+            <bee-description>Bloqueada</bee-description>
+        } @else if (acao().desafioId) {
             <bee-button [fluid]="screenService.isMobile()" [size]="screenService.isMobile() ? 'large' : 'small'" (click)="jogar()">
                 <bee-icon icon="play" />
                 Jogar
@@ -95,6 +104,8 @@ export class DesafioActionComponent {
     protected readonly tituloTamanhoAbelha = TITULO_TAMANHO_ABELHA;
 
     readonly acao = input.required<AcaoDoMapa>();
+    /** Quando true, mostra a recompensa (pra dar um gostinho do que tem lá) mas desabilita "Jogar". */
+    readonly bloqueado = input(false);
 
     protected readonly previewAberto = signal(false);
     protected readonly aparenciaPrevisualizada = signal<Aparencia | undefined>(undefined);

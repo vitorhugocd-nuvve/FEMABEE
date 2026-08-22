@@ -123,7 +123,7 @@ export class AcaoComponent {
     protected selecionar() {
         if (this.bloqueado()) {
             this.somService.erro();
-            this.mobileAcaoSelecionadaService.selecionarBloqueado();
+            this.mobileAcaoSelecionadaService.selecionarBloqueado(this.acao());
             return;
         }
         this.somService.selecionar();

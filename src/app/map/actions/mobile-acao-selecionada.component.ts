@@ -22,8 +22,9 @@ export class MobileAcaoSelecionadaService {
         this.isOpen.set(true);
     }
 
-    public selecionarBloqueado() {
-        this.acaoSelecionada.set(null);
+    /** Mantém a ação selecionada mesmo bloqueada — o card de desafio usa isso pra mostrar a recompensa mesmo sem poder jogar ainda. */
+    public selecionarBloqueado(acao: AcaoDoMapa) {
+        this.acaoSelecionada.set(acao);
         this.bloqueado.set(true);
         this.isOpen.set(true);
     }
@@ -33,25 +34,27 @@ export class MobileAcaoSelecionadaService {
     selector: 'app-mobile-acao-selecionada',
     template: `
     <bee-bottom-drawer [(open)]="isOpen">
-        @if (bloqueado()) {
-            <div class="w-full flex flex-col items-center gap-2 py-2 text-center">
-                <bee-icon icon="stop" [width]="32" />
-                <bee-large>Espera aí chefe!</bee-large>
-                <bee-description>Essa fase ainda está bloqueada. Conclua as fases anteriores primeiro.</bee-description>
-            </div>
-        } @else if (acaoSelecionada(); as acao) {
-            @switch (acao.tipo) {
-                @case (tipoAcao.Loja) {
-                    <app-loja-action [lojaId]="acao.lojaId!" />
-                }
-                @case (tipoAcao.Onibus) {
-                    <app-viagem-action [acao]="acao" />
-                }
-                @case (tipoAcao.Aviao) {
-                    <app-viagem-action [acao]="acao" />
-                }
-                @default {
-                    <app-desafio-action [acao]="acao" />
+        @if (acaoSelecionada(); as acao) {
+            @if (bloqueado() && acao.tipo !== tipoAcao.Desafio) {
+                <div class="w-full flex flex-col items-center gap-2 py-2 text-center">
+                    <bee-icon icon="stop" [width]="32" />
+                    <bee-large>Espera aí chefe!</bee-large>
+                    <bee-description>Essa fase ainda está bloqueada. Conclua as fases anteriores primeiro.</bee-description>
+                </div>
+            } @else {
+                @switch (acao.tipo) {
+                    @case (tipoAcao.Loja) {
+                        <app-loja-action [lojaId]="acao.lojaId!" />
+                    }
+                    @case (tipoAcao.Onibus) {
+                        <app-viagem-action [acao]="acao" />
+                    }
+                    @case (tipoAcao.Aviao) {
+                        <app-viagem-action [acao]="acao" />
+                    }
+                    @default {
+                        <app-desafio-action [acao]="acao" [bloqueado]="bloqueado()" />
+                    }
                 }
             }
         }
