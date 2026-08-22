@@ -1,20 +1,13 @@
 import { Component, computed, DestroyRef, ElementRef, effect, inject, signal, viewChild } from "@angular/core";
-import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
-import { marked, Token } from "marked";
 import { BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent } from "../../../ui/card/card.component";
 import { IconComponent } from "../../../ui/icon/icon.component";
 import { ButtonComponent } from "../../../ui/button/button.component";
 import { TextComponent } from "../../../ui/typography/text.component";
-import { CodeEditorComponent } from "../../../ui/code-editor/code-editor.component";
-import { MermaidComponent } from "../../../ui/mermaid/mermaid.component";
+import { LicaoConteudoComponent } from "./licao-conteudo.component";
 import { LicaoService } from "./licao.service";
 import { BuscarLicaoService } from "./buscar-licao.service";
 import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 import { ScreenService } from "../../../services/tela/screen.service";
-
-type BlocoLicao =
-    | { tipo: 'codigo'; linguagem: string; conteudo: string }
-    | { tipo: 'html'; conteudo: SafeHtml };
 
 @Component({
     selector: 'app-desafio-licao',
@@ -31,16 +24,7 @@ type BlocoLicao =
         </bee-card-header>
 
         <bee-card-content #conteudoScroll class="flex flex-col items-center h-full overflow-auto!" [class]="gap()">
-            <div class="licao-coluna shadow-border border-2 border-black flex flex-col gap-4 shrink-0">
-                @for (bloco of blocos(); track $index) {
-                    @if (bloco.tipo === 'codigo' && bloco.linguagem === 'mermaid') {
-                        <bee-mermaid class="shrink-0" [diagrama]="bloco.conteudo" />
-                    } @else if (bloco.tipo === 'codigo') {
-                        <bee-code-editor class="w-full shrink-0" [class]="alturaCodigo()" [value]="bloco.conteudo" [language]="bloco.linguagem" [readOnly]="true" />
-                    } @else {
-                        <div class="licao-conteudo" [innerHTML]="bloco.conteudo"></div>
-                    }
-                }
+            <app-licao-conteudo [markdown]="licaoService.licao()?.conteudoMarkdown ?? ''" [alturaCodigo]="alturaCodigo()">
                 <div #fimDoTexto></div>
 
                 <!-- Resultado final -->
@@ -52,7 +36,7 @@ type BlocoLicao =
                         </div>
                     </div>
                 }
-            </div>
+            </app-licao-conteudo>
 
             <!-- Botão de ação principal — só aparece quando dá pra fazer algo -->
             @if (mostrarBotaoAcao()) {
@@ -84,13 +68,12 @@ type BlocoLicao =
     providers: [BuscarLicaoService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
-        IconComponent, ButtonComponent, TextComponent, CodeEditorComponent, MermaidComponent
+        IconComponent, ButtonComponent, TextComponent, LicaoConteudoComponent
     ]
 })
 export class DesafioLicaoComponent {
     private readonly buscarService = inject(BuscarLicaoService);
     private readonly desafioAtualService = inject(DesafioAtualService);
-    private readonly sanitizer = inject(DomSanitizer);
     private readonly screenService = inject(ScreenService);
     readonly licaoService = inject(LicaoService);
 
@@ -115,18 +98,6 @@ export class DesafioLicaoComponent {
     protected readonly alturaCodigo = computed(() => this.screenService.isMobile() ? 'h-72' : 'h-56');
     protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-4');
 
-    readonly blocos = computed<BlocoLicao[]>(() => {
-        const markdown = this.licaoService.licao()?.conteudoMarkdown;
-        if (!markdown) return [];
-
-        return marked.lexer(markdown).map((token: Token): BlocoLicao => {
-            if (token.type === 'code') {
-                return { tipo: 'codigo', linguagem: token.lang || 'plaintext', conteudo: token.text };
-            }
-            return { tipo: 'html', conteudo: this.sanitizer.bypassSecurityTrustHtml(marked.parser([token])) };
-        });
-    });
-
     private readonly _carregarDados = effect(() => {
         const desafio = this.buscarService.data();
         if (!desafio) return;
@@ -135,7 +106,7 @@ export class DesafioLicaoComponent {
     });
 
     private readonly _observarFim = effect(() => {
-        this.blocos();
+        this.licaoService.licao();
         const container = this.containerRef()?.nativeElement;
         const sentinela = this.sentinelRef()?.nativeElement;
         if (!container || !sentinela) return;

@@ -1,14 +1,17 @@
 import {
-    ChangeDetectionStrategy,
-    Component,
-    HostListener,
-    OnDestroy,
-    effect,
-    input,
-    model,
-    output,
-    signal,
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  OnDestroy,
+  booleanAttribute,
+  computed,
+  effect,
+  input,
+  model,
+  output,
+  signal,
 } from '@angular/core';
+import { ButtonComponent } from '../button/button.component';
 
 /**
  * Modal central (mesmo princípio de montagem/animação do `bee-side-drawer`/`bee-bottom-drawer`:
@@ -16,10 +19,11 @@ import {
  * em vez de deslizar de uma borda.
  */
 @Component({
-    selector: 'bee-dialog',
-    standalone: true,
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    template: `
+  selector: 'bee-dialog',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ButtonComponent],
+  template: `
     @if (mounted()) {
       <div class="fixed inset-0 z-50" role="dialog" aria-modal="true">
         <!-- Backdrop -->
@@ -37,16 +41,17 @@ import {
                position:fixed dos descendentes, quebrando drawers/dialogs aninhados no conteúdo. -->
           <div
             (transitionend)="onTransitionEnd()"
-            class="flex max-h-[90dvh] w-full max-w-3xl flex-col border-2 border-black bg-neutral-100 shadow-2xl transition-opacity duration-300 ease-out"
+            class="flex max-h-[90dvh] w-full flex-col transition-opacity duration-300 ease-out"
+            [class]="chromeClasses()"
             [class.opacity-100]="visible()"
             [class.opacity-0]="!visible()"
           >
             @if (title()) {
-              <div class="shrink-0 border-b-2 border-black px-4 py-3 flex items-center justify-between gap-2">
-                <h2 class="text-base font-semibold text-balance">
+              <div class="shrink-0 px-2 py-1 flex items-center justify-between gap-2 bg-gradient-to-r from-orange-600 to-amber-400">
+                <h2 class="text-base font-semibold text-balance text-white!">
                   {{ title() }}
                 </h2>
-                <button (click)="onBackdropClick()" class="shrink-0 cursor-pointer" aria-label="Fechar">✕</button>
+                <button bee-button size="small" (click)="onBackdropClick()" class="shrink-0" aria-label="Fechar">&nbsp;✕&nbsp;</button>
               </div>
             }
 
@@ -61,66 +66,72 @@ import {
   `,
 })
 export class DialogComponent implements OnDestroy {
-    /** Controla abertura/fechamento — `model()` pra suportar `[(open)]` e permitir o próprio diálogo se fechar. */
-    open = model.required<boolean>();
-    /** Título opcional exibido no topo do diálogo. */
-    title = input<string>();
+  /** Controla abertura/fechamento — `model()` pra suportar `[(open)]` e permitir o próprio diálogo se fechar. */
+  open = model.required<boolean>();
+  /** Título opcional exibido no topo do diálogo. */
+  title = input<string>();
+  /** Sem o painel/moldura padrão (branco, bordado, com barra de título) — pro conteúdo definir sua própria aparência (ex.: a Enciclopédia, que já é a imagem de um livro). */
+  bare = input(false, { transform: booleanAttribute });
 
-    /** Emitido quando o diálogo fecha (backdrop, X ou Escape). */
-    closed = output<void>();
+  protected readonly chromeClasses = computed(() =>
+    this.bare() ? '' : 'max-w-3xl border-2 border-black bg-neutral-100 shadow-2xl'
+  );
 
-    mounted = signal(false);
-    visible = signal(false);
+  /** Emitido quando o diálogo fecha (backdrop, X ou Escape). */
+  closed = output<void>();
 
-    private previousBodyOverflow = '';
+  mounted = signal(false);
+  visible = signal(false);
 
-    constructor() {
-        effect(() => {
-            if (this.open()) this.mounted.set(true);
-        });
+  private previousBodyOverflow = '';
 
-        effect((onCleanup) => {
-            if (!this.mounted()) return;
+  constructor() {
+    effect(() => {
+      if (this.open()) this.mounted.set(true);
+    });
 
-            if (this.open()) {
-                const id = requestAnimationFrame(() => this.visible.set(true));
-                onCleanup(() => cancelAnimationFrame(id));
-            } else {
-                this.visible.set(false);
-            }
-        });
+    effect((onCleanup) => {
+      if (!this.mounted()) return;
 
-        effect(() => {
-            if (this.mounted()) {
-                this.previousBodyOverflow = document.body.style.overflow;
-                document.body.style.overflow = 'hidden';
-            } else {
-                document.body.style.overflow = this.previousBodyOverflow;
-            }
-        });
-    }
+      if (this.open()) {
+        const id = requestAnimationFrame(() => this.visible.set(true));
+        onCleanup(() => cancelAnimationFrame(id));
+      } else {
+        this.visible.set(false);
+      }
+    });
 
-    @HostListener('window:keydown', ['$event'])
-    onKeydown(e: KeyboardEvent): void {
-        if (this.open() && e.key === 'Escape') {
-            this.close();
-        }
-    }
-
-    ngOnDestroy(): void {
+    effect(() => {
+      if (this.mounted()) {
+        this.previousBodyOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+      } else {
         document.body.style.overflow = this.previousBodyOverflow;
-    }
+      }
+    });
+  }
 
-    onBackdropClick(): void {
-        this.close();
+  @HostListener('window:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent): void {
+    if (this.open() && e.key === 'Escape') {
+      this.close();
     }
+  }
 
-    onTransitionEnd(): void {
-        if (!this.open()) this.mounted.set(false);
-    }
+  ngOnDestroy(): void {
+    document.body.style.overflow = this.previousBodyOverflow;
+  }
 
-    private close(): void {
-        this.open.set(false);
-        this.closed.emit();
-    }
+  onBackdropClick(): void {
+    this.close();
+  }
+
+  onTransitionEnd(): void {
+    if (!this.open()) this.mounted.set(false);
+  }
+
+  private close(): void {
+    this.open.set(false);
+    this.closed.emit();
+  }
 }

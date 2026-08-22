@@ -31,7 +31,8 @@ export class AbelhaProgressoService {
     private readonly _fasesConcluidasNoMapa = signal<Set<string>>(new Set());
     private readonly _aeroportosDesbloqueadosNoMapa = signal<Set<string>>(new Set());
     private readonly _onibusDesbloqueadosNoMapa = signal<Set<string>>(new Set());
-    private readonly _totalFasesConcluidas = signal(0);
+    /** Ids de ação (fases) concluídas em QUALQUER mapa — usado pra "15 fases" e pra saber quais Lições já foram lidas (Enciclopédia). */
+    private readonly _fasesConcluidasGlobal = signal<Set<string>>(new Set());
     private readonly _ultimaFaseConcluida = signal<string | undefined>(undefined);
 
     readonly ultimaFaseConcluida = this._ultimaFaseConcluida.asReadonly();
@@ -54,6 +55,7 @@ export class AbelhaProgressoService {
 
         effect(() => {
             const abelha = this.abelhaSelecionadaService.abelha();
+            this._fasesConcluidasGlobal.set(new Set());
             if (abelha) this.carregarTotalFasesConcluidas(abelha.id);
         });
     }
@@ -70,14 +72,19 @@ export class AbelhaProgressoService {
         return this._onibusDesbloqueadosNoMapa().has(acaoId);
     }
 
+    /** Concluída em qualquer mapa (não só o atual) — ex.: pra saber se a Lição de uma fase já foi lida. */
+    estaFaseConcluidaGlobal(acaoId: string): boolean {
+        return this._fasesConcluidasGlobal().has(acaoId);
+    }
+
     totalFasesConcluidas(): number {
-        return this._totalFasesConcluidas();
+        return this._fasesConcluidasGlobal().size;
     }
 
     marcarFaseConcluida(acaoId: string): void {
         if (this._fasesConcluidasNoMapa().has(acaoId)) return;
         this._fasesConcluidasNoMapa.update(atual => new Set(atual).add(acaoId));
-        this._totalFasesConcluidas.update(atual => atual + 1);
+        this._fasesConcluidasGlobal.update(atual => new Set(atual).add(acaoId));
         this._ultimaFaseConcluida.set(acaoId);
         this.persistir('fases-concluidas', { idFase: acaoId, idMapa: this.localizacaoAtualService.mapaAtualId() });
     }
@@ -116,7 +123,7 @@ export class AbelhaProgressoService {
         const resposta = await firstValueFrom(
             this.http.get<RespostaApi<RegistroProgresso[]>>(`${API_BASE_URL}/abelha/${idAbelha}/fases-concluidas`),
         );
-        this._totalFasesConcluidas.set(resposta.dados.length);
+        this._fasesConcluidasGlobal.set(new Set(resposta.dados.map(registro => registro.identificador)));
     }
 
     private persistir(caminho: string, body: Record<string, string>): void {

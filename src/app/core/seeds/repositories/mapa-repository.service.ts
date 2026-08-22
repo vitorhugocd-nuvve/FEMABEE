@@ -6,7 +6,11 @@ import { MapsSeeds } from "../data/maps/maps.seed";
 })
 export class MapaRepositoryService {
     public findById(id: string) {
-        console.log(MapsSeeds);
         return MapsSeeds.find(where => where.id == id);
+    }
+
+    /** Todos os mapas do jogo — usado pra atravessar as ações de todos eles (ex.: Enciclopédia ligando Lições a fases). */
+    public listarTodos() {
+        return MapsSeeds;
     }
 }
