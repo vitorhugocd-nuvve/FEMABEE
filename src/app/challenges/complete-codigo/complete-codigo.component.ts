@@ -6,6 +6,7 @@ import { ButtonComponent } from "../../../ui/button/button.component";
 import { TextComponent } from "../../../ui/typography/text.component";
 import { ProgressbarComponent } from "../../../ui/progressbar/progressbar.component";
 import { CodeDiffComponent } from "../../../ui/code-diff/code-diff.component";
+import { CodeEditorComponent } from "../../../ui/code-editor/code-editor.component";
 import { IndicatorComponent } from "../../../ui/indicator/indicator.component";
 import { Indication } from "../../../ui/indicator/indication";
 import { BottomDrawerComponent } from "../../../ui/bottom-drawer/bottom-drawer.component";
@@ -107,13 +108,19 @@ import { ScreenService } from "../../../services/tela/screen.service";
             @for (opcao of opcoes(); track opcao.id) {
                 <button
                     bee-button
-                    class="w-full h-fit! text-left justify-between"
+                    class="w-full h-fit! p-1! text-left items-stretch"
                     [ngClass]="classeOpcao(opcao.id)"
                     [disabled]="concluidoAtual() || solicitando()"
                     (click)="selecionarOpcao(opcao.id)">
-                    <span class="text-xs whitespace-pre-wrap">{{ opcao.codigo }}</span>
+                    <bee-code-editor
+                        class="pointer-events-none flex-1 min-w-0 h-20 border-0! shadow-none!"
+                        [value]="opcao.codigo"
+                        [language]="linguagem()"
+                        [readOnly]="true"
+                        wordWrap="on"
+                        lineNumbers="off" />
                     @if (concluidoAtual() && selecaoAtual() === opcao.id) {
-                        <bee-icon icon="check" />
+                        <bee-icon icon="check" class="shrink-0 self-center mr-1" />
                     }
                 </button>
             }
@@ -150,7 +157,7 @@ import { ScreenService } from "../../../services/tela/screen.service";
     providers: [BuscarCompleteCodigoService],
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
-        IconComponent, ButtonComponent, TextComponent, ProgressbarComponent, CodeDiffComponent, NgClass, NgTemplateOutlet,
+        IconComponent, ButtonComponent, TextComponent, ProgressbarComponent, CodeDiffComponent, CodeEditorComponent, NgClass, NgTemplateOutlet,
         IndicatorComponent, BottomDrawerComponent
     ]
 })

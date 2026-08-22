@@ -58,6 +58,8 @@ export class CodeEditorComponent implements OnDestroy {
     readonly value = input.required<string>();
     readonly language = input<string>('plaintext');
     readonly readOnly = input(true);
+    readonly wordWrap = input<'on' | 'off'>('off');
+    readonly lineNumbers = input<'on' | 'off'>('on');
 
     protected readonly carregando = signal(true);
 
@@ -78,8 +80,9 @@ export class CodeEditorComponent implements OnDestroy {
                 minimap: { enabled: false },
                 fontSize: this.screenService.isMobile() ? 12 : 13,
                 lineNumbersMinChars: 3,
+                lineNumbers: this.lineNumbers(),
                 scrollBeyondLastLine: false,
-                wordWrap: 'off',
+                wordWrap: this.wordWrap(),
                 padding: { top: 8, bottom: 8 },
                 scrollbar: { horizontal: 'auto', alwaysConsumeMouseWheel: false },
                 theme: 'vs-dark',
@@ -105,6 +108,10 @@ export class CodeEditorComponent implements OnDestroy {
 
         effect(() => {
             this.editor?.updateOptions({ readOnly: this.readOnly() });
+        });
+
+        effect(() => {
+            this.editor?.updateOptions({ wordWrap: this.wordWrap(), lineNumbers: this.lineNumbers() });
         });
 
         effect(() => {
