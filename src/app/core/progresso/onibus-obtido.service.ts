@@ -1,13 +1,17 @@
-import { Injectable } from "@angular/core";
-
-/** Mock: pontos de ônibus obtidos identificados pelo id da AcaoDoMapa. Substituir por chamada real quando o backend existir. */
-const ONIBUS_OBTIDOS_SEED = new Set<string>(["3"]);
+import { inject, Injectable } from "@angular/core";
+import { AbelhaProgressoService } from "./abelha-progresso.service";
 
 @Injectable({
     providedIn: 'root'
 })
 export class OnibusObtidoService {
+    private readonly abelhaProgressoService = inject(AbelhaProgressoService);
+
     public estaObtido(acaoId: string): boolean {
-        return ONIBUS_OBTIDOS_SEED.has(acaoId);
+        return this.abelhaProgressoService.estaOnibusDesbloqueado(acaoId);
+    }
+
+    public marcarObtido(acaoId: string): void {
+        this.abelhaProgressoService.desbloquearOnibus(acaoId);
     }
 }

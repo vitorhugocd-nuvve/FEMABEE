@@ -12,6 +12,9 @@ import { MapaRepositoryService } from "../../../core/seeds/repositories/mapa-rep
 import { LocalizacaoAtualService } from "../../../core/services/localizacao-atual.service";
 import { PassagemOnibusService } from "../../../core/progresso/passagem-onibus.service";
 import { PassagemAviaoService } from "../../../core/progresso/passagem-aviao.service";
+import { OnibusObtidoService } from "../../../core/progresso/onibus-obtido.service";
+import { AviaoObtidoService } from "../../../core/progresso/aviao-obtido.service";
+import { AbelhaProgressoService } from "../../../core/progresso/abelha-progresso.service";
 import { MobileAcaoSelecionadaService } from "../mobile-acao-selecionada.component";
 
 @Component({
@@ -57,6 +60,9 @@ export class ViagemActionComponent {
     private readonly localizacaoAtualService = inject(LocalizacaoAtualService);
     private readonly passagemOnibusService = inject(PassagemOnibusService);
     private readonly passagemAviaoService = inject(PassagemAviaoService);
+    private readonly onibusObtidoService = inject(OnibusObtidoService);
+    private readonly aviaoObtidoService = inject(AviaoObtidoService);
+    private readonly abelhaProgressoService = inject(AbelhaProgressoService);
     private readonly mobileAcaoSelecionadaService = inject(MobileAcaoSelecionadaService);
 
     readonly screenService = inject(ScreenService);
@@ -88,6 +94,15 @@ export class ViagemActionComponent {
 
     protected async viajar(destinoId: string): Promise<void> {
         if (!this.ehVolta() && !(await this.passagemService().gastar())) return;
+
+        const acao = this.acao();
+        if (acao.tipo === TipoAcao.Aviao) {
+            this.aviaoObtidoService.marcarObtido(acao.id);
+        } else if (acao.tipo === TipoAcao.Onibus) {
+            this.onibusObtidoService.marcarObtido(acao.id);
+        }
+        this.abelhaProgressoService.desbloquearArea(destinoId);
+
         this.localizacaoAtualService.irPara(destinoId);
         this.mobileAcaoSelecionadaService.isOpen.set(false);
     }

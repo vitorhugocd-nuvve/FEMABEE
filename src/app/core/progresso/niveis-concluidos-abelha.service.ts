@@ -1,29 +1,24 @@
-import { Injectable, signal } from "@angular/core";
-
-/** Mock: níveis concluídos identificados pelo id da AcaoDoMapa. Substituir por chamada real quando o backend existir. */
-const NIVEIS_CONCLUIDOS_SEED = new Set<string>(["1", "2"]);
+import { inject, Injectable } from "@angular/core";
+import { AbelhaProgressoService } from "./abelha-progresso.service";
 
 @Injectable({
     providedIn: 'root'
 })
 export class NiveisConcluidosAbelhaService {
-    private readonly _concluidos = signal<Set<string>>(new Set(NIVEIS_CONCLUIDOS_SEED));
-    /** Id da última fase marcada como concluída — observável por quem precisa reagir a "uma fase acabou de terminar". */
-    private readonly _ultimoConcluido = signal<string | undefined>(undefined);
+    private readonly abelhaProgressoService = inject(AbelhaProgressoService);
 
-    public readonly ultimoConcluido = this._ultimoConcluido.asReadonly();
+    /** Id da última fase marcada como concluída — observável por quem precisa reagir a "uma fase acabou de terminar". */
+    public readonly ultimoConcluido = this.abelhaProgressoService.ultimaFaseConcluida;
 
     public estaConcluido(acaoId: string): boolean {
-        return this._concluidos().has(acaoId);
+        return this.abelhaProgressoService.estaFaseConcluida(acaoId);
     }
 
     public marcarConcluido(acaoId: string): void {
-        if (this._concluidos().has(acaoId)) return;
-        this._concluidos.update(atual => new Set(atual).add(acaoId));
-        this._ultimoConcluido.set(acaoId);
+        this.abelhaProgressoService.marcarFaseConcluida(acaoId);
     }
 
     public quantidadeConcluida(): number {
-        return this._concluidos().size;
+        return this.abelhaProgressoService.totalFasesConcluidas();
     }
 }
