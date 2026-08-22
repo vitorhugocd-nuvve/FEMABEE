@@ -62,12 +62,15 @@ import { ScreenService } from "../../../services/tela/screen.service";
         @if (!concluidoAtual()) {
             <button
                 bee-button
-                class="rounded-full! p-3! aspect-square"
+                class="shrink-0"
                 [ngClass]="classeBotaoSelecionar()"
                 [disabled]="solicitando()"
                 (click)="selecionarAberto.set(true)"
-                [attr.aria-label]="selecaoAtual() ? 'Trocar trecho selecionado' : 'Selecionar trecho'">
+                [attr.aria-label]="selecaoAtual() ? 'Trocar o trecho selecionado' : 'Selecionar o trecho que completa o código'">
                 <bee-icon [icon]="selecaoAtual() ? 'repeat' : 'list-box'" />
+                @if (!selecaoAtual()) {
+                    Selecionar trecho
+                }
             </button>
         }
     </div>
