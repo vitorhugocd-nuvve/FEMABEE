@@ -44,15 +44,18 @@ describe('AbelhaEconomiaService (integração real com o backend em ../new-back)
         await new Promise(resolve => setTimeout(resolve, 100));
     });
 
-    it('a abelha nasce com 500 de dinheiro e 1 passagem de cada tipo', () => {
-        expect(abelhaEconomiaService.dinheiro()).toBe(500);
+    it('a abelha nasce com 0 de dinheiro e 1 passagem de cada tipo', () => {
+        expect(abelhaEconomiaService.dinheiro()).toBe(0);
         expect(abelhaEconomiaService.ticketContinental()).toBe(1);
         expect(abelhaEconomiaService.ticketRegional()).toBe(1);
     });
 
-    it('gasta dinheiro com sucesso e atualiza o saldo', async () => {
-        const gastou = await abelhaEconomiaService.gastarDinheiro(200);
+    it('ganha dinheiro (recompensa) e depois gasta com sucesso, atualizando o saldo', async () => {
+        const ganhou = await abelhaEconomiaService.ganharDinheiro(500);
+        expect(ganhou).toBe(true);
+        expect(abelhaEconomiaService.dinheiro()).toBe(500);
 
+        const gastou = await abelhaEconomiaService.gastarDinheiro(200);
         expect(gastou).toBe(true);
         expect(abelhaEconomiaService.dinheiro()).toBe(300);
     });
@@ -61,7 +64,7 @@ describe('AbelhaEconomiaService (integração real com o backend em ../new-back)
         const gastou = await abelhaEconomiaService.gastarDinheiro(1000);
 
         expect(gastou).toBe(false);
-        expect(abelhaEconomiaService.dinheiro()).toBe(500);
+        expect(abelhaEconomiaService.dinheiro()).toBe(0);
     });
 
     it('gasta a passagem continental e depois rejeita gastar de novo', async () => {

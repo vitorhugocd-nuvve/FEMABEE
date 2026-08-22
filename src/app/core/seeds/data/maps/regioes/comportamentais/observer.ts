@@ -48,6 +48,16 @@ export const REGIAO_OBSERVER = new Mapa({
         }),
 
         new AcaoDoMapa({
+            id: "rob-loja-listras",
+            titulo: "Listras & Cia",
+            tipo: TipoAcao.Loja,
+            lojaId: "observer-loja-listras",
+            posicaoEmPx: { x: 32, y: 160 },
+            mostrarLabel: true,
+            niveisDependentes: ["rob-quiz-001"]
+        }),
+
+        new AcaoDoMapa({
             id: "rob-complete-texto-001",
             titulo: "Complete o texto",
             tipo: TipoAcao.Desafio,
@@ -78,6 +88,16 @@ export const REGIAO_OBSERVER = new Mapa({
             posicaoEmPx: { x: 224, y: 64 },
             niveisDependentes: ["rob-encontre-bug-001"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 })]
+        }),
+
+        new AcaoDoMapa({
+            id: "rob-loja-despojado",
+            titulo: "Estilo Despojado",
+            tipo: TipoAcao.Loja,
+            lojaId: "observer-loja-despojado",
+            posicaoEmPx: { x: 352, y: 192 },
+            mostrarLabel: true,
+            niveisDependentes: ["rob-encontre-pares-001"]
         }),
 
         new AcaoDoMapa({

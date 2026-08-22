@@ -48,6 +48,16 @@ export const REGIAO_BRIDGE = new Mapa({
         }),
 
         new AcaoDoMapa({
+            id: "rbr-loja-rostos",
+            titulo: "Galeria de Rostos",
+            tipo: TipoAcao.Loja,
+            lojaId: "bridge-loja-rostos",
+            posicaoEmPx: { x: 32, y: 160 },
+            mostrarLabel: true,
+            niveisDependentes: ["rbr-quiz-001"]
+        }),
+
+        new AcaoDoMapa({
             id: "rbr-complete-texto-001",
             titulo: "Complete o texto",
             tipo: TipoAcao.Desafio,
@@ -78,6 +88,16 @@ export const REGIAO_BRIDGE = new Mapa({
             posicaoEmPx: { x: 256, y: 64 },
             niveisDependentes: ["rbr-encontre-bug-001"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 })]
+        }),
+
+        new AcaoDoMapa({
+            id: "rbr-loja-oculos",
+            titulo: "Ótica da Ponte",
+            tipo: TipoAcao.Loja,
+            lojaId: "bridge-loja-oculos",
+            posicaoEmPx: { x: 416, y: 192 },
+            mostrarLabel: true,
+            niveisDependentes: ["rbr-encontre-pares-001"]
         }),
 
         new AcaoDoMapa({

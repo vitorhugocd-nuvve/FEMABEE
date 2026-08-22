@@ -44,10 +44,17 @@ export const REGIAO_SINGLETON = new Mapa({
             desafioId: "quiz-singleton-001",
             posicaoEmPx: { x: 64, y: 32 },
             niveisDependentes: ["rs-licao-001"],
-            recompensas: [
-                new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 50 }),
-                new Recompensa({ tipo: TipoRecompensa.Aparencia, aparenciaId: 1 }),
-            ]
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 50 })]
+        }),
+
+        new AcaoDoMapa({
+            id: "rs-loja-classico",
+            titulo: "Guarda-Roupa Clássico",
+            tipo: TipoAcao.Loja,
+            lojaId: "singleton-loja-classico",
+            posicaoEmPx: { x: 32, y: 96 },
+            mostrarLabel: true,
+            niveisDependentes: ["rs-quiz-001"]
         }),
 
         new AcaoDoMapa({
@@ -58,10 +65,7 @@ export const REGIAO_SINGLETON = new Mapa({
             desafioId: "ct-singleton-001",
             posicaoEmPx: { x: 96, y: 32 },
             niveisDependentes: ["rs-quiz-001"],
-            recompensas: [
-                new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 }),
-                new Recompensa({ tipo: TipoRecompensa.Aparencia, aparenciaId: 9 }),
-            ]
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 })]
         }),
 
         new AcaoDoMapa({
@@ -87,6 +91,16 @@ export const REGIAO_SINGLETON = new Mapa({
                 new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 }),
                 new Recompensa({ tipo: TipoRecompensa.PassagemRegional }),
             ]
+        }),
+
+        new AcaoDoMapa({
+            id: "rs-loja-vibrante",
+            titulo: "Guarda-Roupa Vibrante",
+            tipo: TipoAcao.Loja,
+            lojaId: "singleton-loja-vibrante",
+            posicaoEmPx: { x: 256, y: 192 },
+            mostrarLabel: true,
+            niveisDependentes: ["rs-encontre-pares-001"]
         }),
 
         new AcaoDoMapa({
@@ -136,10 +150,7 @@ export const REGIAO_SINGLETON = new Mapa({
             desafioId: "licao-singleton-003",
             posicaoEmPx: { x: 160, y: 288 },
             niveisDependentes: ["rs-encontre-bug-002"],
-            recompensas: [
-                new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 30 }),
-                new Recompensa({ tipo: TipoRecompensa.Aparencia, aparenciaId: 15 }),
-            ]
+            recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 30 })]
         }),
 
         new AcaoDoMapa({

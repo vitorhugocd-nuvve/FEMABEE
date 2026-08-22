@@ -7,7 +7,7 @@ export const TAMANHO_APARENCIA_ABELHA = 32;
 export const LOCALIZACAO_ICONE_APARENCIA_IMAGEM = 0;
 
 /** Spritesheet base da abelha (mesmo formato ícone + 4 tamanhos das imagens de aparência), renderizada por baixo de todas as camadas. */
-export const CAMINHO_IMAGEM_BASE_ABELHA = "/aparencia/tamanhos.gif";
+export const CAMINHO_IMAGEM_BASE_ABELHA = "/wardrobe/body/tamanho-abelha/tamanhos.gif";
 
 export const LOCALIZACAO_APARENCIA_NA_IMAGEM: Record<TamanhoAbelha, number> = {
     PEQUENA_MAGRA: TAMANHO_APARENCIA_ABELHA,
