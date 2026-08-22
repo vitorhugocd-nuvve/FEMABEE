@@ -17,11 +17,13 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 import { SomService } from "../../../services/som/som.service";
 import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
 import { ScreenService } from "../../../services/tela/screen.service";
+import { GirarDispositivoComponent } from "../../../ui/girar-dispositivo/girar-dispositivo.component";
 
 @Component({
     selector: 'app-desafio-complete-codigo',
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
+    <bee-girar-dispositivo />
     <bee-card class="w-full h-full!">
         <!-- Cabeçalho -->
         <bee-card-header>
@@ -114,7 +116,7 @@ import { ScreenService } from "../../../services/tela/screen.service";
                     (click)="selecionarOpcao(opcao.id)">
                     <bee-code-editor
                         class="pointer-events-none flex-1 min-w-0 h-20 border-0! shadow-none!"
-                        [value]="opcao.codigo"
+                        [value]="dedentar(opcao.codigo)"
                         [language]="linguagem()"
                         [readOnly]="true"
                         wordWrap="on"
@@ -158,7 +160,7 @@ import { ScreenService } from "../../../services/tela/screen.service";
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent,
         IconComponent, ButtonComponent, TextComponent, ProgressbarComponent, CodeDiffComponent, CodeEditorComponent, NgClass, NgTemplateOutlet,
-        IndicatorComponent, BottomDrawerComponent
+        IndicatorComponent, BottomDrawerComponent, GirarDispositivoComponent
     ]
 })
 export class DesafioCompleteCodigoComponent {
@@ -235,6 +237,21 @@ export class DesafioCompleteCodigoComponent {
     /** Destaca o botão flutuante de seleção quando já há um trecho escolhido. */
     classeBotaoSelecionar(): Record<string, boolean> {
         return { 'bg-primary/20! border-primary!': !!this.selecaoAtual() };
+    }
+
+    /**
+     * O trecho vem indentado do jeito que fica dentro do template original (8-12 espaços),
+     * mas aqui é mostrado isolado num cartão pequeno — sem tirar essa indentação, o código
+     * fica todo empurrado pra direita, sobrando quase nada de largura útil pra ler.
+     */
+    protected dedentar(codigo: string): string {
+        const linhas = codigo.split('\n');
+        const indentacoes = linhas
+            .filter(linha => linha.trim().length > 0)
+            .map(linha => linha.match(/^ */)?.[0].length ?? 0);
+        const menorIndentacao = indentacoes.length ? Math.min(...indentacoes) : 0;
+        if (menorIndentacao === 0) return codigo;
+        return linhas.map(linha => linha.slice(menorIndentacao)).join('\n');
     }
 
     selecionarOpcao(id: string): void {

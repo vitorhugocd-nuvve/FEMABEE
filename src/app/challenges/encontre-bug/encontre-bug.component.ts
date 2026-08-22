@@ -18,11 +18,13 @@ import { DesafioAtualService } from "../../core/services/desafio-atual.service";
 import { SomService } from "../../../services/som/som.service";
 import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-errar.service";
 import { ScreenService } from "../../../services/tela/screen.service";
+import { GirarDispositivoComponent } from "../../../ui/girar-dispositivo/girar-dispositivo.component";
 
 @Component({
     selector: 'app-desafio-encontre-bug',
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
+    <bee-girar-dispositivo />
     <bee-card class="w-full h-full!">
         <!-- Cabeçalho -->
         <bee-card-header>
@@ -158,7 +160,7 @@ import { ScreenService } from "../../../services/tela/screen.service";
     imports: [
         BeeCardComponent, BeeCardHeaderComponent, BeeCardContentComponent, IndicatorComponent,
         IconComponent, ButtonComponent, ProgressbarComponent, LargeComponent, TextComponent,
-        BottomDrawerComponent, CodeEditorComponent, NgClass
+        BottomDrawerComponent, CodeEditorComponent, NgClass, GirarDispositivoComponent
     ]
 })
 export class DesafioEncontreBugComponent {
