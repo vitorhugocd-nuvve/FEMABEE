@@ -40,10 +40,8 @@ import { GirarDispositivoComponent } from "../../../ui/girar-dispositivo/girar-d
             </div>
         </bee-card-header>
 
-        <!-- Quase sem gap: o código ocupa o card inteiro, só a barra de arquivo em cima e a de ações embaixo -->
+        <!-- Quase sem gap: o código ocupa o card inteiro, só a barra de ações embaixo (só existe 1 arquivo aqui, não precisa de rótulo) -->
         <bee-card-content class="flex flex-col h-full overflow-hidden! gap-1! p-1!">
-            <span class="text-xs font-semibold text-muted-foreground truncate w-full shrink-0 px-1">{{ arquivo() }}</span>
-
             <bee-code-diff
                 class="w-full flex-1 min-h-0"
                 [original]="codigoOriginal()"

@@ -41,39 +41,39 @@ import { GirarDispositivoComponent } from "../../../ui/girar-dispositivo/girar-d
             </div>
         </bee-card-header>
 
-        <bee-card-content class="flex flex-col items-center h-full overflow-auto!" [class]="gap()">
-            <bee-progressbar [value]="progresso()" />
-
-            <div class="flex flex-col w-full h-full overflow-auto" [class]="gap()">
-                <!-- Cartão de arquivo: abre o drawer de seleção -->
+        <!-- Quase sem gap: o código ocupa o card inteiro, só a barra de ações embaixo -->
+        <bee-card-content class="flex flex-col h-full overflow-hidden! gap-1! p-1! relative">
+            <!-- Seletor de arquivo flutuante, largura mínima, canto superior direito -->
+            @if (totalArquivos() > 1) {
                 <button
                     bee-button
-                    class="w-full justify-between"
-                    (click)="arquivoDrawerAberto.set(true)">
-                    <span class="text-xs font-semibold truncate">{{ arquivoAtual()?.nome }}</span>
-                    <span class="flex items-center gap-1 text-xs shrink-0">
-                        <bee-icon icon="folder" />
-                        {{ totalArquivos() }}
-                    </span>
+                    size="small"
+                    class="absolute top-1 right-1 z-10 shrink-0"
+                    (click)="arquivoDrawerAberto.set(true)"
+                    [attr.aria-label]="'Arquivo: ' + (arquivoAtual()?.nome ?? '') + ' — trocar arquivo'">
+                    <bee-icon icon="folder" />
+                    {{ indiceArquivo() + 1 }}/{{ totalArquivos() }}
+                </button>
+            }
+
+            <bee-code-editor
+                class="w-full flex-1 min-h-0"
+                [value]="arquivoAtual()?.codigo ?? ''"
+                [language]="arquivoAtual()?.linguagem ?? 'plaintext'"
+                [readOnly]="true" />
+
+            <!-- Barra de progresso no canto inferior esquerdo, botões de pergunta/resposta ao lado -->
+            <div class="w-full flex flex-row items-center gap-2 shrink-0">
+                <bee-progressbar [value]="progresso()" class="flex-1 min-w-0 w-auto!" />
+
+                <button bee-button class="shrink-0" (click)="perguntaDrawerAberto.set(true)">
+                    <bee-icon icon="book-open" />
+                    Ver pergunta
                 </button>
 
-                <!-- Editor Monaco -->
-                <bee-code-editor
-                    class="w-full h-56"
-                    [value]="arquivoAtual()?.codigo ?? ''"
-                    [language]="arquivoAtual()?.linguagem ?? 'plaintext'"
-                    [readOnly]="true" />
-
-                <!-- Pergunta -->
-                <div class="w-full bg-white shadow-border border-2 border-black p-2">
-                    <bee-large>{{ pergunta()?.enunciado }}</bee-large>
-                </div>
-
-                <!-- Abre o drawer de resposta -->
                 <button
                     bee-button
-                    size="large"
-                    class="w-full text-center"
+                    class="shrink-0"
                     [disabled]="solicitando()"
                     (click)="respostaDrawerAberto.set(true)">
                     @if (jaRespondeu()) {
@@ -81,12 +81,14 @@ import { GirarDispositivoComponent } from "../../../ui/girar-dispositivo/girar-d
                         Ver resposta
                     } @else {
                         <bee-icon icon="send" />
-                        Escolher resposta
+                        Responder
                     }
                 </button>
             </div>
         </bee-card-content>
     </bee-card>
+
+    <bee-indicator #resultadoIndicator />
 
     <!-- Drawer: escolher arquivo -->
     <bee-bottom-drawer [(open)]="arquivoDrawerAberto" title="Escolher arquivo">
@@ -106,9 +108,13 @@ import { GirarDispositivoComponent } from "../../../ui/girar-dispositivo/girar-d
         </div>
     </bee-bottom-drawer>
 
+    <!-- Drawer: ver pergunta -->
+    <bee-bottom-drawer [(open)]="perguntaDrawerAberto" title="Pergunta">
+        <bee-large>{{ pergunta()?.enunciado }}</bee-large>
+    </bee-bottom-drawer>
+
     <!-- Drawer: escolher resposta / ver feedback -->
     <bee-bottom-drawer [(open)]="respostaDrawerAberto" [title]="tituloRespostaDrawer()">
-        <bee-indicator #resultadoIndicator />
         @if (!jaRespondeu()) {
             <div class="flex flex-col gap-2">
                 @for (resposta of respostas(); track resposta.id) {
@@ -172,13 +178,13 @@ export class DesafioEncontreBugComponent {
     private readonly screenService = inject(ScreenService);
     readonly encontreBugService = inject(EncontreBugService);
 
-    /** No mobile a tela tem menos espaço sobrando — padding e gap do card ficam mais compactos. */
+    /** No mobile a tela tem menos espaço sobrando — padding do card fica mais compacto. */
     protected readonly hostPadding = computed(() => this.screenService.isMobile() ? 'p-2' : 'p-4');
-    protected readonly gap = computed(() => this.screenService.isMobile() ? 'gap-2' : 'gap-3');
 
     /** Índice do arquivo em exibição, dentro da pergunta atual */
     readonly indiceArquivo = signal(0);
     readonly arquivoDrawerAberto = signal(false);
+    readonly perguntaDrawerAberto = signal(false);
     readonly respostaDrawerAberto = signal(false);
 
     readonly padrao         = computed(() => this.encontreBugService.desafio()?.padrao);
