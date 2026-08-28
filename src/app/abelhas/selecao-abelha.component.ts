@@ -29,13 +29,13 @@ const POSICOES: Slot['posicao'][] = ['esquerda', 'centro', 'direita'];
             <bee-loader [width]="32" />
         </bee-center>
     } @else {
-        <div class="w-dvw h-dvh flex flex-row items-center justify-center gap-8 pattern-background">
+        <div class="w-dvw min-h-dvh flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 pattern-background overflow-y-auto p-4">
             @for (slot of slots(); track slot.posicao) {
                 <div class="relative">
                     <button
                         type="button"
-                        class="shadow-border border-2 bg-neutral-300 w-56 h-72 flex flex-col items-center justify-center gap-3 cursor-pointer"
-                        [class.h-80]="slot.posicao === 'centro'"
+                        class="shadow-border border-2 bg-neutral-300 w-48 h-64 md:w-56 md:h-72 flex flex-col items-center justify-center gap-3 cursor-pointer"
+                        [class.md:h-80]="slot.posicao === 'centro'"
                         (click)="onSlotClick(slot)"
                     >
                         @if (slot.abelha; as abelha) {

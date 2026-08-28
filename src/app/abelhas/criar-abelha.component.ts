@@ -31,16 +31,16 @@ const TAMANHOS = Object.values(TamanhoAbelha);
                 <input type="text" bee-input id="input-comida-favorita" formControlName="comidaFavorita" />
             </bee-field>
 
-            <div class="grid grid-cols-2 gap-2">
+            <div class="flex flex-col gap-2 md:grid md:grid-cols-2">
                 @for (tamanho of tamanhos; track tamanho) {
                     <button
                         type="button"
-                        class="shadow-border border-2 bg-neutral-300 p-1.5 flex flex-col items-center gap-1 cursor-pointer"
-                        [class.bg-primary!]="tamanho === form.controls.tamanho.value"
+                        class="border-2 p-1.5 flex flex-row md:flex-col items-center gap-2 md:gap-1 duration-300 transition-all cursor-pointer"
+                        [class]="tamanho === form.controls.tamanho.value ? 'inside-border bg-neutral-400' : 'shadow-border bg-neutral-300'"
                         (click)="form.controls.tamanho.setValue(tamanho)"
                     >
                         <bee-abelha [tamanho]="tamanho" [scale]="1.3" />
-                        <span class="text-xs text-center truncate w-full">{{ tituloTamanho[tamanho] }}</span>
+                        <span class="text-xs text-left md:text-center truncate w-full">{{ tituloTamanho[tamanho] }}</span>
                     </button>
                 }
             </div>

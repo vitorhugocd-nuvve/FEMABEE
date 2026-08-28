@@ -19,7 +19,7 @@ import { SomService } from "../../services/som/som.service";
 @Component({
     selector: 'bee-login',
     template: `
-    <bee-card class="w-fit">
+    <bee-card class="w-fit max-w-full">
         <bee-card-header>
             /realizar_login
             <a bee-button size="small" href="/cadastro">
@@ -58,10 +58,10 @@ import { SomService } from "../../services/som/som.service";
         </bee-card-content>
     </bee-card>
 
-    <img src="/login-image.png" class="w-1/2" alt="">
+    <img src="/login-image.png" class="hidden md:block w-1/2" alt="">
     `,
     host: {
-        class: 'h-screen w-screen flex flex-row gap-16 items-center justify-center pattern-background'
+        class: 'min-h-screen w-screen flex flex-col md:flex-row gap-6 md:gap-16 items-center justify-center pattern-background p-4 overflow-y-auto'
     },
     imports: [TextComponent, LinkComponent, IconComponent, ButtonComponent, LabelComponent, FieldComponent, TitleComponent, BeeCardContentComponent, BeeCardHeaderComponent, BeeCardComponent, InputComponent, ReactiveFormsModule, IndicatorComponent]
 })

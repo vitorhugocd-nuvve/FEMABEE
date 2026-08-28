@@ -120,7 +120,7 @@ import { MapTileService } from '../services/map-tile.service';
       white-space: nowrap;
       background: rgba(0,0,0,.75);
       padding: 1px 4px;
-      font-size: 8px;
+      font-size: 4px;
       font-weight: 500;
       line-height: 1.4;
       color: #fff;

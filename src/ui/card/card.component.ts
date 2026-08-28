@@ -11,7 +11,7 @@ const CardVariants = {
     <ng-content />
     `,
     host: {
-        class: 'shadow-border border-2 p-0.5 bg-neutral-300 flex flex-col gap-1',
+        class: 'duration-300 transition-all shadow-border border-2 p-0.5 bg-neutral-300 flex flex-col gap-1',
         '[class]': 'computedClasses()'
     }
 })
@@ -33,7 +33,7 @@ export class BeeCardComponent {
         class: 'p-3.5 flex-auto'
     }
 })
-export class BeeCardContentComponent {}
+export class BeeCardContentComponent { }
 
 @Component({
     selector: 'bee-card-header',
@@ -44,4 +44,4 @@ export class BeeCardContentComponent {}
         class: 'px-2 py-1 text-sm text-white! bg-gradient-to-r from-orange-600 to-amber-400 w-full flex flex-row justify-between gap-8 items-center'
     }
 })
-export class BeeCardHeaderComponent {}
+export class BeeCardHeaderComponent { }
