@@ -9,6 +9,7 @@ type ValoresEconomia = {
     dinheiro: number | string;
     ticketContinental: number | string;
     ticketRegional: number | string;
+    sequenciaSemErrar: number | string;
 };
 
 type TipoPassaporte = 'continental' | 'regional';
@@ -26,10 +27,12 @@ export class AbelhaEconomiaService {
     private readonly _dinheiro = signal(0);
     private readonly _ticketContinental = signal(0);
     private readonly _ticketRegional = signal(0);
+    private readonly _sequenciaSemErrar = signal(0);
 
     readonly dinheiro = this._dinheiro.asReadonly();
     readonly ticketContinental = this._ticketContinental.asReadonly();
     readonly ticketRegional = this._ticketRegional.asReadonly();
+    readonly sequenciaSemErrar = this._sequenciaSemErrar.asReadonly();
 
     constructor() {
         effect(() => {
@@ -124,9 +127,38 @@ export class AbelhaEconomiaService {
         }
     }
 
+    /** Chamado ao concluir uma fase sem nenhum erro no caminho. */
+    async incrementarSequenciaSemErrar(): Promise<void> {
+        const idAbelha = this.abelhaSelecionadaService.abelha()?.id;
+        if (!idAbelha) return;
+
+        this._sequenciaSemErrar.update(atual => atual + 1);
+        try {
+            const resposta = await firstValueFrom(
+                this.http.patch<RespostaApi<ValoresEconomia>>(`${API_BASE_URL}/abelha/${idAbelha}/sequencia-sem-errar`, {}),
+            );
+            this.atualizarValores(resposta.dados);
+        } catch { /* mantém o valor otimista mesmo se a persistência falhar */ }
+    }
+
+    /** Chamado ao errar qualquer coisa durante uma fase — zera a sequência. */
+    async resetarSequenciaSemErrar(): Promise<void> {
+        const idAbelha = this.abelhaSelecionadaService.abelha()?.id;
+        if (!idAbelha) return;
+
+        this._sequenciaSemErrar.set(0);
+        try {
+            const resposta = await firstValueFrom(
+                this.http.delete<RespostaApi<ValoresEconomia>>(`${API_BASE_URL}/abelha/${idAbelha}/sequencia-sem-errar`),
+            );
+            this.atualizarValores(resposta.dados);
+        } catch { /* mantém o valor otimista mesmo se a persistência falhar */ }
+    }
+
     private atualizarValores(valores: ValoresEconomia): void {
         this._dinheiro.set(Number(valores.dinheiro));
         this._ticketContinental.set(Number(valores.ticketContinental));
         this._ticketRegional.set(Number(valores.ticketRegional));
+        this._sequenciaSemErrar.set(Number(valores.sequenciaSemErrar));
     }
 }

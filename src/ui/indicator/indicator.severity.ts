@@ -28,6 +28,12 @@ export const SeverityVariants = {
         border: 'border-green-400',
         header: 'bg-gradient-to-r from-green-600 to-green-400',
         progress: 'accent-green-600'
+    },
+    conquista: {
+        bg: 'bg-amber-100',
+        border: 'border-amber-500',
+        header: 'bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600',
+        progress: 'accent-amber-500'
     }
 } as const;
 

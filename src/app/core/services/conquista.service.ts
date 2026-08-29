@@ -7,14 +7,21 @@ import { NiveisConcluidosAbelhaService } from "../progresso/niveis-concluidos-ab
 import { ProgressoMapaService } from "../progresso/progresso-mapa.service";
 import { SequenciaSemErrarService } from "../progresso/sequencia-sem-errar.service";
 import { AparenciaObtidaService } from "../progresso/aparencia-obtida.service";
+import { AbelhaProgressoService } from "../progresso/abelha-progresso.service";
 import { MapaRepositoryService } from "../seeds/repositories/mapa-repository.service";
+import { SomService } from "../../../services/som/som.service";
+import { Indication } from "../../../ui/indicator/indication";
 
 export type ConquistaComEstado = {
     conquista: Conquista;
     desbloqueada: boolean;
 }
 
-/** Motor de conquistas: guarda quais estão desbloqueadas e reavalia as condições de cada uma. */
+/**
+ * Motor de conquistas: reavalia as condições de cada uma contra o progresso real (persistido)
+ * e marca as satisfeitas via `AbelhaProgressoService` — sobrevive a reload/login, em vez de um
+ * Set em memória que reavaliava tudo do zero a cada boot.
+ */
 @Injectable({
     providedIn: 'root'
 })
@@ -24,24 +31,51 @@ export class ConquistaService {
     private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
     private readonly aparenciaObtidaService = inject(AparenciaObtidaService);
     private readonly mapaRepositoryService = inject(MapaRepositoryService);
-
-    private readonly _desbloqueadas = signal<Set<string>>(new Set());
+    private readonly abelhaProgressoService = inject(AbelhaProgressoService);
+    private readonly somService = inject(SomService);
 
     public readonly todas: Conquista[] = ConquistasSeeds;
 
-    public readonly comEstado = computed<ConquistaComEstado[]>(() => {
-        const desbloqueadas = this._desbloqueadas();
-        return this.todas.map(conquista => ({ conquista, desbloqueada: desbloqueadas.has(conquista.id) }));
-    });
+    private readonly _pendente = signal<Indication | null>(null);
+    /** Toast dourado a anunciar — `GameShellComponent` observa isso num `bee-indicator` global. */
+    public readonly pendente = this._pendente.asReadonly();
 
-    /** Reavalia todas as conquistas ainda não desbloqueadas contra o estado atual do jogo. */
+    public readonly comEstado = computed<ConquistaComEstado[]>(() =>
+        this.todas.map(conquista => ({
+            conquista,
+            desbloqueada: this.abelhaProgressoService.estaConquistaDesbloqueada(conquista.id)
+        }))
+    );
+
+    /**
+     * Reavalia todas as conquistas ainda não desbloqueadas contra o estado atual do jogo.
+     * Não faz nada até `conquistasCarregadas` — sem isso, essa checagem roda no boot antes do
+     * GET de conquistas-desbloqueadas resolver, e o Set local (ainda vazio) faria parecer que
+     * nenhuma conquista foi desbloqueada, mesmo quando o backend já tem o registro.
+     */
     public verificar(): void {
+        if (!this.abelhaProgressoService.conquistasCarregadas()) return;
+
         for (const conquista of this.todas) {
-            if (this._desbloqueadas().has(conquista.id)) continue;
+            if (this.abelhaProgressoService.estaConquistaDesbloqueada(conquista.id)) continue;
             if (this.satisfaz(conquista.condicao)) {
-                this._desbloqueadas.update(atual => new Set(atual).add(conquista.id));
+                this.abelhaProgressoService.marcarConquistaDesbloqueada(conquista.id);
+                this.anunciar(conquista);
             }
         }
+    }
+
+    private anunciar(conquista: Conquista): void {
+        this.somService.sucesso();
+        this._pendente.set(new Indication({
+            title: 'Conquista desbloqueada!',
+            message: `${conquista.titulo} — ${conquista.descricao}`,
+            icon: conquista.icone,
+            severity: 'conquista',
+            ttlInMs: 4500,
+            toast: true,
+            toastPosition: 'center',
+        }));
     }
 
     private satisfaz(condicao: CondicaoConquista): boolean {
@@ -65,6 +99,9 @@ export class ConquistaService {
                     .filter(item => item.tipo === condicao.tipoAparencia);
                 return this.aparenciaObtidaService.possuiTodas(itens);
             }
+
+            case TipoCondicaoConquista.AparenciasObtidas:
+                return this.aparenciaObtidaService.quantidadeObtida() >= condicao.meta;
         }
     }
 }

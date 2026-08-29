@@ -2,6 +2,8 @@ import { Injectable, effect, inject, untracked } from "@angular/core";
 import { DesafioAtualService } from "./desafio-atual.service";
 import { NiveisConcluidosAbelhaService } from "../progresso/niveis-concluidos-abelha.service";
 import { SequenciaSemErrarService } from "../progresso/sequencia-sem-errar.service";
+import { TentativasFaseService } from "../progresso/tentativas-fase.service";
+import { AbelhaProgressoService } from "../progresso/abelha-progresso.service";
 import { ConquistaService } from "./conquista.service";
 import { RecompensaService } from "./recompensa.service";
 import { MapaRepositoryService } from "../seeds/repositories/mapa-repository.service";
@@ -27,6 +29,8 @@ export class ConquistaProgressoService {
     private readonly desafioAtualService = inject(DesafioAtualService);
     private readonly niveisConcluidosAbelhaService = inject(NiveisConcluidosAbelhaService);
     private readonly sequenciaSemErrarService = inject(SequenciaSemErrarService);
+    private readonly tentativasFaseService = inject(TentativasFaseService);
+    private readonly abelhaProgressoService = inject(AbelhaProgressoService);
     private readonly conquistaService = inject(ConquistaService);
     private readonly recompensaService = inject(RecompensaService);
     private readonly mapaRepositoryService = inject(MapaRepositoryService);
@@ -47,8 +51,9 @@ export class ConquistaProgressoService {
         effect(() => { if (this.encontreParesService.concluido()) this.registrarFaseConcluida(); });
         effect(() => { if (this.licaoService.concluida()) this.registrarFaseConcluida(); });
 
-        // Avalia o estado inicial (ex.: fases já concluídas no mock de partida) assim que sobe.
-        this.conquistaService.verificar();
+        // Reavalia assim que as conquistas já desbloqueadas terminam de carregar do backend —
+        // até lá, `verificar()` não faz nada (ver o comentário em ConquistaService.verificar).
+        effect(() => { this.abelhaProgressoService.conquistasCarregadas(); this.conquistaService.verificar(); });
     }
 
     /**
@@ -69,6 +74,12 @@ export class ConquistaProgressoService {
             const idMapa = this.localizacaoAtualService.mapaAtualId();
             const acao = this.mapaRepositoryService.findById(idMapa)?.acoes.find(a => a.id === acaoId);
             if (acao?.recompensas.length) this.recompensaService.conceder(acao.recompensas);
+
+            if (this.tentativasFaseService.reivindicarEnvio()) {
+                this.abelhaProgressoService.registrarTentativaFase(
+                    acaoId, idMapa, this.tentativasFaseService.tentativas(), this.tentativasFaseService.erros(),
+                );
+            }
         });
     }
 }

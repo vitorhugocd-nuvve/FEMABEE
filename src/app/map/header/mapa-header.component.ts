@@ -2,6 +2,7 @@ import { Component, inject } from "@angular/core";
 import { ContinentalTicketsComponent } from "./continental-tickets.component";
 import { RegionalTicketsComponent } from "./regional-tickets.component";
 import { MoneyCounterComponent } from "./money-counter.component";
+import { FoguinhoComponent } from "./foguinho.component";
 import { LocalizacaoAtualComponent } from "./localizacao-atual.component";
 import { ScreenService } from "../../../services/tela/screen.service";
 
@@ -14,6 +15,7 @@ import { ScreenService } from "../../../services/tela/screen.service";
             <app-continental-tickets />
             <app-regional-tickets />
             <app-money-counter />
+            <app-foguinho />
         </div>
         <div></div>
     }
@@ -24,11 +26,12 @@ import { ScreenService } from "../../../services/tela/screen.service";
             <app-continental-tickets />
             <app-regional-tickets />
             <app-money-counter />
+            <app-foguinho />
         </div>
     }
     `,
     host: { class: 'absolute top-0 left-0 w-full h-12 z-10 bg-gradient-to-b from-black/50 to-transparent grid grid-cols-[1fr_auto_1fr] items-center' },
-    imports: [ContinentalTicketsComponent, RegionalTicketsComponent, MoneyCounterComponent, LocalizacaoAtualComponent]
+    imports: [ContinentalTicketsComponent, RegionalTicketsComponent, MoneyCounterComponent, FoguinhoComponent, LocalizacaoAtualComponent]
 })
 export class MapaHeaderComponent {
     protected readonly screenService = inject(ScreenService);

@@ -1,4 +1,4 @@
-type IndicationSeverity = "danger" | "success" | "warning" | "hint" | "default"
+type IndicationSeverity = "danger" | "success" | "warning" | "hint" | "default" | "conquista"
 
 export type IndicationProps = {
     ttlInMs?: number; // tempo até sumir. Se não informado, não desaparece automaticamente
@@ -7,7 +7,7 @@ export type IndicationProps = {
     icon?: string;
     severity: IndicationSeverity;
     toast?: boolean; // faz funcionar como um toast em baixo da tela
-    toastPosition?: "top" | "bottom";
+    toastPosition?: "top" | "bottom" | "center";
 }
 
 export class Indication {

@@ -6,7 +6,8 @@ export type CondicaoConquista =
     | { tipo: TipoCondicaoConquista.FaseEspecifica; acaoId: string }
     | { tipo: TipoCondicaoConquista.RegiaoEspecifica; mapaId: string }
     | { tipo: TipoCondicaoConquista.SequenciaSemErrar; meta: number }
-    | { tipo: TipoCondicaoConquista.ComprasCompletas; tipoAparencia: TipoAparencia };
+    | { tipo: TipoCondicaoConquista.ComprasCompletas; tipoAparencia: TipoAparencia }
+    | { tipo: TipoCondicaoConquista.AparenciasObtidas; meta: number };
 
 export type ConquistaProps = {
     id: string;

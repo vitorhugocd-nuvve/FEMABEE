@@ -97,12 +97,25 @@ export class IndicatorComponent {
         ].join(' ');
     });
 
-    /** Toast = bottom sheet fixo que sobe do rodapé (ou desce do topo), com transição real via translate-y. */
+    /**
+     * Toast = bottom sheet fixo que sobe do rodapé (ou desce do topo), com transição real via
+     * translate-y. `center` é diferente: fica no meio da tela (pra anúncios grandes, tipo
+     * conquistas), sem direção natural de "fora da tela" — anima com fade + scale em vez disso.
+     */
     readonly toastClasses = computed(() => {
         const ind = this.indication();
         if (!ind || !ind.toast) return '';
 
         const position = ind.toastPosition || 'bottom';
+
+        if (position === 'center') {
+            return [
+                'fixed inset-0 z-50 flex items-center justify-center px-4 pointer-events-none',
+                'transition-all duration-300 ease-out',
+                this.visivel() ? 'opacity-100 scale-100' : 'opacity-0 scale-90',
+            ].join(' ');
+        }
+
         const escondido = position === 'top' ? '-translate-y-full' : 'translate-y-full';
 
         return [

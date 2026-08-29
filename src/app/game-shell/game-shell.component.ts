@@ -9,6 +9,7 @@ import { MapComponent } from "../map/map.component";
 import { DesafioAtualService } from "../core/services/desafio-atual.service";
 import { TipoDesafio } from "../core/models/desafios/tipo-desafio";
 import { ConquistaProgressoService } from "../core/services/conquista-progresso.service";
+import { ConquistaService } from "../core/services/conquista.service";
 import { RecompensaService } from "../core/services/recompensa.service";
 import { DialogoGatilhoService } from "../core/services/dialogo-gatilho.service";
 import { MusicaAmbienteService } from "../core/services/musica-ambiente.service";
@@ -33,6 +34,7 @@ import { IndicatorComponent } from "../../ui/indicator/indicator.component";
   }
   <app-dialogo />
   <bee-indicator #recompensaIndicator />
+  <bee-indicator #conquistaIndicator />
   `,
   imports: [DesafioCompleteTextoComponent, DesafioQuizComponent, DesafioEncontreParesComponent, DesafioEncontreBugComponent, DesafioCompleteCodigoComponent, DesafioLicaoComponent, MapComponent, DialogoComponent, IndicatorComponent],
 })
@@ -42,6 +44,9 @@ export class GameShellComponent {
 
   private readonly recompensaService = inject(RecompensaService);
   private readonly recompensaIndicator = viewChild<IndicatorComponent>('recompensaIndicator');
+
+  private readonly conquistaService = inject(ConquistaService);
+  private readonly conquistaIndicator = viewChild<IndicatorComponent>('conquistaIndicator');
 
   // Injetados só pra instanciar eagerly — os efeitos que observam conclusão de desafios,
   // reavaliam conquistas, disparam diálogos e tocam a trilha ambiente precisam começar
@@ -55,5 +60,11 @@ export class GameShellComponent {
   private readonly _anunciarRecompensa = effect(() => {
     const indicacao = this.recompensaService.pendente();
     if (indicacao) this.recompensaIndicator()?.show(indicacao);
+  });
+
+  /** Indicator dedicado (não o de recompensa) pra não colidir quando as duas coincidem — ex.: completar a última fase de uma região concede recompensa E desbloqueia a conquista "Mestra do <padrão>" no mesmo instante. */
+  private readonly _anunciarConquista = effect(() => {
+    const indicacao = this.conquistaService.pendente();
+    if (indicacao) this.conquistaIndicator()?.show(indicacao);
   });
 }

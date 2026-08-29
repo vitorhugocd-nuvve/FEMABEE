@@ -9,4 +9,6 @@ export enum TipoCondicaoConquista {
     SequenciaSemErrar = "SEQUENCIA_SEM_ERRAR",
     /** Comprar todos os itens de aparência de um tipo (ex.: todas as roupas). */
     ComprasCompletas = "COMPRAS_COMPLETAS",
+    /** Obter N aparências no total (compradas ou de recompensa) — ex.: "comprou a primeira roupa" com meta 1. */
+    AparenciasObtidas = "APARENCIAS_OBTIDAS",
 }
