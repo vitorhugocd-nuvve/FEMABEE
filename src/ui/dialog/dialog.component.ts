@@ -41,7 +41,7 @@ import { ButtonComponent } from '../button/button.component';
                position:fixed dos descendentes, quebrando drawers/dialogs aninhados no conteúdo. -->
           <div
             (transitionend)="onTransitionEnd()"
-            class="flex max-h-[90dvh] w-full flex-col transition-opacity duration-300 ease-out"
+            class="flex max-h-[90dvh] w-full flex-col transition-opacity duration-300 ease-out p-0.5"
             [class]="chromeClasses()"
             [class.opacity-100]="visible()"
             [class.opacity-0]="!visible()"

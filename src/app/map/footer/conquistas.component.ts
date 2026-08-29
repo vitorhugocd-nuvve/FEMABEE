@@ -22,7 +22,7 @@ import { ConquistaService } from "../../core/services/conquista.service";
                         <bee-description class="truncate">{{ item.conquista.descricao }}</bee-description>
                     </div>
                     @if (item.desbloqueada) {
-                        <bee-icon icon="check-circle" class="shrink-0" />
+                        <bee-icon icon="check" class="shrink-0" />
                     }
                 </div>
             }

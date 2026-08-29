@@ -7,7 +7,7 @@ import { SequenciaSemErrarService } from "../../core/progresso/sequencia-sem-err
 @Component({
     selector: 'app-foguinho',
     template: `
-    <bee-icon icon="fire" [width]="24" />
+    <img src="/icons/fogo.png" class="w-8! h-8! tile-icon" alt="Fogo">
     <bee-text class="text-white! font-black! [-webkit-text-stroke:1px_white]!"> {{ sequenciaSemErrarService.sequenciaAtual() }} </bee-text>
     `,
     host: { class: 'flex flex-row justify-center gap-2 items-center' },

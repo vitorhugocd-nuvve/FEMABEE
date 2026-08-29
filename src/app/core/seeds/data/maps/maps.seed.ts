@@ -6,11 +6,13 @@ import { TipoMapa } from "../../../models/map/tipo-mapa";
 import { ID_MAPA_INICIAL, MAPA_MUNDI } from "./mapa-mundi";
 
 import { CONTINENTE_CRIACIONAL } from "./continentes/criacaional";
-import { CONTINENTE_COMPORTAMENTAL } from "./continentes/comportamental";
-import { CONTINENTE_ESTRUTURAL } from "./continentes/estrutural";
+// Só o Continente Criacional (com a Ilha do Singleton) está liberado nesta fase do jogo —
+// os demais continentes ficam comentados (não removidos) até terem suas regiões implementadas.
+// import { CONTINENTE_COMPORTAMENTAL } from "./continentes/comportamental";
+// import { CONTINENTE_ESTRUTURAL } from "./continentes/estrutural";
 
-// Somente Singleton, Observer e Bridge estão liberados nesta fase do jogo — as demais
-// regiões ficam comentadas (não removidas) até terem suas fases implementadas.
+// Só Singleton está liberado nesta fase do jogo — as demais regiões ficam comentadas
+// (não removidas) até terem suas fases implementadas / voltarem a ficar disponíveis.
 // import { REGIAO_FACTORY } from "./regioes/criacionais/factory";
 // import { REGIAO_PROTOTYPE } from "./regioes/criacionais/prototype";
 // import { REGIAO_BUILDER } from "./regioes/criacionais/builder";
@@ -23,14 +25,14 @@ import { REGIAO_SINGLETON } from "./regioes/criacionais/singleton";
 // import { REGIAO_ITERATOR } from "./regioes/comportamentais/iterator";
 // import { REGIAO_MEDIATOR } from "./regioes/comportamentais/mediator";
 // import { REGIAO_MEMENTO } from "./regioes/comportamentais/memento";
-import { REGIAO_OBSERVER } from "./regioes/comportamentais/observer";
+// import { REGIAO_OBSERVER } from "./regioes/comportamentais/observer";
 // import { REGIAO_STATE } from "./regioes/comportamentais/state";
 // import { REGIAO_STRATEGY } from "./regioes/comportamentais/strategy";
 // import { REGIAO_TEMPLATE_METHOD } from "./regioes/comportamentais/template-method";
 // import { REGIAO_VISITOR } from "./regioes/comportamentais/visitor";
 
 // import { REGIAO_ADAPTER } from "./regioes/estruturais/adapter";
-import { REGIAO_BRIDGE } from "./regioes/estruturais/bridge";
+// import { REGIAO_BRIDGE } from "./regioes/estruturais/bridge";
 // import { REGIAO_COMPOSITE } from "./regioes/estruturais/composite";
 // import { REGIAO_DECORATOR } from "./regioes/estruturais/decorator";
 // import { REGIAO_FACADE } from "./regioes/estruturais/facade";
@@ -43,9 +45,10 @@ export const MapsSeeds = [
     MAPA_MUNDI,
 
     // ── Continentes: N paradas de ônibus (1 por região) + 1 avião de volta ao Mundi. ──────────
+    // Só o Criacional está liberado nesta fase — os demais ficam comentados acima (não removidos).
     CONTINENTE_CRIACIONAL,
-    CONTINENTE_COMPORTAMENTAL,
-    CONTINENTE_ESTRUTURAL,
+    // CONTINENTE_COMPORTAMENTAL,
+    // CONTINENTE_ESTRUTURAL,
 
     // ── Regiões Criacionais ────────────────────────────────────────────────────────────────
     // Só Singleton está liberado nesta fase — as demais regiões ficam comentadas acima
@@ -56,22 +59,22 @@ export const MapsSeeds = [
     REGIAO_SINGLETON,
     // REGIAO_ABSTRACT_FACTORY,
 
-    // ── Regiões Comportamentais — só Observer está liberado nesta fase ────────────────────────
+    // ── Regiões Comportamentais (comentadas — só Singleton está liberado nesta fase) ──────────
     // REGIAO_CHAIN_OF_RESPONSIBILITY,
     // REGIAO_COMMAND,
     // REGIAO_INTERPRETER,
     // REGIAO_ITERATOR,
     // REGIAO_MEDIATOR,
     // REGIAO_MEMENTO,
-    REGIAO_OBSERVER,
+    // REGIAO_OBSERVER,
     // REGIAO_STATE,
     // REGIAO_STRATEGY,
     // REGIAO_TEMPLATE_METHOD,
     // REGIAO_VISITOR,
 
-    // ── Regiões Estruturais — só Bridge está liberado nesta fase ──────────────────────────────
+    // ── Regiões Estruturais (comentadas — só Singleton está liberado nesta fase) ───────────────
     // REGIAO_ADAPTER,
-    REGIAO_BRIDGE,
+    // REGIAO_BRIDGE,
     // REGIAO_COMPOSITE,
     // REGIAO_DECORATOR,
     // REGIAO_FACADE,

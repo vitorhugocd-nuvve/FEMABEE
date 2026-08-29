@@ -22,7 +22,7 @@ export const REGIAO_SINGLETON = new Mapa({
             titulo: "Voltar ao Continental",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "continental-criacional",
-            posicaoEmPx: { x: 144, y: 176 },
+            posicaoEmPx: { x: 176 + 32 + 16, y: 256 + 6 },
             mostrarLabel: true
         }),
 
@@ -84,7 +84,6 @@ export const REGIAO_SINGLETON = new Mapa({
             niveisDependentes: ["rs-encontre-bug-001"],
             recompensas: [
                 new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 }),
-                new Recompensa({ tipo: TipoRecompensa.PassagemRegional }),
             ]
         }),
 
@@ -125,7 +124,6 @@ export const REGIAO_SINGLETON = new Mapa({
             niveisDependentes: ["rs-licao-002"],
             recompensas: [
                 new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 60 }),
-                new Recompensa({ tipo: TipoRecompensa.PassagemContinental }),
             ]
         }),
 
@@ -176,6 +174,7 @@ export const REGIAO_SINGLETON = new Mapa({
             recompensas: [
                 new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 100 }),
                 new Recompensa({ tipo: TipoRecompensa.PassagemRegional }),
+                new Recompensa({ tipo: TipoRecompensa.PassagemContinental }),
             ]
         }),
     ]

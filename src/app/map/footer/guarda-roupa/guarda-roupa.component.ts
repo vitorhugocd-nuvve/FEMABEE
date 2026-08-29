@@ -19,7 +19,7 @@ const TODOS_TAMANHOS_ABELHA = Object.values(TamanhoAbelha);
         <div class="flex flex-col md:flex-row w-full">
             <!-- Painel esquerdo: prévia da abelha equipada -->
             <div class="relative shrink-0 w-full h-56 md:h-auto md:w-72 inside-border bg-[#111] overflow-hidden flex items-center justify-center">
-                <img src="/wardrobe/luz.gif" class="absolute inset-0 m-auto w-62 h-62 object-contain pointer-events-none" alt="">
+                <img src="/wardrobe/luz.gif" class="absolute inset-0 m-auto w-62 h-62 object-contain pointer-events-none [image-rendering:pixelated]" alt="">
                 <div class="relative mt-10">
                     <bee-abelha [tamanho]="tamanhoAtual()" [aparencias]="equipadas()" [scale]="3.5" />
                 </div>

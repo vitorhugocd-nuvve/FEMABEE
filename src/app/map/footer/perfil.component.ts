@@ -78,7 +78,7 @@ export class PerfilComponent {
     protected readonly cards = computed(() => [
         { icon: 'trophy', label: 'Fases Vencidas', valor: this.niveisConcluidosAbelhaService.quantidadeConcluida() },
         { icon: 'shirt', label: 'Roupas Obtidas', valor: this.aparenciaObtidaService.quantidadeObtida() },
-        { icon: 'plane', label: 'Passagens de Avião', valor: this.abelhaEconomiaService.ticketContinental() },
+        { icon: 'send', label: 'Passagens de Avião', valor: this.abelhaEconomiaService.ticketContinental() },
         { icon: 'bus', label: 'Passagens de Ônibus', valor: this.abelhaEconomiaService.ticketRegional() },
         { icon: 'wallet', label: 'Dinheiro Atual', valor: this.abelhaEconomiaService.dinheiro() },
         { icon: 'zap', label: 'Sequência sem Errar', valor: this.sequenciaSemErrarService.sequenciaAtual() },

@@ -74,7 +74,7 @@ export class ConquistaService {
             severity: 'conquista',
             ttlInMs: 4500,
             toast: true,
-            toastPosition: 'center',
+            toastPosition: 'top',
         }));
     }
 

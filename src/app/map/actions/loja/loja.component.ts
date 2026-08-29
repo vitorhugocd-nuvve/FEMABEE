@@ -59,7 +59,7 @@ import { AbelhaEconomiaService } from "../../../core/jogador/abelha-economia.ser
             <footer class="w-full flex flex-row-reverse">
                 <button bee-button [disabled]="jaPossui(item) || !temSaldo(item)" (click)="comprar(item)">
                     @if (jaPossui(item)) {
-                        <bee-icon icon="check-circle" />
+                        <bee-icon icon="check" />
                         Já possui
                     } @else {
                         <bee-icon icon="shopping-cart" />
