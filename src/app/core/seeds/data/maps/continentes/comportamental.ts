@@ -20,7 +20,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Chain of Responsibility",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "chain-of-responsibility",
-            posicaoEmPx: { x: 256, y: 128 },
+            posicaoEmPx: { x: 320, y: 197 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -28,7 +28,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Command",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "command",
-            posicaoEmPx: { x: 416, y: 128 },
+            posicaoEmPx: { x: 448, y: 341 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -36,7 +36,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Interpreter",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "interpreter",
-            posicaoEmPx: { x: 560, y: 128 },
+            posicaoEmPx: { x: 448, y: 533 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -44,7 +44,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Iterator",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "iterator",
-            posicaoEmPx: { x: 96, y: 336 },
+            posicaoEmPx: { x: 368, y: 549 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -52,7 +52,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Mediator",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "mediator",
-            posicaoEmPx: { x: 256, y: 336 },
+            posicaoEmPx: { x: 336, y: 421 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -60,7 +60,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Memento",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "memento",
-            posicaoEmPx: { x: 416, y: 336 },
+            posicaoEmPx: { x: 272, y: 309 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -68,15 +68,15 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Observer",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "observer",
-            posicaoEmPx: { x: 560, y: 336 },
+            posicaoEmPx: { x: 240, y: 149 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
             id: "cco-onibus-reg-state",
-            titulo: "State",
+            titulo: "Signal",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "state",
-            posicaoEmPx: { x: 96, y: 544 },
+            posicaoEmPx: { x: 368, y: 293 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -84,7 +84,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Strategy",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "strategy",
-            posicaoEmPx: { x: 256, y: 544 },
+            posicaoEmPx: { x: 128, y: 101 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -92,7 +92,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Template Method",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "template-method",
-            posicaoEmPx: { x: 416, y: 544 },
+            posicaoEmPx: { x: 416, y: 437 },
             mostrarLabel: true
         }),
         new AcaoDoMapa({
@@ -100,7 +100,7 @@ export const CONTINENTE_COMPORTAMENTAL = new Mapa({
             titulo: "Visitor",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "visitor",
-            posicaoEmPx: { x: 560, y: 544 },
+            posicaoEmPx: { x: 192, y: 229 },
             mostrarLabel: true
         }),
 

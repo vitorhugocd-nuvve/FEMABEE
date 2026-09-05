@@ -27,7 +27,7 @@ export const DESAFIO_EB_OBSERVER_001 = new EncontreBug({
                     nome: "CarteiroDaColmeia.java",
                     linguagem: "java",
                     codigo:
-`public class CarteiroDaColmeia {
+                        `public class CarteiroDaColmeia {
     private final List<Assinante> assinantes = new ArrayList<>();
     private String edicaoAtual;
 
@@ -51,7 +51,7 @@ export const DESAFIO_EB_OBSERVER_001 = new EncontreBug({
                     nome: "AbelhaOperaria.java",
                     linguagem: "java",
                     codigo:
-`public class AbelhaOperaria implements Assinante {
+                        `public class AbelhaOperaria implements Assinante {
     @Override
     public void receberEdicao(String edicao) {
         System.out.println("Operária leu a edição: " + edicao);
@@ -63,7 +63,7 @@ export const DESAFIO_EB_OBSERVER_001 = new EncontreBug({
                     nome: "App.java",
                     linguagem: "java",
                     codigo:
-`public class App {
+                        `public class App {
     public static void main(String[] args) {
         CarteiroDaColmeia carteiro = new CarteiroDaColmeia();
         carteiro.inscrever(new AbelhaOperaria());
@@ -89,12 +89,11 @@ export const DESAFIO_EB_OBSERVER_001 = new EncontreBug({
                     nome: "CarteiroDaColmeia.java",
                     linguagem: "java",
                     codigo:
-`public class CarteiroDaColmeia {
+                        `public class CarteiroDaColmeia {
     private final List<Assinante> assinantes = new ArrayList<>();
     private String edicaoAtual;
 
     public void inscrever(Assinante assinante) {
-        // "assinante" nunca é adicionado a "assinantes"
     }
 
     public void publicarNovaEdicao(String edicao) {
@@ -114,7 +113,7 @@ export const DESAFIO_EB_OBSERVER_001 = new EncontreBug({
                     nome: "App.java",
                     linguagem: "java",
                     codigo:
-`public class App {
+                        `public class App {
     public static void main(String[] args) {
         CarteiroDaColmeia carteiro = new CarteiroDaColmeia();
         carteiro.inscrever(new AbelhaOperaria());

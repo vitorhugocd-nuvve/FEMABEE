@@ -22,7 +22,7 @@ export const REGIAO_OBSERVER = new Mapa({
             titulo: "Voltar ao Continental",
             tipo: TipoAcao.Onibus,
             mapaDestinoId: "continental-comportamental",
-            posicaoEmPx: { x: 192, y: 128 },
+            posicaoEmPx: { x: 192 + 64, y: 128 + 64 + 5 },
             mostrarLabel: true
         }),
 
@@ -32,7 +32,7 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.Licao,
             desafioId: "licao-observer-001",
-            posicaoEmPx: { x: 32, y: 32 },
+            posicaoEmPx: { x: 64, y: 144 },
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 30 })]
         }),
 
@@ -42,7 +42,7 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.PerguntasRespostas,
             desafioId: "quiz-observer-001",
-            posicaoEmPx: { x: 64, y: 32 },
+            posicaoEmPx: { x: 96, y: 128 },
             niveisDependentes: ["rob-licao-001"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 50 })]
         }),
@@ -52,9 +52,9 @@ export const REGIAO_OBSERVER = new Mapa({
             titulo: "Listras & Cia",
             tipo: TipoAcao.Loja,
             lojaId: "observer-loja-listras",
-            posicaoEmPx: { x: 32, y: 160 },
+            posicaoEmPx: { x: 160, y: 192 + 5 },
             mostrarLabel: true,
-            niveisDependentes: ["rob-quiz-001"]
+            niveisDependentes: ["rob-encontre-bug-001"]
         }),
 
         new AcaoDoMapa({
@@ -63,7 +63,7 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.CompleteTexto,
             desafioId: "ct-observer-001",
-            posicaoEmPx: { x: 96, y: 32 },
+            posicaoEmPx: { x: 144, y: 128 },
             niveisDependentes: ["rob-quiz-001"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 })]
         }),
@@ -74,7 +74,7 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.EncontreBug,
             desafioId: "eb-observer-001",
-            posicaoEmPx: { x: 160, y: 64 },
+            posicaoEmPx: { x: 176, y: 160 },
             niveisDependentes: ["rob-complete-texto-001"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 50 })]
         }),
@@ -85,7 +85,7 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.EncontrePares,
             desafioId: "ep-observer-001",
-            posicaoEmPx: { x: 224, y: 64 },
+            posicaoEmPx: { x: 224, y: 144 },
             niveisDependentes: ["rob-encontre-bug-001"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 40 })]
         }),
@@ -95,9 +95,9 @@ export const REGIAO_OBSERVER = new Mapa({
             titulo: "Estilo Despojado",
             tipo: TipoAcao.Loja,
             lojaId: "observer-loja-despojado",
-            posicaoEmPx: { x: 352, y: 192 },
+            posicaoEmPx: { x: 320, y: 64 + 5 },
             mostrarLabel: true,
-            niveisDependentes: ["rob-encontre-pares-001"]
+            niveisDependentes: ["rob-complete-codigo-001"]
         }),
 
         new AcaoDoMapa({
@@ -106,7 +106,7 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.Licao,
             desafioId: "licao-observer-002",
-            posicaoEmPx: { x: 288, y: 96 },
+            posicaoEmPx: { x: 272, y: 128 },
             niveisDependentes: ["rob-encontre-pares-001"],
             recompensas: [
                 new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 30 }),
@@ -120,7 +120,7 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.CompleteCodigo,
             desafioId: "cc-observer-001",
-            posicaoEmPx: { x: 320, y: 160 },
+            posicaoEmPx: { x: 304, y: 96 },
             niveisDependentes: ["rob-licao-002"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 60 })]
         }),
@@ -131,8 +131,8 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.EncontreBug,
             desafioId: "eb-observer-002",
-            posicaoEmPx: { x: 288, y: 224 },
-            niveisDependentes: ["rob-complete-codigo-001"],
+            posicaoEmPx: { x: 224, y: 96 },
+            niveisDependentes: ["rob-encontre-bug-001", "rob-encontre-pares-001"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 50 })]
         }),
 
@@ -142,7 +142,7 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.Licao,
             desafioId: "licao-observer-003",
-            posicaoEmPx: { x: 192, y: 224 },
+            posicaoEmPx: { x: 224, y: 48 },
             niveisDependentes: ["rob-encontre-bug-002"],
             recompensas: [new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 30 })]
         }),
@@ -153,11 +153,12 @@ export const REGIAO_OBSERVER = new Mapa({
             tipo: TipoAcao.Desafio,
             tipoDesafio: TipoDesafio.PerguntasRespostas,
             desafioId: "quiz-observer-002",
-            posicaoEmPx: { x: 96, y: 224 },
+            posicaoEmPx: { x: 176, y: 48 },
             niveisDependentes: ["rob-licao-003"],
             recompensas: [
                 new Recompensa({ tipo: TipoRecompensa.Dinheiro, valor: 100 }),
                 new Recompensa({ tipo: TipoRecompensa.PassagemRegional }),
+                new Recompensa({ tipo: TipoRecompensa.PassagemContinental }),
             ]
         }),
     ]
