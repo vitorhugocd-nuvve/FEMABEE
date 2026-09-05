@@ -38,6 +38,15 @@ export class AbelhaProgressoService {
     private readonly _onibusDesbloqueadosNoMapa = signal<Set<string>>(new Set());
     /** Ids de ação (fases) concluídas em QUALQUER mapa — usado pra "15 fases" e pra saber quais Lições já foram lidas (Enciclopédia). */
     private readonly _fasesConcluidasGlobal = signal<Set<string>>(new Set());
+    /**
+     * Mesmo princípio de `_dialogosCarregados`: evita `ConquistaService.verificar()` reavaliar
+     * uma condição "fase específica"/"região específica" contra um Set ainda vazio (da abelha
+     * recém-selecionada, cujo GET de fases concluídas ainda não resolveu) — sem isso, trocar de
+     * abelha podia deixar a condição momentaneamente "não satisfeita" (a checagem simplesmente
+     * não roda de novo depois que o Set carrega de verdade) OU, pior, satisfeita por engano se
+     * outro Set relacionado ainda estivesse com dado da abelha anterior nesse meio-tempo.
+     */
+    private readonly _fasesGlobaisCarregadas = signal(false);
     private readonly _ultimaFaseConcluida = signal<string | undefined>(undefined);
     /** Ids de diálogo já exibidos (qualquer mapa) — pra não repetir o mesmo diálogo (ex.: boas-vindas) a cada login. */
     private readonly _dialogosConcluidos = signal<Set<string>>(new Set());
@@ -59,6 +68,7 @@ export class AbelhaProgressoService {
     readonly ultimaFaseConcluida = this._ultimaFaseConcluida.asReadonly();
     readonly dialogosCarregados = this._dialogosCarregados.asReadonly();
     readonly conquistasCarregadas = this._conquistasCarregadas.asReadonly();
+    readonly fasesGlobaisCarregadas = this._fasesGlobaisCarregadas.asReadonly();
 
     constructor() {
         effect(() => {
@@ -78,7 +88,9 @@ export class AbelhaProgressoService {
 
         effect(() => {
             const abelha = this.abelhaSelecionadaService.abelha();
+            console.log(`[ABELHA-PROGRESSO] efeito fasesGlobal: abelha=${abelha?.id ?? 'null'} — zerando e (re)carregando`);
             this._fasesConcluidasGlobal.set(new Set());
+            this._fasesGlobaisCarregadas.set(false);
             if (abelha) this.carregarTotalFasesConcluidas(abelha.id);
         });
 
@@ -97,6 +109,7 @@ export class AbelhaProgressoService {
 
         effect(() => {
             const abelha = this.abelhaSelecionadaService.abelha();
+            console.log(`[ABELHA-PROGRESSO] efeito conquistas: abelha=${abelha?.id ?? 'null'} — zerando e (re)carregando`);
             this._conquistasDesbloqueadas.set(new Set());
             this._conquistasCarregadas.set(false);
             if (abelha) this.carregarConquistasDesbloqueadas(abelha.id);
@@ -177,7 +190,12 @@ export class AbelhaProgressoService {
 
     /** Marca uma conquista como desbloqueada — permanente, sobrevive a reload/login. */
     marcarConquistaDesbloqueada(conquistaId: string): void {
-        if (this._conquistasDesbloqueadas().has(conquistaId)) return;
+        const idAbelhaAtual = this.abelhaSelecionadaService.abelha()?.id;
+        if (this._conquistasDesbloqueadas().has(conquistaId)) {
+            console.log(`[ABELHA-PROGRESSO] marcarConquistaDesbloqueada("${conquistaId}") ignorado, já estava no Set local (abelha=${idAbelhaAtual})`);
+            return;
+        }
+        console.log(`[ABELHA-PROGRESSO] marcarConquistaDesbloqueada("${conquistaId}") para abelha=${idAbelhaAtual}`);
         this._conquistasDesbloqueadas.update(atual => new Set(atual).add(conquistaId));
         this.persistir('conquistas-desbloqueadas', { idConquista: conquistaId, idMapa: this.localizacaoAtualService.mapaAtualId() });
     }
@@ -196,10 +214,18 @@ export class AbelhaProgressoService {
     }
 
     private async carregarTotalFasesConcluidas(idAbelha: string): Promise<void> {
-        const resposta = await firstValueFrom(
-            this.http.get<RespostaApi<RegistroProgresso[]>>(`${API_BASE_URL}/abelha/${idAbelha}/fases-concluidas`),
-        );
-        this._fasesConcluidasGlobal.set(new Set(resposta.dados.map(registro => registro.identificador)));
+        try {
+            const resposta = await firstValueFrom(
+                this.http.get<RespostaApi<RegistroProgresso[]>>(`${API_BASE_URL}/abelha/${idAbelha}/fases-concluidas`),
+            );
+            const ids = resposta.dados.map(registro => registro.identificador);
+            console.log(`[ABELHA-PROGRESSO] GET fases-concluidas OK pra abelha=${idAbelha}:`, ids);
+            this._fasesConcluidasGlobal.set(new Set(ids));
+        } catch (erro) {
+            console.error(`[ABELHA-PROGRESSO] GET fases-concluidas FALHOU pra abelha=${idAbelha}`, erro);
+        } finally {
+            this._fasesGlobaisCarregadas.set(true);
+        }
     }
 
     private async carregarDialogosConcluidos(idAbelha: string): Promise<void> {
@@ -220,7 +246,11 @@ export class AbelhaProgressoService {
             const resposta = await firstValueFrom(
                 this.http.get<RespostaApi<RegistroProgresso[]>>(`${API_BASE_URL}/abelha/${idAbelha}/conquistas-desbloqueadas`),
             );
-            this._conquistasDesbloqueadas.set(new Set(resposta.dados.map(registro => registro.identificador)));
+            const ids = resposta.dados.map(registro => registro.identificador);
+            console.log(`[ABELHA-PROGRESSO] GET conquistas-desbloqueadas OK pra abelha=${idAbelha}:`, ids);
+            this._conquistasDesbloqueadas.set(new Set(ids));
+        } catch (erro) {
+            console.error(`[ABELHA-PROGRESSO] GET conquistas-desbloqueadas FALHOU pra abelha=${idAbelha}`, erro);
         } finally {
             this._conquistasCarregadas.set(true);
         }
@@ -235,7 +265,13 @@ export class AbelhaProgressoService {
 
     private persistir(caminho: string, body: Record<string, string | number>): void {
         const idAbelha = this.abelhaSelecionadaService.abelha()?.id;
-        if (!idAbelha) return;
-        firstValueFrom(this.http.post(`${API_BASE_URL}/abelha/${idAbelha}/${caminho}`, body)).catch(() => {});
+        if (!idAbelha) {
+            console.warn(`[ABELHA-PROGRESSO] persistir("${caminho}") abortado: nenhuma abelha selecionada`, body);
+            return;
+        }
+        console.log(`[ABELHA-PROGRESSO] POST ${caminho} pra abelha=${idAbelha}`, body);
+        firstValueFrom(this.http.post(`${API_BASE_URL}/abelha/${idAbelha}/${caminho}`, body))
+            .then(() => console.log(`[ABELHA-PROGRESSO] POST ${caminho} OK pra abelha=${idAbelha}`))
+            .catch((erro) => console.error(`[ABELHA-PROGRESSO] POST ${caminho} FALHOU pra abelha=${idAbelha}`, erro));
     }
 }

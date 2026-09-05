@@ -6,9 +6,8 @@ import { TipoMapa } from "../../../models/map/tipo-mapa";
 import { ID_MAPA_INICIAL, MAPA_MUNDI } from "./mapa-mundi";
 
 import { CONTINENTE_CRIACIONAL } from "./continentes/criacaional";
-// Só o Continente Criacional (com a Ilha do Singleton) está liberado nesta fase do jogo —
-// os demais continentes ficam comentados (não removidos) até terem suas regiões implementadas.
-// import { CONTINENTE_COMPORTAMENTAL } from "./continentes/comportamental";
+import { CONTINENTE_COMPORTAMENTAL } from "./continentes/comportamental";
+// O Continente Estrutural ainda fica comentado (não removido) até ter uma região implementada.
 // import { CONTINENTE_ESTRUTURAL } from "./continentes/estrutural";
 
 // Só Singleton está liberado nesta fase do jogo — as demais regiões ficam comentadas
@@ -25,7 +24,7 @@ import { REGIAO_SINGLETON } from "./regioes/criacionais/singleton";
 // import { REGIAO_ITERATOR } from "./regioes/comportamentais/iterator";
 // import { REGIAO_MEDIATOR } from "./regioes/comportamentais/mediator";
 // import { REGIAO_MEMENTO } from "./regioes/comportamentais/memento";
-// import { REGIAO_OBSERVER } from "./regioes/comportamentais/observer";
+import { REGIAO_OBSERVER } from "./regioes/comportamentais/observer";
 // import { REGIAO_STATE } from "./regioes/comportamentais/state";
 // import { REGIAO_STRATEGY } from "./regioes/comportamentais/strategy";
 // import { REGIAO_TEMPLATE_METHOD } from "./regioes/comportamentais/template-method";
@@ -45,9 +44,9 @@ export const MapsSeeds = [
     MAPA_MUNDI,
 
     // ── Continentes: N paradas de ônibus (1 por região) + 1 avião de volta ao Mundi. ──────────
-    // Só o Criacional está liberado nesta fase — os demais ficam comentados acima (não removidos).
+    // O Estrutural ainda fica comentado acima (não removido) até ter uma região implementada.
     CONTINENTE_CRIACIONAL,
-    // CONTINENTE_COMPORTAMENTAL,
+    CONTINENTE_COMPORTAMENTAL,
     // CONTINENTE_ESTRUTURAL,
 
     // ── Regiões Criacionais ────────────────────────────────────────────────────────────────
@@ -59,14 +58,14 @@ export const MapsSeeds = [
     REGIAO_SINGLETON,
     // REGIAO_ABSTRACT_FACTORY,
 
-    // ── Regiões Comportamentais (comentadas — só Singleton está liberado nesta fase) ──────────
+    // ── Regiões Comportamentais (as demais ficam comentadas até terem fases implementadas) ────
     // REGIAO_CHAIN_OF_RESPONSIBILITY,
     // REGIAO_COMMAND,
     // REGIAO_INTERPRETER,
     // REGIAO_ITERATOR,
     // REGIAO_MEDIATOR,
     // REGIAO_MEMENTO,
-    // REGIAO_OBSERVER,
+    REGIAO_OBSERVER,
     // REGIAO_STATE,
     // REGIAO_STRATEGY,
     // REGIAO_TEMPLATE_METHOD,

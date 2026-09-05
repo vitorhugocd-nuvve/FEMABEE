@@ -37,4 +37,14 @@ export class ProgressoMapaService {
         const fases = this.fases(mapa);
         return fases.length > 0 && fases.every(fase => this.estaConcluida(fase));
     }
+
+    /**
+     * Mesma checagem de `mapaCompleto`, mas contra o progresso GLOBAL em vez do progresso do
+     * mapa atualmente aberto — use pra avaliar um `mapa` que pode não ser o mapa em que a
+     * abelha está agora (ex.: condição de conquista "completou a região X" checada do Mundi).
+     */
+    public mapaCompletoGlobal(mapa: Mapa): boolean {
+        const fases = this.fases(mapa);
+        return fases.length > 0 && fases.every(fase => this.niveisConcluidosAbelhaService.estaConcluidoGlobal(fase.id));
+    }
 }

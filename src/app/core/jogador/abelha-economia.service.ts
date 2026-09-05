@@ -28,24 +28,47 @@ export class AbelhaEconomiaService {
     private readonly _ticketContinental = signal(0);
     private readonly _ticketRegional = signal(0);
     private readonly _sequenciaSemErrar = signal(0);
+    /** Só fica `true` depois da primeira carga (sucesso ou falha) dos valores da abelha atual — ver `AbelhaProgressoService.conquistasCarregadas` pro mesmo princípio. */
+    private readonly _carregado = signal(false);
 
     readonly dinheiro = this._dinheiro.asReadonly();
     readonly ticketContinental = this._ticketContinental.asReadonly();
     readonly ticketRegional = this._ticketRegional.asReadonly();
     readonly sequenciaSemErrar = this._sequenciaSemErrar.asReadonly();
+    readonly carregado = this._carregado.asReadonly();
 
     constructor() {
         effect(() => {
             const abelha = this.abelhaSelecionadaService.abelha();
+            console.log(`[ABELHA-ECONOMIA] efeito: abelha=${abelha?.id ?? 'null'} — zerando e (re)carregando`);
+
+            // Zera na hora, antes do fetch resolver: sem isso, ao trocar de abelha os valores
+            // da abelha anterior (dinheiro, passagens, sequência sem errar) continuam valendo
+            // por um instante — e como `ConquistaService.verificar()` pode rodar nesse meio
+            // tempo, uma conquista de sequência poderia ser (erroneamente) concedida à nova
+            // abelha usando o streak deixado pela anterior.
+            this._dinheiro.set(0);
+            this._ticketContinental.set(0);
+            this._ticketRegional.set(0);
+            this._sequenciaSemErrar.set(0);
+            this._carregado.set(false);
+
             if (abelha) this.carregar(abelha.id);
         });
     }
 
     private async carregar(idAbelha: string): Promise<void> {
-        const resposta = await firstValueFrom(
-            this.http.get<RespostaApi<ValoresEconomia>>(`${API_BASE_URL}/abelha/${idAbelha}/info`),
-        );
-        this.atualizarValores(resposta.dados);
+        try {
+            const resposta = await firstValueFrom(
+                this.http.get<RespostaApi<ValoresEconomia>>(`${API_BASE_URL}/abelha/${idAbelha}/info`),
+            );
+            console.log(`[ABELHA-ECONOMIA] GET OK pra abelha=${idAbelha}:`, resposta.dados);
+            this.atualizarValores(resposta.dados);
+        } catch (erro) {
+            console.error(`[ABELHA-ECONOMIA] GET FALHOU pra abelha=${idAbelha}`, erro);
+        } finally {
+            this._carregado.set(true);
+        }
     }
 
     /** `valor` positivo credita, negativo debita. Resolve `false` (sem lançar) em saldo insuficiente. */

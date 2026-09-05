@@ -15,10 +15,12 @@ export class AbelhaSelecionadaService {
     readonly abelha = this._abelha.asReadonly();
 
     selecionar(abelha: Abelha): void {
+        console.log(`[ABELHA-SELECIONADA] selecionar("${abelha.nome}", id="${abelha.id}")`);
         this._abelha.set(abelha);
     }
 
     limpar(): void {
+        console.log('[ABELHA-SELECIONADA] limpar()');
         this._abelha.set(null);
     }
 }

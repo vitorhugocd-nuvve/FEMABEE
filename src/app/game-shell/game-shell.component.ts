@@ -56,15 +56,27 @@ export class GameShellComponent {
   private readonly dialogoGatilhoService = inject(DialogoGatilhoService);
   private readonly musicaAmbienteService = inject(MusicaAmbienteService);
 
+  constructor() {
+    console.log('[GAME-SHELL] instância CRIADA');
+  }
+
   /** Um único bee-indicator, global, anuncia toda recompensa de fase — não faz sentido cada desafio ter o seu. */
   private readonly _anunciarRecompensa = effect(() => {
     const indicacao = this.recompensaService.pendente();
-    if (indicacao) this.recompensaIndicator()?.show(indicacao);
+    console.log('[GAME-SHELL] efeito _anunciarRecompensa disparou, pendente()=', indicacao);
+    if (indicacao) {
+      this.recompensaIndicator()?.show(indicacao);
+      this.recompensaService.consumirPendente();
+    }
   });
 
   /** Indicator dedicado (não o de recompensa) pra não colidir quando as duas coincidem — ex.: completar a última fase de uma região concede recompensa E desbloqueia a conquista "Mestra do <padrão>" no mesmo instante. */
   private readonly _anunciarConquista = effect(() => {
     const indicacao = this.conquistaService.pendente();
-    if (indicacao) this.conquistaIndicator()?.show(indicacao);
+    console.log('[GAME-SHELL] efeito _anunciarConquista disparou, pendente()=', indicacao);
+    if (indicacao) {
+      this.conquistaIndicator()?.show(indicacao);
+      this.conquistaService.consumirPendente();
+    }
   });
 }

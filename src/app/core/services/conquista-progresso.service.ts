@@ -14,6 +14,7 @@ import { CompleteTextoService } from "../../challenges/complete-texto/complete-t
 import { CompleteCodigoService } from "../../challenges/complete-codigo/complete-codigo.service";
 import { EncontreParesService } from "../../challenges/encontre-pares/encontre-pares.service";
 import { LicaoService } from "../../challenges/licao/licao.service";
+import { AparenciaObtidaService } from "../progresso/aparencia-obtida.service";
 
 /**
  * Observa a conclusão de qualquer tipo de desafio e, quando acontece: marca a fase como
@@ -35,6 +36,7 @@ export class ConquistaProgressoService {
     private readonly recompensaService = inject(RecompensaService);
     private readonly mapaRepositoryService = inject(MapaRepositoryService);
     private readonly localizacaoAtualService = inject(LocalizacaoAtualService);
+    private readonly aparenciaObtidaService = inject(AparenciaObtidaService);
 
     private readonly quizService = inject(QuizService);
     private readonly encontreBugService = inject(EncontreBugService);
@@ -51,9 +53,21 @@ export class ConquistaProgressoService {
         effect(() => { if (this.encontreParesService.concluido()) this.registrarFaseConcluida(); });
         effect(() => { if (this.licaoService.concluida()) this.registrarFaseConcluida(); });
 
-        // Reavalia assim que as conquistas já desbloqueadas terminam de carregar do backend —
-        // até lá, `verificar()` não faz nada (ver o comentário em ConquistaService.verificar).
-        effect(() => { this.abelhaProgressoService.conquistasCarregadas(); this.conquistaService.verificar(); });
+        // Reavalia sempre que qualquer um dos dados que as condições de conquista usam termina
+        // de carregar do backend pra abelha atual — até todos estarem prontos, `verificar()` não
+        // faz nada (ver o comentário lá). Lendo os quatro sinais aqui (não só o de conquistas)
+        // garante que esse efeito dispara de novo a cada um que chega, em vez de rodar só uma
+        // vez, cedo demais, e nunca mais reavaliar depois que o resto também carregar.
+        effect(() => {
+            const conquistasCarregadas = this.abelhaProgressoService.conquistasCarregadas();
+            const fasesGlobaisCarregadas = this.abelhaProgressoService.fasesGlobaisCarregadas();
+            const aparenciasCarregadas = this.aparenciaObtidaService.carregado();
+            const sequenciaCarregada = this.sequenciaSemErrarService.carregado();
+            console.log('[CONQUISTA-PROGRESSO] efeito de prontidão disparou', {
+                conquistasCarregadas, fasesGlobaisCarregadas, aparenciasCarregadas, sequenciaCarregada,
+            });
+            this.conquistaService.verificar();
+        });
     }
 
     /**
@@ -65,8 +79,13 @@ export class ConquistaProgressoService {
     private registrarFaseConcluida(): void {
         untracked(() => {
             const acaoId = this.desafioAtualService.acaoIdAtiva();
-            if (!acaoId || this.niveisConcluidosAbelhaService.estaConcluido(acaoId)) return;
+            console.log(`[CONQUISTA-PROGRESSO] registrarFaseConcluida() chamado, acaoIdAtiva="${acaoId}"`);
+            if (!acaoId || this.niveisConcluidosAbelhaService.estaConcluido(acaoId)) {
+                console.log(`[CONQUISTA-PROGRESSO] abortando registrarFaseConcluida: acaoId ausente ou já concluída no mapa atual`);
+                return;
+            }
 
+            console.log(`[CONQUISTA-PROGRESSO] marcando "${acaoId}" concluída + verificando conquistas`);
             this.niveisConcluidosAbelhaService.marcarConcluido(acaoId);
             this.sequenciaSemErrarService.registrarFaseConcluida();
             this.conquistaService.verificar();

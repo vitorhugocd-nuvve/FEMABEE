@@ -23,6 +23,17 @@ export class RecompensaService {
     private readonly _pendente = signal<Indication | null>(null);
     readonly pendente = this._pendente.asReadonly();
 
+    /**
+     * Chamado por quem exibiu o toast, logo depois de exibir — sem isso, `_pendente` (um
+     * `providedIn: 'root'`, sobrevive à recriação de componentes) ficava setado pra sempre, e
+     * uma instância nova do indicator (ex.: `GameShellComponent` recriado ao trocar de abelha,
+     * já que passa por `/abelhas`) reexibia o MESMO toast antigo pra abelha errada, na hora em
+     * que o efeito que o mostra roda pela primeira vez.
+     */
+    consumirPendente(): void {
+        this._pendente.set(null);
+    }
+
     async conceder(recompensas: Recompensa[]): Promise<void> {
         const itens: string[] = [];
         for (const recompensa of recompensas) {

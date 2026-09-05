@@ -1,4 +1,4 @@
-import { Component, computed, effect, signal, ChangeDetectionStrategy } from "@angular/core";
+import { Component, computed, effect, signal, ChangeDetectionStrategy, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { Indication } from "./indication";
 import { SeverityVariants, SeverityVariantKey } from "./indicator.severity";
@@ -6,6 +6,7 @@ import { IconComponent } from "../icon/icon.component";
 import { TextComponent } from "../typography/text.component";
 
 const ANIMATION_FRAME_MS = 50;
+let _proximoIdInstancia = 1;
 
 @Component({
     selector: 'bee-indicator',
@@ -46,12 +47,18 @@ const ANIMATION_FRAME_MS = 50;
         '[class]': 'toastClasses()'
     }
 })
-export class IndicatorComponent {
+export class IndicatorComponent implements OnDestroy {
+    private readonly idInstancia = _proximoIdInstancia++;
+
     readonly indication = signal<Indication | null>(null);
     readonly timeElapsed = signal(0);
     /** Controla a transição de entrada do bottom sheet (toast) — começa fora da tela, anima até a posição final. */
     readonly visivel = signal(false);
     private hideTimeoutId: number | null = null;
+
+    ngOnDestroy(): void {
+        console.log(`[INDICATOR #${this.idInstancia}] instância DESTRUÍDA`);
+    }
 
     readonly progressPercentage = computed(() => {
         const ind = this.indication();
@@ -127,6 +134,7 @@ export class IndicatorComponent {
     });
 
     show(indication: Indication): void {
+        console.log(`[INDICATOR #${this.idInstancia}] show()`, { title: indication.title, message: indication.message, ttlInMs: indication.ttlInMs });
         this.indication.set(indication);
         this.timeElapsed.set(0);
         this.visivel.set(false);
@@ -151,6 +159,7 @@ export class IndicatorComponent {
     }
 
     hide(): void {
+        console.log(`[INDICATOR #${this.idInstancia}] hide()`);
         this.indication.set(null);
         this.visivel.set(false);
         this.timeElapsed.set(0);
@@ -161,6 +170,8 @@ export class IndicatorComponent {
     }
 
     constructor() {
+        console.log(`[INDICATOR #${this.idInstancia}] instância CRIADA`);
+
         effect(() => {
             const ind = this.indication();
             if (!ind || !ind.ttlInMs) return;

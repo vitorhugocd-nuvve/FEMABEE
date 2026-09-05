@@ -23,13 +23,18 @@ export class AparenciaObtidaService {
     private readonly localizacaoAtualService = inject(LocalizacaoAtualService);
 
     private readonly _obtidas = signal<Set<number>>(new Set());
+    /** Só fica `true` depois da primeira carga (sucesso ou falha) das aparências da abelha atual — ver `AbelhaProgressoService.conquistasCarregadas` pro mesmo princípio. */
+    private readonly _carregado = signal(false);
 
     public readonly quantidadeObtida = computed(() => this._obtidas().size);
+    public readonly carregado = this._carregado.asReadonly();
 
     constructor() {
         effect(() => {
             const abelha = this.abelhaSelecionadaService.abelha();
+            console.log(`[APARENCIA-OBTIDA] efeito: abelha=${abelha?.id ?? 'null'} — zerando e (re)carregando`);
             this._obtidas.set(new Set());
+            this._carregado.set(false);
             if (abelha) this.carregar(abelha.id);
         });
     }
@@ -55,9 +60,17 @@ export class AparenciaObtidaService {
     }
 
     private async carregar(idAbelha: string): Promise<void> {
-        const resposta = await firstValueFrom(
-            this.http.get<RespostaApi<RegistroAparencia[]>>(`${API_BASE_URL}/abelha/${idAbelha}/aparencias-desbloqueadas`),
-        );
-        this._obtidas.set(new Set(resposta.dados.map(registro => Number(registro.identificador))));
+        try {
+            const resposta = await firstValueFrom(
+                this.http.get<RespostaApi<RegistroAparencia[]>>(`${API_BASE_URL}/abelha/${idAbelha}/aparencias-desbloqueadas`),
+            );
+            const ids = resposta.dados.map(registro => Number(registro.identificador));
+            console.log(`[APARENCIA-OBTIDA] GET OK pra abelha=${idAbelha}:`, ids);
+            this._obtidas.set(new Set(ids));
+        } catch (erro) {
+            console.error(`[APARENCIA-OBTIDA] GET FALHOU pra abelha=${idAbelha}`, erro);
+        } finally {
+            this._carregado.set(true);
+        }
     }
 }

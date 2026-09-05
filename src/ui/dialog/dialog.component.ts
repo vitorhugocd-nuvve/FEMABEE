@@ -98,6 +98,11 @@ export class DialogComponent implements OnDestroy {
         onCleanup(() => cancelAnimationFrame(id));
       } else {
         this.visible.set(false);
+        // Fallback: `transitionend` nem sempre dispara (ex.: transição interrompida por abrir/
+        // fechar rápido demais) — sem isso, o overlay fica montado pra sempre, invisível mas
+        // ainda bloqueando cliques na tela inteira.
+        const timeoutId = setTimeout(() => this.mounted.set(false), 350);
+        onCleanup(() => clearTimeout(timeoutId));
       }
     });
 

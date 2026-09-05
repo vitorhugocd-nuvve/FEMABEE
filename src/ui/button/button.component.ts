@@ -10,8 +10,8 @@ import { SomService } from "../../services/som/som.service";
             active:enabled:bg-neutral-400
             active:enabled:translate-y-[1.5px]
             bg-neutral-300
-            focus:bg-neutral-400
-            focus:text-neutral-950
+            focus-visible:bg-neutral-400
+            focus-visible:text-neutral-950
             text-neutral-700
             flex flex-row gap-2
             items-center

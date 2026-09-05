@@ -28,6 +28,7 @@ export class DesafioAtualService {
         const desafio = this.desafioRepositoryService.findById(desafioId);
         if (!desafio) return;
 
+        console.log(`[DESAFIO-ATUAL] abrir(acaoId="${acaoId}", desafioId="${desafioId}")`);
         this._desafioAtivo.set(desafio);
         this._acaoIdAtiva.set(acaoId);
         this.sequenciaSemErrarService.iniciarFase();
@@ -44,12 +45,19 @@ export class DesafioAtualService {
     public fechar() {
         const acaoId = this._acaoIdAtiva();
         const tentativas = this.tentativasFaseService.tentativas();
+        console.log(`[DESAFIO-ATUAL] fechar(), acaoIdAtiva era "${acaoId}"`);
 
         if (acaoId && tentativas > 0 && this.tentativasFaseService.reivindicarEnvio()) {
             this.abelhaProgressoService.registrarTentativaFase(
                 acaoId, this.localizacaoAtualService.mapaAtualId(), tentativas, this.tentativasFaseService.erros(),
             );
         }
+
+        // Se a fase foi concluída com sucesso, `ConquistaProgressoService` já chamou
+        // `registrarFaseConcluida()` antes disso — aqui é um no-op nesse caso. Mas se foi
+        // abandonada (fechou sem terminar) depois de errar algo, sem isso a sequência ficava
+        // intacta como se o erro nunca tivesse acontecido.
+        this.sequenciaSemErrarService.encerrarSemConcluir();
 
         this._desafioAtivo.set(undefined);
         this._acaoIdAtiva.set(undefined);
